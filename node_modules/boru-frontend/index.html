@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BORÜ Centro de Combate | CT de Artes Marciais & Alta Performance em Porto Velho</title>
+  <meta name="description" content="Conheça o Centro de Treinamento BORÜ em Porto Velho - RO. Estrutura de ponta, professores faixa preta em Muay Thai, Jiu-Jitsu, MMA, Kickboxing e Funcional. Agende sua aula experimental gratuita!">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            boru: {
+              black: '#0B0B0C',
+              dark: '#141416',
+              card: '#1A1A1E',
+              red: '#DC2626',
+              redDark: '#991B1B',
+              amber: '#F59E0B',
+              gray: '#27272A',
+              textMuted: '#A1A1AA'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-[#0B0B0C] text-zinc-100 min-h-screen selection:bg-red-600 selection:text-white">
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#0B0B0C]/90 backdrop-blur-md border-b border-zinc-800 transition-all duration-300" id="main-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-11 h-11 bg-red-600 flex items-center justify-center rounded-lg shadow-lg group-hover:bg-red-700 transition transform group-hover:scale-105">
+          <i data-lucide="swords" class="w-6 h-6 text-white"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-display text-2xl sm:text-3xl tracking-widest font-black text-white leading-none group-hover:text-red-500 transition">
+            BORÜ
+          </span>
+          <span class="text-[9px] tracking-[0.25em] font-semibold text-zinc-400 uppercase">
+            Centro de Treinamento
+          </span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation (Modelo Portfólio / CT Completo) -->
+      <nav class="hidden xl:flex items-center gap-6 text-sm font-medium text-zinc-300">
+        <a href="#o-que-e-o-ct" class="hover:text-red-500 transition">O Que É o CT</a>
+        <a href="#estrutura" class="hover:text-red-500 transition">Estrutura</a>
+        <a href="#modalidades" class="hover:text-red-500 transition">Modalidades</a>
+        <a href="#professores" class="hover:text-red-500 transition">Professores</a>
+        <a href="#galeria" class="hover:text-red-500 transition">Galeria</a>
+        <a href="#horarios" class="hover:text-red-500 transition">Horários</a>
+        <a href="#planos" class="hover:text-red-500 transition">Planos</a>
+        <a href="#faq" class="hover:text-red-500 transition">FAQ</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="hidden sm:flex items-center gap-3">
+        <!-- Portal Button -->
+        <a href="portal.html" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 hover:text-white transition">
+          <i data-lucide="monitor-play" class="w-4 h-4 text-red-500"></i>
+          <span>Área do Aluno</span>
+        </a>
+
+        <!-- Schedule Trial CTA -->
+        <button onclick="openBookingModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-red-900/40 hover:shadow-red-700/60 transition transform active:scale-95">
+          <i data-lucide="flame" class="w-4 h-4 text-amber-300 animate-pulse"></i>
+          <span>Aula Experimental</span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button id="mobile-menu-btn" class="xl:hidden p-2 text-zinc-400 hover:text-white focus:outline-none" aria-label="Abrir Menu">
+        <i data-lucide="menu" class="w-7 h-7"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="hidden xl:hidden bg-[#141416] border-b border-zinc-800 px-6 py-6 space-y-4 max-h-[85vh] overflow-y-auto">
+      <nav class="flex flex-col space-y-3 text-base font-semibold">
+        <a href="#o-que-e-o-ct" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">O Que É o CT BORÜ</a>
+        <a href="#estrutura" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Estrutura & Espaço</a>
+        <a href="#modalidades" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Modalidades de Luta</a>
+        <a href="#professores" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Nossos Professores / Mestres</a>
+        <a href="#galeria" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Galeria do Tatame</a>
+        <a href="#horarios" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Grade de Horários</a>
+        <a href="#planos" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Planos & Parcerias</a>
+        <a href="#faq" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Dúvidas Frequentes (FAQ)</a>
+        <a href="#localizacao" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Onde Estamos</a>
+      </nav>
+      <div class="pt-4 border-t border-zinc-800 flex flex-col gap-3">
+        <a href="portal.html" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white font-semibold text-sm">
+          <i data-lucide="monitor-play" class="w-4 h-4 text-red-500"></i>
+          Acessar Área do Aluno / Portal
+        </a>
+        <button onclick="closeMobileMenu(); openBookingModal();" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600 text-white font-bold text-sm shadow-md">
+          <i data-lucide="calendar-check" class="w-4 h-4"></i>
+          Agendar Aula Gratuita no WhatsApp
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO SECTION ================= -->
+  <section id="hero" class="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-combat-gradient">
+    <div class="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none"></div>
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/2 -left-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Hero Text & CTA -->
+        <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+          
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/60 border border-red-800/80 text-red-400 text-xs sm:text-sm font-semibold tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span>CENTRO DE TREINAMENTO DE ALTO NÍVEL EM PORTO VELHO - RO</span>
+          </div>
+
+          <h1 class="font-display text-4xl sm:text-6xl xl:text-7xl font-extrabold uppercase tracking-tight text-white leading-none">
+            Mais Que Um Treino, <br class="hidden sm:inline">
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-amber-500">
+              Uma Transformação
+            </span>
+          </h1>
+
+          <p class="text-zinc-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+            O <strong>BORÜ Centro de Combate</strong> é o espaço definitivo em Rondônia para quem busca saúde, perda de peso, defesa pessoal, disciplina e alta performance em artes marciais.
+          </p>
+
+          <!-- CTAs -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <button onclick="openBookingModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-base uppercase tracking-wider glow-red transition transform hover:-translate-y-0.5 active:scale-95">
+              <i data-lucide="check-circle-2" class="w-5 h-5 text-amber-300"></i>
+              <span>Agendar Aula Gratuita</span>
+            </button>
+
+            <a href="#o-que-e-o-ct" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-4 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-100 font-bold text-base transition transform hover:-translate-y-0.5">
+              <i data-lucide="compass" class="w-5 h-5 text-red-500"></i>
+              <span>Conhecer o CT</span>
+            </a>
+          </div>
+
+          <!-- Credibility Highlights -->
+          <div class="pt-6 border-t border-zinc-800/80 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
+            <div>
+              <div class="font-display text-2xl sm:text-3xl font-bold text-white">+500</div>
+              <div class="text-xs text-zinc-400 font-medium">Alunos Ativos</div>
+            </div>
+            <div>
+              <div class="font-display text-2xl sm:text-3xl font-bold text-red-500">100%</div>
+              <div class="text-xs text-zinc-400 font-medium">Mestres Faixa Preta</div>
+            </div>
+            <div>
+              <div class="font-display text-2xl sm:text-3xl font-bold text-amber-400">180m²</div>
+              <div class="text-xs text-zinc-400 font-medium">Tatame Climatizado</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Hero Media Showcase Card -->
+        <div class="lg:col-span-5 relative">
+          <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-900 group">
+            <img src="https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=1000&q=80" 
+                 alt="Treino no BORÜ Centro de Combate" 
+                 class="w-full h-[440px] object-cover object-center group-hover:scale-105 transition duration-700 brightness-90">
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0B0B0C] via-transparent to-black/30"></div>
+
+            <div class="absolute top-4 right-4 bg-red-600/90 backdrop-blur-md text-white text-xs font-black uppercase px-3 py-1.5 rounded-md flex items-center gap-1.5 shadow-lg">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+              Porto Velho - RO
+            </div>
+
+            <div class="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-red-600/20 border border-red-500/40 flex items-center justify-center">
+                    <i data-lucide="award" class="w-5 h-5 text-red-400"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-white">Metodologia Gradual & Segura</h4>
+                    <p class="text-xs text-zinc-400">Acolhimento para iniciantes sem machucados</p>
+                  </div>
+                </div>
+                <button onclick="openBookingModal()" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition">
+                  Experimentar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: O QUE É O CT ================= -->
+  <section id="o-que-e-o-ct" class="py-24 bg-[#141416] border-y border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-5 space-y-4">
+          <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" 
+                 alt="Tatame do BORÜ Centro de Combate" 
+                 class="w-full h-80 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+            <div class="absolute bottom-4 left-4 right-4">
+              <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Ambiente de Respeito & Irmandade</span>
+              <p class="text-sm font-semibold text-white mt-1">Onde o ego fica do lado de fora do tatame.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-center">
+              <div class="font-display text-3xl font-bold text-red-500">100%</div>
+              <div class="text-xs text-zinc-400 mt-1">Ambiente Climatizado</div>
+            </div>
+            <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-center">
+              <div class="font-display text-3xl font-bold text-amber-400">0 a 100</div>
+              <div class="text-xs text-zinc-400 mt-1">Do Sedentário ao Atleta</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-600/20 text-red-400 text-xs font-bold uppercase tracking-wider">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            Conheça o Nosso Centro de Treinamento
+          </div>
+
+          <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white uppercase leading-tight">
+            O Que É o <span class="text-red-500">CT BORÜ</span>?
+          </h2>
+
+          <p class="text-zinc-300 text-base leading-relaxed">
+            O <strong>BORÜ Centro de Combate</strong> nasceu em Porto Velho com uma missão clara: 
+            <strong>democratizar as artes marciais de alto nível técnico</strong> em um ambiente seguro, acolhedor e com infraestrutura padrão internacional.
+          </p>
+
+          <div class="space-y-4 text-sm text-zinc-400">
+            <div class="flex items-start gap-3">
+              <div class="p-2 rounded-lg bg-red-600/10 text-red-500 flex-shrink-0 mt-0.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <strong class="text-white">Para quem nunca calçou uma luva ou vestiu um kimono:</strong> 
+                Não existe cobrança agressiva de desempenho. Nossos mestres ensinam desde a base (postura, guarda, respiração) garantindo que você se sinta seguro e motivado a cada aula.
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="p-2 rounded-lg bg-red-600/10 text-red-500 flex-shrink-0 mt-0.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <strong class="text-white">Para quem busca emagrecimento & alívio do estresse:</strong> 
+                Nossos treinos de Muay Thai, Kickboxing e Funcional Fight queimam até 800 calorias por hora, descarregando as tensões do dia a dia e tonificando o corpo todo.
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="p-2 rounded-lg bg-red-600/10 text-red-500 flex-shrink-0 mt-0.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <strong class="text-white">Para atletas e praticantes graduados:</strong> 
+                Treinos táticos de alto rendimento, sparring técnico controlado, preparação física especializada e preparação para campeonatos de Jiu-Jitsu, Muay Thai e MMA.
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-4">
+            <button onclick="openBookingModal()" class="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm uppercase tracking-wider shadow-lg transition">
+              Agendar Minha Primeira Aula
+            </button>
+            <a href="#estrutura" class="px-6 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm transition">
+              Ver Nossa Estrutura
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: ESTRUTURA & INSTALAÇÕES ================= -->
+  <section id="estrutura" class="py-24 bg-[#0B0B0C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Infraestrutura de Ponta</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Estrutura do Centro de Treinamento
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Projetado minuciosamente para oferecer máxima absorção de impacto, higiene impecável e conforto para você e sua família.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="facilities-grid">
+        <!-- Renderizado dinamicamente via app.js a partir do mockData -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: PROFESSORES / MESTRES (PORTFÓLIO) ================= -->
+  <section id="professores" class="py-24 bg-[#141416] border-y border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Corpo Docente de Elite</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Nossos Professores & Mestres
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Aprenda diretamente com quem tem graduações reconhecidas pelas federações mundiais, décadas de tatame e pedagogia moderna de ensino.
+        </p>
+      </div>
+
+      <!-- Grid Detalhado de Professores -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="instructors-portfolio-grid">
+        <!-- Renderizado dinamicamente via app.js com bio rica, conquistas e especialidades -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: MODALIDADES ================= -->
+  <section id="modalidades" class="py-24 bg-[#0B0B0C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+        <div>
+          <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Artes Marciais & Condicionamento</h2>
+          <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase mt-1">
+            Modalidades Oferecidas
+          </h3>
+        </div>
+        <p class="text-zinc-400 max-w-md text-sm">
+          Escolha a arte que melhor se adapta aos seus objetivos ou treine todas com o nosso <strong>Passaporte Livre</strong>.
+        </p>
+      </div>
+
+      <!-- Modalities Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <!-- Muay Thai -->
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=800&q=80" 
+                 alt="Muay Thai" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-red-600 text-white text-xs font-bold uppercase">
+              Arte das 8 Armas
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Muay Thai Tradicional</h4>
+              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Socos, chutes, joelhadas, cotoveladas e clinch tailandês. Excelente para queima de gordura (+800 kcal/aula), reflexo e autodefesa.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <span class="text-xs text-zinc-400 font-medium">Turmas: Manhã, Tarde e Noite</span>
+              <button onclick="openBookingModal('Muay Thai')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
+                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jiu-Jitsu Brasileiro (BJJ) -->
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500 transition duration-300 flex flex-col justify-between card-combat">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" 
+                 alt="Jiu-Jitsu Brasileiro" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-amber-500 text-black text-xs font-bold uppercase">
+              Arte Suave & Alavancas
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-amber-500 transition">Jiu-Jitsu (Gi & No-Gi)</h4>
+              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Aprenda a controlar qualquer oponente usando alavancas e técnica no chão. Turmas com kimono e sem kimono (No-Gi).
+              </p>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <span class="text-xs text-zinc-400 font-medium">Iniciante ao Avançado</span>
+              <button onclick="openBookingModal('Jiu-Jitsu (BJJ)')" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MMA -->
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?auto=format&fit=crop&w=800&q=80" 
+                 alt="MMA Artes Marciais Mistas" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-red-700 text-white text-xs font-bold uppercase">
+              Combate Integrado
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Artes Marciais Mistas (MMA)</h4>
+              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Integração completa de luta em pé, quedas de wrestling na grade e finalizações no chão com estratégia de cage.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <span class="text-xs text-zinc-400 font-medium">Técnica & Grade</span>
+              <button onclick="openBookingModal('MMA')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
+                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kickboxing -->
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80" 
+                 alt="Kickboxing" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-zinc-800 text-zinc-200 text-xs font-bold uppercase">
+              Dinâmico & Veloz
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Kickboxing K1</h4>
+              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Ritmo acelerado, movimentação constante, esquivas e combinações agressivas de boxe com chutes em todas as linhas.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <span class="text-xs text-zinc-400 font-medium">Turmas Noturnas</span>
+              <button onclick="openBookingModal('Kickboxing')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
+                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funcional de Luta -->
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500 transition duration-300 flex flex-col justify-between card-combat">
+          <div class="relative h-56 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80" 
+                 alt="Funcional de Luta" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-amber-600 text-white text-xs font-bold uppercase">
+              Potência & Gás
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-amber-500 transition">Funcional Fight</h4>
+              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+                Treino de alta intensidade (HIIT) utilizando cordas navais, kettlebells e movimentos de luta para queimar gordura e ganhar explosão.
+              </p>
+            </div>
+            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <span class="text-xs text-zinc-400 font-medium">Manhãs e Noites</span>
+              <button onclick="openBookingModal('Funcional de Luta')" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pacote Todas as Modalidades -->
+        <div class="rounded-2xl p-8 bg-gradient-to-br from-red-950/60 to-zinc-900 border-2 border-dashed border-red-600/60 flex flex-col justify-between text-center relative overflow-hidden card-combat">
+          <div class="space-y-4">
+            <div class="w-16 h-16 rounded-full bg-red-600/20 border border-red-500/40 mx-auto flex items-center justify-center">
+              <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
+            </div>
+            <h4 class="font-display text-3xl font-bold text-white uppercase">Passaporte Livre BORÜ</h4>
+            <p class="text-sm text-zinc-300 leading-relaxed">
+              Tenha acesso irrestrito a todas as modalidades, horários e tatame livre por uma única mensalidade.
+            </p>
+          </div>
+          <div class="pt-6">
+            <button onclick="openBookingModal('Passaporte Livre')" class="w-full py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm tracking-wider uppercase shadow-lg transition">
+              Quero Acesso Total
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: GALERIA DO CT (ATMOSFERA) ================= -->
+  <section id="galeria" class="py-24 bg-[#141416] border-y border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Dia a Dia no Tatame</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Galeria de Fotos do CT
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Veja a energia, a infraestrutura e a união da nossa equipe nos treinos e graduações.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        
+        <div class="relative rounded-xl overflow-hidden group h-60 bg-zinc-900 border border-zinc-800">
+          <img src="https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=600&q=80" alt="Treino de Muay Thai" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-600/90 px-3 py-1 rounded">Muay Thai</span>
+          </div>
+        </div>
+
+        <div class="relative rounded-xl overflow-hidden group h-60 bg-zinc-900 border border-zinc-800">
+          <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80" alt="Treino de Jiu-Jitsu" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <span class="text-xs font-bold text-white uppercase tracking-wider bg-amber-500/90 text-black px-3 py-1 rounded">Jiu-Jitsu</span>
+          </div>
+        </div>
+
+        <div class="relative rounded-xl overflow-hidden group h-60 bg-zinc-900 border border-zinc-800">
+          <img src="https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?auto=format&fit=crop&w=600&q=80" alt="Treino na Grade de MMA" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-700/90 px-3 py-1 rounded">MMA Cage</span>
+          </div>
+        </div>
+
+        <div class="relative rounded-xl overflow-hidden group h-60 bg-zinc-900 border border-zinc-800">
+          <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80" alt="Treino Funcional de Luta" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <span class="text-xs font-bold text-white uppercase tracking-wider bg-zinc-800 px-3 py-1 rounded">Funcional Fight</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: GRADE DE HORÁRIOS ================= -->
+  <section id="horarios" class="py-20 bg-[#0B0B0C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Grade Completa</h2>
+        <h3 class="font-display text-3xl sm:text-5xl font-extrabold text-white uppercase">
+          Horários de Treino
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Filtre por turno para encontrar o melhor horário para seu dia a dia.
+        </p>
+      </div>
+
+      <!-- Shift Filter Tabs -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-8" id="schedule-filters">
+        <button class="schedule-filter-btn active px-5 py-2.5 rounded-lg text-sm font-bold transition bg-red-600 text-white" data-filter="all">
+          Todos os Turnos
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="manha">
+          <i data-lucide="sun" class="w-4 h-4 inline mr-1 text-amber-400"></i> Manhã (06h - 11h)
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="tarde">
+          <i data-lucide="cloud-sun" class="w-4 h-4 inline mr-1 text-orange-400"></i> Tarde (12h - 17h)
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="noite">
+          <i data-lucide="moon" class="w-4 h-4 inline mr-1 text-indigo-400"></i> Noite (17h - 22h)
+        </button>
+      </div>
+
+      <!-- Schedule Dynamic Container -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="schedule-container">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
+  <section id="planos" class="py-24 bg-[#141416] border-y border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Valores Transparentes</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Planos de Treinamento
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Sem taxa de matrícula oculta. Condições facilitadas para você focar apenas na sua evolução.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        
+        <!-- 1 Modalidade -->
+        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Foco Único</span>
+            <h4 class="font-display text-3xl font-bold text-white uppercase">1 Modalidade</h4>
+            <div class="flex items-baseline gap-1">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">169</span>
+              <span class="text-sm text-zinc-400">/mês</span>
+            </div>
+            <p class="text-xs text-zinc-400">Ideal para quem quer se especializar em uma única arte.</p>
+            
+            <ul class="pt-6 space-y-3 text-sm text-zinc-300 border-t border-zinc-800">
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Aulas da modalidade escolhida</li>
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> 3x a 5x por semana</li>
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Acesso aos vestiários climatizados</li>
+              <li class="flex items-center gap-2 text-zinc-500"><i data-lucide="x" class="w-4 h-4"></i> Outras modalidades liberadas</li>
+            </ul>
+          </div>
+
+          <div class="pt-8">
+            <button onclick="openBookingModal('Plano 1 Modalidade')" class="w-full py-3.5 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Começar Agora
+            </button>
+          </div>
+        </div>
+
+        <!-- Passaporte Livre (Destaque) -->
+        <div class="p-8 rounded-2xl bg-gradient-to-b from-red-950/40 via-zinc-900 to-zinc-900 border-2 border-red-600 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
+          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-amber-500 text-white text-xs font-black uppercase px-4 py-1 rounded-full shadow-lg">
+            Mais Escolhido
+          </div>
+
+          <div class="space-y-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-red-400">Acesso Total</span>
+            <h4 class="font-display text-3xl font-bold text-white uppercase">Passaporte BORÜ</h4>
+            <div class="flex items-baseline gap-1">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-5xl font-extrabold text-white">229</span>
+              <span class="text-sm text-zinc-400">/mês</span>
+            </div>
+            <p class="text-xs text-zinc-300">Treine tudo o que quiser: Muay Thai, BJJ, MMA, Kickboxing e Funcional.</p>
+            
+            <ul class="pt-6 space-y-3 text-sm text-zinc-200 border-t border-zinc-800">
+              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Todas as 5 modalidades liberadas</li>
+              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Treinos ilimitados em qualquer turno</li>
+              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Acesso total à Plataforma Digital</li>
+              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Open Mat e treinos livres inclusos</li>
+            </ul>
+          </div>
+
+          <div class="pt-8">
+            <button onclick="openBookingModal('Passaporte BORÜ Livre')" class="w-full py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider shadow-lg glow-red transition">
+              Garantir Passaporte Livre
+            </button>
+          </div>
+        </div>
+
+        <!-- Anual Black -->
+        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Melhor Custo-Benefício</span>
+            <h4 class="font-display text-3xl font-bold text-white uppercase">Anual Black</h4>
+            <div class="flex items-baseline gap-1">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">189</span>
+              <span class="text-sm text-zinc-400">/mês (plano anual)</span>
+            </div>
+            <p class="text-xs text-zinc-400">Compromisso com seus resultados com a maior economia.</p>
+            
+            <ul class="pt-6 space-y-3 text-sm text-zinc-300 border-t border-zinc-800">
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Todas as modalidades liberadas</li>
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Camiseta Oficial BORÜ exclusiva</li>
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Plataforma com videoaulas HD</li>
+              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Desconto em seminários e graduações</li>
+            </ul>
+          </div>
+
+          <div class="pt-8">
+            <button onclick="openBookingModal('Plano Anual Black')" class="w-full py-3.5 rounded-xl border border-zinc-700 hover:border-amber-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Contratar Anual
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Parceiros Corporativos (Wellhub / TotalPass) -->
+      <div class="mt-16 p-8 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-center">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Parceiros Corporativos Aceitos no CT</h4>
+        <div class="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-80 hover:opacity-100 transition">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center font-black text-white text-lg">W</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">Wellhub</span>
+              <span class="block text-[11px] text-zinc-400">(Antigo Gympass)</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">TotalPass</span>
+              <span class="block text-[11px] text-zinc-400">Check-in Liberado</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-black text-zinc-900 text-lg">B</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">Convênios Locais</span>
+              <span class="block text-[11px] text-zinc-400">Empresas & OAB/RO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
+  <section id="faq" class="py-24 bg-[#0B0B0C]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Tire Suas Dúvidas</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Perguntas Frequentes
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Tudo o que você precisa saber antes de pisar no tatame pela primeira vez.
+        </p>
+      </div>
+
+      <div class="space-y-4" id="faq-accordion-container">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= LOCALIZAÇÃO & ATENDIMENTO ================= -->
+  <section id="localizacao" class="py-24 bg-[#141416] border-t border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-6 space-y-6">
+          <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Venha Nos Conhecer Pessoalmente</h2>
+          <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+            Localização do CT em Porto Velho
+          </h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Fácil acesso, estacionamento amplo, segurança e ambiente totalmente climatizado no coração da capital rondoniense.
+          </p>
+
+          <div class="space-y-4 pt-2">
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div class="p-2.5 rounded-lg bg-red-600/20 text-red-500">
+                <i data-lucide="map-pin" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h5 class="text-sm font-bold text-white">Endereço do CT</h5>
+                <p class="text-xs text-zinc-400 mt-0.5">Porto Velho - RO (Atendimento presencial de segunda a sábado)</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div class="p-2.5 rounded-lg bg-amber-500/20 text-amber-500">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h5 class="text-sm font-bold text-white">Horário de Funcionamento</h5>
+                <p class="text-xs text-zinc-400 mt-0.5">Segunda a Sexta: 06h às 22h | Sábados: 08h às 13h</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div class="p-2.5 rounded-lg bg-emerald-600/20 text-emerald-500">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h5 class="text-sm font-bold text-white">WhatsApp & Redes Sociais</h5>
+                <p class="text-xs text-zinc-400 mt-0.5">Recepção rápida no WhatsApp | Instagram: @borucentrodecombate</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-4">
+            <a href="https://instagram.com/borucentrodecombate" target="_blank" class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-sm font-semibold text-zinc-200">
+              <i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i>
+              @borucentrodecombate
+            </a>
+            <button onclick="openBookingModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              Conversar no WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <!-- Mapa / Visual Showcase -->
+        <div class="lg:col-span-6">
+          <div class="rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 p-2 shadow-2xl">
+            <div class="relative h-[380px] w-full rounded-xl overflow-hidden bg-zinc-950 flex items-center justify-center">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.4357776100185!2d-63.90566372422789!3d-8.75620959129505!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x92325cdd7d298379%3A0x6b6f7df2b0c1ec2!2sPorto%20Velho%2C%20RO!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr" 
+                width="100%" 
+                height="100%" 
+                style="border:0; filter: invert(90%) hue-rotate(180deg);" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+              <div class="absolute bottom-4 left-4 right-4 bg-zinc-900/90 backdrop-blur-md p-3 rounded-lg border border-zinc-700 text-xs flex items-center justify-between">
+                <span class="font-bold text-white">BORÜ Centro de Combate - Porto Velho</span>
+                <a href="https://maps.google.com/?q=Porto+Velho+RO" target="_blank" class="text-red-400 font-bold hover:underline">Abrir no GPS</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-black border-t border-zinc-900 py-12 text-zinc-500 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-red-600 flex items-center justify-center rounded text-white font-bold">
+            <i data-lucide="swords" class="w-4 h-4"></i>
+          </div>
+          <span class="font-display text-xl font-bold tracking-widest text-white">BORÜ</span>
+          <span class="text-xs text-zinc-500">| Centro de Treinamento em Artes Marciais</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-6 text-xs font-medium">
+          <a href="#o-que-e-o-ct" class="hover:text-zinc-300 transition">O Que É o CT</a>
+          <a href="#professores" class="hover:text-zinc-300 transition">Professores</a>
+          <a href="#estrutura" class="hover:text-zinc-300 transition">Estrutura</a>
+          <a href="#horarios" class="hover:text-zinc-300 transition">Horários</a>
+          <a href="portal.html" class="hover:text-red-400 transition font-bold">Área do Aluno</a>
+        </div>
+
+        <div class="text-xs text-center md:text-right">
+          &copy; <span id="current-year"></span> BORÜ Centro de Combate. Todos os direitos reservados.
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODAL AGENDAMENTO EXPERIMENTAL ================= -->
+  <div id="booking-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-[#141416] border border-zinc-700 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-6 bg-gradient-to-r from-red-950/60 to-zinc-900 border-b border-zinc-800 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-400">100% Gratuita & Sem Compromisso</span>
+          <h3 class="font-display text-2xl font-bold text-white uppercase">Agendar Aula Experimental no CT</h3>
+        </div>
+        <button onclick="closeBookingModal()" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form id="booking-form" class="p-6 space-y-4" onsubmit="handleBookingSubmit(event)">
+        
+        <div>
+          <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Seu Nome Completo *</label>
+          <input type="text" id="book-name" required placeholder="Ex: Carlos Eduardo" class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none text-sm">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">WhatsApp / Celular *</label>
+            <input type="tel" id="book-phone" required placeholder="(69) 99999-9999" class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Modalidade Desejada *</label>
+            <select id="book-modality" class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-red-500 focus:outline-none text-sm">
+              <option value="Muay Thai">Muay Thai</option>
+              <option value="Jiu-Jitsu (BJJ)">Jiu-Jitsu (BJJ)</option>
+              <option value="MMA">MMA (Artes Marciais Mistas)</option>
+              <option value="Kickboxing">Kickboxing</option>
+              <option value="Funcional de Luta">Funcional de Luta</option>
+              <option value="Passaporte Livre">Passaporte Todas as Aulas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Turno de Preferência</label>
+            <select id="book-shift" class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-red-500 focus:outline-none text-sm">
+              <option value="Manhã (06h - 10h)">Manhã (06h - 10h)</option>
+              <option value="Tarde (12h - 17h)">Tarde (12h - 17h)</option>
+              <option value="Noite (18h - 22h)">Noite (18h - 22h)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Já praticou lutas?</label>
+            <select id="book-experience" class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white focus:border-red-500 focus:outline-none text-sm">
+              <option value="Nunca pratiquei (Iniciante zero)">Nunca pratiquei (Iniciante zero)</option>
+              <option value="Já fiz outra modalidade">Já fiz outra modalidade</option>
+              <option value="Já sou graduado / praticante">Já sou graduado / praticante</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-zinc-800">
+          <button type="submit" class="w-full py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm uppercase tracking-wider shadow-lg shadow-red-900/40 flex items-center justify-center gap-2 transition">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Confirmar no WhatsApp da Academia</span>
+          </button>
+          <p class="text-[11px] text-zinc-400 text-center mt-2">Você será redirecionado para o WhatsApp com seu formulário preenchido.</p>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container"></div>
+
+  <!-- JavaScript Scripts -->
+  <script src="js/mockData.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    lucide.createIcons();
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+<div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+</html>

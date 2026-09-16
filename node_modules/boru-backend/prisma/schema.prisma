@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Aluno {
+  id             String        @id @default(uuid())
+  nome           String
+  email          String?       @unique
+  telefone       String?
+  plano          TipoPlano?
+  criadoEm       DateTime      @default(now())
+  
+  mensalidades   Mensalidade[]
+  presencas      AgendamentoPresenca[]
+}
+
+enum TipoPlano {
+  DIARIA             // R$ 40
+  DUAS_AULAS_SEMANA  // R$ 130
+  TRES_AULAS_SEMANA  // R$ 160
+  TODOS_HORARIOS     // R$ 280
+}
+
+model Mensalidade {
+  id             String          @id @default(uuid())
+  valor          Float
+  dataVencimento DateTime
+  dataPagamento  DateTime?
+  status         StatusPagamento @default(PENDENTE)
+  
+  alunoId        String
+  aluno          Aluno           @relation(fields: [alunoId], references: [id])
+  
+  criadoEm       DateTime        @default(now())
+}
+
+enum StatusPagamento {
+  PENDENTE
+  PAGO
+  ATRASADO
+}
+
+model EventoDeAula {
+  id          String                @id @default(uuid())
+  titulo      String
+  dataInicio  DateTime
+  dataFim     DateTime
+  
+  agendamentos AgendamentoPresenca[]
+  
+  criadoEm    DateTime              @default(now())
+}
+
+model AgendamentoPresenca {
+  id          String         @id @default(uuid())
+  status      StatusPresenca @default(AGENDADO)
+  fotoComprovanteUrl String? // Para upload da foto como gabarito (se houver)
+
+  alunoId     String
+  aluno       Aluno          @relation(fields: [alunoId], references: [id])
+  
+  eventoId    String
+  evento      EventoDeAula   @relation(fields: [eventoId], references: [id])
+  
+  criadoEm    DateTime       @default(now())
+
+  // Garante que o mesmo aluno não seja agendado duas vezes na mesma aula
+  @@unique([alunoId, eventoId])
+}
+
+enum StatusPresenca {
+  AGENDADO // Marcou no app, aula ainda vai acontecer
+  PRESENTE // Agendou e compareceu
+  AUSENTE  // Agendou e não apareceu
+  PENETRA  // Não agendou, mas participou
+}

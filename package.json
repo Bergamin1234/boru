@@ -1,0 +1,14 @@
+{
+  "name": "boru-workspace",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "install:all": "npm install"
+  }
+}
