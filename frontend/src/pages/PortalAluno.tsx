@@ -15,6 +15,44 @@ const MOCK_AULAS = [
 
 export default function PortalAluno() {
   const [aulas, setAulas] = useState(MOCK_AULAS);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [cpf, setCpf] = useState('');
+  const [erroCpf, setErroCpf] = useState('');
+
+  // Função clássica para validação matemática real de CPF
+  const validarCPF = (cpf: string) => {
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let add = 0;
+    for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+    let rev = 11 - (add % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(cpf.charAt(9))) return false;
+    add = 0;
+    for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+    rev = 11 - (add % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(cpf.charAt(10))) return false;
+    return true;
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validarCPF(cpf)) {
+      setErroCpf('');
+      setIsLoggedIn(true);
+    } else {
+      setErroCpf('CPF Inválido. Verifique os números e tente novamente.');
+    }
+  };
+
+  const formatarCpf = (v: string) => {
+    v = v.replace(/\D/g, "");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    setCpf(v);
+  };
 
   const fazerCheckin = (id: number) => {
     setAulas(aulas.map(aula => 
@@ -23,6 +61,41 @@ export default function PortalAluno() {
     alert('Check-in realizado com sucesso! Aguardando o professor confirmar a presença (Triagem).');
   };
 
+  // TELA DE LOGIN DO ALUNO
+  if (!isLoggedIn) {
+    return (
+      <div className="fixed inset-0 bg-[#0B0B0C] flex items-center justify-center z-[9999] px-4">
+        <div className="bg-[#141416] border border-zinc-800 p-8 rounded-2xl w-full max-w-sm">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-black text-white tracking-widest mb-1">BORÜ</h1>
+            <p className="text-red-500 font-bold text-sm tracking-widest uppercase">Área do Aluno</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-zinc-400 text-sm font-semibold mb-2">Digite seu CPF</label>
+              <input 
+                type="text" 
+                value={cpf}
+                onChange={(e) => formatarCpf(e.target.value)}
+                maxLength={14}
+                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
+                placeholder="000.000.000-00"
+              />
+              {erroCpf && <p className="text-red-500 text-xs mt-2 font-semibold">{erroCpf}</p>}
+            </div>
+            <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition transform active:scale-95">
+              Acessar Portal
+            </button>
+          </form>
+          <a href="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
+            Voltar ao site
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // TELA DO PORTAL (LOGADO)
   return (
     <div className="fixed inset-0 overflow-y-auto bg-[#0B0B0C] text-zinc-100 font-sans p-6 z-[9999]">
       <div className="max-w-4xl mx-auto space-y-8">
