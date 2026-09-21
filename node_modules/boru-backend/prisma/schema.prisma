@@ -13,6 +13,8 @@ model Aluno {
   email          String?       @unique
   telefone       String?
   cpf            String?       @unique
+  senha          String?       // Senha criptografada (ou temporária)
+  primeiroAcesso Boolean       @default(true) // Controla se o aluno precisa trocar a senha
   plano          String?       // Valores: DIARIA, DUAS_AULAS_SEMANA, TRES_AULAS_SEMANA, TODOS_HORARIOS
   criadoEm       DateTime      @default(now())
   

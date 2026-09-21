@@ -63,6 +63,39 @@ async function main() {
       }
     }
   }
+  
+  // CRIAR ALUNOS E MENSALIDADES DE TESTE
+  console.log('Criando alunos de teste...');
+  
+  await prisma.aluno.create({
+    data: {
+      nome: 'João Pedro',
+      cpf: '00000000000',
+      plano: '3x na semana',
+      mensalidades: {
+        create: {
+          valor: 160.00,
+          dataVencimento: new Date(hoje.getTime() + 4 * 24 * 60 * 60 * 1000), // Vence em 4 dias
+          status: 'PAGO'
+        }
+      }
+    }
+  });
+
+  await prisma.aluno.create({
+    data: {
+      nome: 'Maria Silva',
+      cpf: '12345678909',
+      plano: 'Todos os Horários',
+      mensalidades: {
+        create: {
+          valor: 280.00,
+          dataVencimento: new Date(hoje.getTime() - 2 * 24 * 60 * 60 * 1000), // Atrasado 2 dias
+          status: 'ATRASADO'
+        }
+      }
+    }
+  });
 
   await prisma.eventoDeAula.createMany({
     data: eventos,
