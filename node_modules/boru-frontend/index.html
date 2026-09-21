@@ -71,6 +71,12 @@
 
       <!-- Action Buttons -->
       <div class="hidden sm:flex items-center gap-3">
+        <!-- Admin Button -->
+        <a href="/admin" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 hover:text-white transition">
+          <i data-lucide="lock" class="w-4 h-4 text-red-500"></i>
+          <span>Admin</span>
+        </a>
+
         <!-- Portal Button -->
         <a href="/portal" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 hover:text-white transition">
           <i data-lucide="monitor-play" class="w-4 h-4 text-red-500"></i>
@@ -104,9 +110,13 @@
         <a href="#localizacao" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Onde Estamos</a>
       </nav>
       <div class="pt-4 border-t border-zinc-800 flex flex-col gap-3">
-        <a href="portal.html" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white font-semibold text-sm">
+        <a href="/portal" onclick="closeMobileMenu()" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white font-semibold text-sm">
           <i data-lucide="monitor-play" class="w-4 h-4 text-red-500"></i>
-          Acessar Área do Aluno / Portal
+          Área do Aluno
+        </a>
+        <a href="/admin" onclick="closeMobileMenu()" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white font-semibold text-sm">
+          <i data-lucide="lock" class="w-4 h-4 text-red-500"></i>
+          Admin
         </a>
         <button onclick="closeMobileMenu(); openBookingModal();" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600 text-white font-bold text-sm shadow-md">
           <i data-lucide="calendar-check" class="w-4 h-4"></i>
