@@ -13,7 +13,7 @@
     "express": "^4.18.3"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

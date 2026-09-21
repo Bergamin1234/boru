@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Aluno {
@@ -12,18 +12,12 @@ model Aluno {
   nome           String
   email          String?       @unique
   telefone       String?
-  plano          TipoPlano?
+  cpf            String?       @unique
+  plano          String?       // Valores: DIARIA, DUAS_AULAS_SEMANA, TRES_AULAS_SEMANA, TODOS_HORARIOS
   criadoEm       DateTime      @default(now())
   
   mensalidades   Mensalidade[]
   presencas      AgendamentoPresenca[]
-}
-
-enum TipoPlano {
-  DIARIA             // R$ 40
-  DUAS_AULAS_SEMANA  // R$ 130
-  TRES_AULAS_SEMANA  // R$ 160
-  TODOS_HORARIOS     // R$ 280
 }
 
 model Mensalidade {
@@ -31,18 +25,12 @@ model Mensalidade {
   valor          Float
   dataVencimento DateTime
   dataPagamento  DateTime?
-  status         StatusPagamento @default(PENDENTE)
+  status         String          @default("PENDENTE") // Valores: PENDENTE, PAGO, ATRASADO
   
   alunoId        String
   aluno          Aluno           @relation(fields: [alunoId], references: [id])
   
   criadoEm       DateTime        @default(now())
-}
-
-enum StatusPagamento {
-  PENDENTE
-  PAGO
-  ATRASADO
 }
 
 model EventoDeAula {
@@ -58,7 +46,7 @@ model EventoDeAula {
 
 model AgendamentoPresenca {
   id          String         @id @default(uuid())
-  status      StatusPresenca @default(AGENDADO)
+  status      String         @default("AGENDADO") // Valores: AGENDADO, PRESENTE, AUSENTE, PENETRA
   fotoComprovanteUrl String? // Para upload da foto como gabarito (se houver)
 
   alunoId     String
@@ -69,13 +57,6 @@ model AgendamentoPresenca {
   
   criadoEm    DateTime       @default(now())
 
-  // Garante que o mesmo aluno não seja agendado duas vezes na mesma aula
   @@unique([alunoId, eventoId])
 }
 
-enum StatusPresenca {
-  AGENDADO // Marcou no app, aula ainda vai acontecer
-  PRESENTE // Agendou e compareceu
-  AUSENTE  // Agendou e não apareceu
-  PENETRA  // Não agendou, mas participou
-}

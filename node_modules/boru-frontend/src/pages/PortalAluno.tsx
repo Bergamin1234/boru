@@ -38,11 +38,20 @@ export default function PortalAluno() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validarCPF(cpf)) {
+    if (!validarCPF(cpf)) {
+      setErroCpf('CPF Inválido. Verifique os números e tente novamente.');
+      return;
+    }
+    
+    // Simulação do Banco de Dados: Apenas estes CPFs estão cadastrados na academia
+    const cpfsCadastrados = ['12345678909', '00000000000', '11122233344'];
+    const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+
+    if (cpfsCadastrados.includes(cpfLimpo)) {
       setErroCpf('');
       setIsLoggedIn(true);
     } else {
-      setErroCpf('CPF Inválido. Verifique os números e tente novamente.');
+      setErroCpf('CPF não encontrado no sistema. Por favor, fale com o administrador para realizar seu cadastro.');
     }
   };
 
