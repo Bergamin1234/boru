@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3001/api';
@@ -174,9 +175,9 @@ export default function PortalAluno() {
               {loading ? 'Verificando...' : 'Acessar Portal'}
             </button>
           </form>
-          <a href="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
+          <Link to="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
             Voltar ao site
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -234,9 +235,9 @@ export default function PortalAluno() {
             </h1>
             <p className="text-zinc-400 mt-1">Bem-vindo de volta, {alunoLogado?.nome}!</p>
           </div>
-          <a href="/" className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition">
+          <Link to="/" className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition">
             Voltar ao Início
-          </a>
+          </Link>
         </header>
 
         {/* MEU PLANO */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3001/api';
@@ -10,6 +11,10 @@ export default function AdminDashboard() {
   const [metricas, setMetricas] = useState({ totalAlunos: 0, assinaturasAtivas: 0, inadimplentes: 0 });
   const [alunos, setAlunos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Estados do Modal
+  const [showModal, setShowModal] = useState(false);
+  const [novoAluno, setNovoAluno] = useState({ nome: '', cpf: '', email: '', plano: '3x na semana' });
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -41,19 +46,24 @@ export default function AdminDashboard() {
 
   const criarAluno = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nome = (document.getElementById('nomeNovo') as HTMLInputElement).value;
-    const cpf = (document.getElementById('cpfNovo') as HTMLInputElement).value;
-    const email = (document.getElementById('emailNovo') as HTMLInputElement).value;
-    const plano = (document.getElementById('planoNovo') as HTMLSelectElement).value;
-
     try {
-      const response = await axios.post(`${API_URL}/admin/alunos`, { nome, cpf, email, plano });
-      alert(`Aluno criado com sucesso!\n\nUm email foi simulado no terminal do servidor.\n\nSenha temporária gerada: ${response.data.senhaTemporaria}\n(Envie isso para o aluno acessar o portal)`);
+      const response = await axios.post(`${API_URL}/admin/alunos`, novoAluno);
+      alert(`Aluno criado com sucesso!\n\nSenha temporária gerada: ${response.data.senhaTemporaria}\n(Envie isso para o aluno acessar o portal)`);
       carregarDashboard();
-      (document.getElementById('modalNovoAluno') as HTMLDialogElement).close();
+      setShowModal(false);
+      setNovoAluno({ nome: '', cpf: '', email: '', plano: '3x na semana' }); // Reseta o form
     } catch (error: any) {
       alert(error.response?.data?.erro || 'Erro ao criar aluno.');
     }
+  };
+
+  // Formatação de CPF no formulário do Admin
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, "");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    setNovoAluno({ ...novoAluno, cpf: v });
   };
 
   // TELA DE LOGIN
@@ -80,9 +90,9 @@ export default function AdminDashboard() {
               Entrar no Painel
             </button>
           </form>
-          <a href="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
+          <Link to="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
             Voltar ao site
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -102,9 +112,9 @@ export default function AdminDashboard() {
             <p className="text-zinc-400 mt-1">Gestão de Alunos, Mensalidades e Triagem</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsLoggedIn(false)} className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition">
+            <Link to="/" onClick={() => setIsLoggedIn(false)} className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition">
               Sair (Logout)
-            </button>
+            </Link>
           </div>
         </header>
 
@@ -129,42 +139,46 @@ export default function AdminDashboard() {
             </div>
 
             {/* MODAL NOVO ALUNO */}
-            <dialog id="modalNovoAluno" className="bg-[#141416] border border-zinc-800 p-8 rounded-2xl w-full max-w-md text-white backdrop:bg-black/80">
-              <h2 className="text-2xl font-bold mb-6">Novo Aluno</h2>
-              <form onSubmit={criarAluno} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Nome Completo</label>
-                  <input id="nomeNovo" required type="text" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white" />
+            {showModal && (
+              <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000] px-4">
+                <div className="bg-[#141416] border border-zinc-800 p-8 rounded-2xl w-full max-w-md text-white">
+                  <h2 className="text-2xl font-bold mb-6">Novo Aluno</h2>
+                  <form onSubmit={criarAluno} className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-zinc-400 mb-1">Nome Completo</label>
+                      <input required type="text" value={novoAluno.nome} onChange={(e) => setNovoAluno({...novoAluno, nome: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-zinc-400 mb-1">CPF</label>
+                      <input required type="text" maxLength={14} value={novoAluno.cpf} onChange={handleCpfChange} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500" placeholder="000.000.000-00" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-zinc-400 mb-1">E-mail (Opcional)</label>
+                      <input type="email" value={novoAluno.email} onChange={(e) => setNovoAluno({...novoAluno, email: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-zinc-400 mb-1">Plano</label>
+                      <select value={novoAluno.plano} onChange={(e) => setNovoAluno({...novoAluno, plano: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-red-500">
+                        <option value="2x na semana">2x na semana (R$ 130)</option>
+                        <option value="3x na semana">3x na semana (R$ 160)</option>
+                        <option value="Todos os Horários">Todos os Horários (R$ 280)</option>
+                        <option value="Diária">Diária (R$ 40)</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-4 pt-4">
+                      <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 py-2 rounded-lg font-bold transition">Cancelar</button>
+                      <button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded-lg font-bold transition">Cadastrar</button>
+                    </div>
+                  </form>
                 </div>
-                <div>
-                  <label className="block text-sm text-zinc-400 mb-1">CPF</label>
-                  <input id="cpfNovo" required type="text" maxLength={14} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400 mb-1">E-mail (Para enviar senha)</label>
-                  <input id="emailNovo" required type="email" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400 mb-1">Plano</label>
-                  <select id="planoNovo" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-2 text-white">
-                    <option value="2x na semana">2x na semana (R$ 130)</option>
-                    <option value="3x na semana">3x na semana (R$ 160)</option>
-                    <option value="Todos os Horários">Todos os Horários (R$ 280)</option>
-                    <option value="Diária">Diária (R$ 40)</option>
-                  </select>
-                </div>
-                <div className="flex gap-4 pt-4">
-                  <button type="button" onClick={() => (document.getElementById('modalNovoAluno') as HTMLDialogElement).close()} className="flex-1 bg-zinc-800 py-2 rounded-lg font-bold">Cancelar</button>
-                  <button type="submit" className="flex-1 bg-red-600 py-2 rounded-lg font-bold">Cadastrar Aluno</button>
-                </div>
-              </form>
-            </dialog>
+              </div>
+            )}
 
             {/* ALUNOS E MENSALIDADES */}
             <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
               <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">Controle de Mensalidades</h2>
-                <button onClick={() => (document.getElementById('modalNovoAluno') as HTMLDialogElement).showModal()} className="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition">
+                <button onClick={() => setShowModal(true)} className="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition">
                   + Novo Aluno
                 </button>
               </div>
