@@ -33,8 +33,6 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-[#0B0B0C] text-zinc-100 min-h-screen selection:bg-red-600 selection:text-white">
 
@@ -71,10 +69,9 @@
 
       <!-- Action Buttons -->
       <div class="hidden sm:flex items-center gap-3">
-        <!-- Admin Button -->
-        <a href="/admin" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs sm:text-sm font-semibold text-zinc-200 hover:text-white transition">
-          <i data-lucide="lock" class="w-4 h-4 text-red-500"></i>
-          <span>Admin</span>
+        <!-- Admin Link (Discreto) -->
+        <a href="/admin" class="text-xs font-medium text-zinc-500 hover:text-red-500 transition mr-2">
+          Acesso Professor
         </a>
 
         <!-- Portal Button -->
@@ -114,9 +111,9 @@
           <i data-lucide="monitor-play" class="w-4 h-4 text-red-500"></i>
           Área do Aluno
         </a>
-        <a href="/admin" onclick="closeMobileMenu()" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white font-semibold text-sm">
-          <i data-lucide="lock" class="w-4 h-4 text-red-500"></i>
-          Admin
+        <a href="/admin" onclick="closeMobileMenu()" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:text-white font-semibold text-sm transition">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          Acesso Professor
         </a>
         <button onclick="closeMobileMenu(); openBookingModal();" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600 text-white font-bold text-sm shadow-md">
           <i data-lucide="calendar-check" class="w-4 h-4"></i>
@@ -374,8 +371,8 @@
         </p>
       </div>
 
-      <!-- Modalities Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Grid de Modalidades -->
+      <div class="grid grid-cols-1 max-w-xl mx-auto gap-6">
         
         <!-- Muay Thai -->
         <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
@@ -401,132 +398,6 @@
                 Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
               </button>
             </div>
-          </div>
-        </div>
-
-        <!-- Jiu-Jitsu Brasileiro (BJJ) -->
-        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500 transition duration-300 flex flex-col justify-between card-combat">
-          <div class="relative h-56 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" 
-                 alt="Jiu-Jitsu Brasileiro" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
-            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-amber-500 text-black text-xs font-bold uppercase">
-              Arte Suave & Alavancas
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-amber-500 transition">Jiu-Jitsu (Gi & No-Gi)</h4>
-              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                Aprenda a controlar qualquer oponente usando alavancas e técnica no chão. Turmas com kimono e sem kimono (No-Gi).
-              </p>
-            </div>
-            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
-              <span class="text-xs text-zinc-400 font-medium">Iniciante ao Avançado</span>
-              <button onclick="openBookingModal('Jiu-Jitsu (BJJ)')" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1">
-                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- MMA -->
-        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
-          <div class="relative h-56 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?auto=format&fit=crop&w=800&q=80" 
-                 alt="MMA Artes Marciais Mistas" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
-            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-red-700 text-white text-xs font-bold uppercase">
-              Combate Integrado
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Artes Marciais Mistas (MMA)</h4>
-              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                Integração completa de luta em pé, quedas de wrestling na grade e finalizações no chão com estratégia de cage.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
-              <span class="text-xs text-zinc-400 font-medium">Técnica & Grade</span>
-              <button onclick="openBookingModal('MMA')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
-                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kickboxing -->
-        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
-          <div class="relative h-56 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80" 
-                 alt="Kickboxing" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
-            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-zinc-800 text-zinc-200 text-xs font-bold uppercase">
-              Dinâmico & Veloz
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Kickboxing K1</h4>
-              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                Ritmo acelerado, movimentação constante, esquivas e combinações agressivas de boxe com chutes em todas as linhas.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
-              <span class="text-xs text-zinc-400 font-medium">Turmas Noturnas</span>
-              <button onclick="openBookingModal('Kickboxing')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
-                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Funcional de Luta -->
-        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500 transition duration-300 flex flex-col justify-between card-combat">
-          <div class="relative h-56 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80" 
-                 alt="Funcional de Luta" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
-            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-amber-600 text-white text-xs font-bold uppercase">
-              Potência & Gás
-            </span>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-            <div>
-              <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-amber-500 transition">Funcional Fight</h4>
-              <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                Treino de alta intensidade (HIIT) utilizando cordas navais, kettlebells e movimentos de luta para queimar gordura e ganhar explosão.
-              </p>
-            </div>
-            <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
-              <span class="text-xs text-zinc-400 font-medium">Manhãs e Noites</span>
-              <button onclick="openBookingModal('Funcional de Luta')" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1">
-                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pacote Todas as Modalidades -->
-        <div class="rounded-2xl p-8 bg-gradient-to-br from-red-950/60 to-zinc-900 border-2 border-dashed border-red-600/60 flex flex-col justify-between text-center relative overflow-hidden card-combat">
-          <div class="space-y-4">
-            <div class="w-16 h-16 rounded-full bg-red-600/20 border border-red-500/40 mx-auto flex items-center justify-center">
-              <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
-            </div>
-            <h4 class="font-display text-3xl font-bold text-white uppercase">Passaporte Livre BORÜ</h4>
-            <p class="text-sm text-zinc-300 leading-relaxed">
-              Tenha acesso irrestrito a todas as modalidades, horários e tatame livre por uma única mensalidade.
-            </p>
-          </div>
-          <div class="pt-6">
-            <button onclick="openBookingModal('Passaporte Livre')" class="w-full py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm tracking-wider uppercase shadow-lg transition">
-              Quero Acesso Total
-            </button>
           </div>
         </div>
 
@@ -636,93 +507,116 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+      <!-- Planos Mensais -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
         
-        <!-- 1 Modalidade -->
-        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4">
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">Foco Único</span>
-            <h4 class="font-display text-3xl font-bold text-white uppercase">1 Modalidade</h4>
-            <div class="flex items-baseline gap-1">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">169</span>
-              <span class="text-sm text-zinc-400">/mês</span>
+        <!-- 2x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">2x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="target" class="w-12 h-12 text-zinc-600"></i>
             </div>
-            <p class="text-xs text-zinc-400">Ideal para quem quer se especializar em uma única arte.</p>
-            
-            <ul class="pt-6 space-y-3 text-sm text-zinc-300 border-t border-zinc-800">
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Aulas da modalidade escolhida</li>
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> 3x a 5x por semana</li>
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Acesso aos vestiários climatizados</li>
-              <li class="flex items-center gap-2 text-zinc-500"><i data-lucide="x" class="w-4 h-4"></i> Outras modalidades liberadas</li>
-            </ul>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">140</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
           </div>
-
-          <div class="pt-8">
-            <button onclick="openBookingModal('Plano 1 Modalidade')" class="w-full py-3.5 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Começar Agora
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <button onclick="openBookingModal('Plano 2x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
             </button>
           </div>
         </div>
 
-        <!-- Passaporte Livre (Destaque) -->
-        <div class="p-8 rounded-2xl bg-gradient-to-b from-red-950/40 via-zinc-900 to-zinc-900 border-2 border-red-600 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
-          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-red-600 to-amber-500 text-white text-xs font-black uppercase px-4 py-1 rounded-full shadow-lg">
-            Mais Escolhido
-          </div>
-
-          <div class="space-y-4">
-            <span class="text-xs font-bold uppercase tracking-wider text-red-400">Acesso Total</span>
-            <h4 class="font-display text-3xl font-bold text-white uppercase">Passaporte BORÜ</h4>
-            <div class="flex items-baseline gap-1">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-5xl font-extrabold text-white">229</span>
-              <span class="text-sm text-zinc-400">/mês</span>
+        <!-- 3x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">3x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="flame" class="w-12 h-12 text-zinc-500"></i>
             </div>
-            <p class="text-xs text-zinc-300">Treine tudo o que quiser: Muay Thai, BJJ, MMA, Kickboxing e Funcional.</p>
-            
-            <ul class="pt-6 space-y-3 text-sm text-zinc-200 border-t border-zinc-800">
-              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Todas as 5 modalidades liberadas</li>
-              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Treinos ilimitados em qualquer turno</li>
-              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Acesso total à Plataforma Digital</li>
-              <li class="flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-500"></i> Open Mat e treinos livres inclusos</li>
-            </ul>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">160</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
           </div>
-
-          <div class="pt-8">
-            <button onclick="openBookingModal('Passaporte BORÜ Livre')" class="w-full py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider shadow-lg glow-red transition">
-              Garantir Passaporte Livre
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <button onclick="openBookingModal('Plano 3x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
             </button>
           </div>
         </div>
 
-        <!-- Anual Black -->
-        <div class="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4">
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Melhor Custo-Benefício</span>
-            <h4 class="font-display text-3xl font-bold text-white uppercase">Anual Black</h4>
-            <div class="flex items-baseline gap-1">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">189</span>
-              <span class="text-sm text-zinc-400">/mês (plano anual)</span>
+        <!-- 5x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">5x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="zap" class="w-12 h-12 text-zinc-400"></i>
             </div>
-            <p class="text-xs text-zinc-400">Compromisso com seus resultados com a maior economia.</p>
-            
-            <ul class="pt-6 space-y-3 text-sm text-zinc-300 border-t border-zinc-800">
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Todas as modalidades liberadas</li>
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Camiseta Oficial BORÜ exclusiva</li>
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Plataforma com videoaulas HD</li>
-              <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-amber-400"></i> Desconto em seminários e graduações</li>
-            </ul>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">200</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
           </div>
-
-          <div class="pt-8">
-            <button onclick="openBookingModal('Plano Anual Black')" class="w-full py-3.5 rounded-xl border border-zinc-700 hover:border-amber-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Contratar Anual
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <button onclick="openBookingModal('Plano 5x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
             </button>
           </div>
         </div>
 
+        <!-- Livre -->
+        <div class="p-6 rounded-2xl bg-red-700 border-2 border-red-500 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
+          <div class="space-y-2 text-center">
+            <h4 class="font-display text-4xl font-bold text-white uppercase">Livre</h4>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-red-200 block">6x na semana<br>Todos os horários</span>
+            <div class="flex justify-center mt-2 pb-2">
+              <i data-lucide="award" class="w-14 h-14 text-amber-300 drop-shadow-md"></i>
+            </div>
+            <div class="flex items-baseline justify-center gap-1 mt-4">
+              <span class="text-sm font-semibold text-red-200">R$</span>
+              <span class="text-5xl font-extrabold text-white">280</span>
+              <span class="text-sm text-red-200">,00</span>
+            </div>
+          </div>
+          <div class="pt-6 mt-4 border-t border-red-500">
+            <button onclick="openBookingModal('Plano Livre')" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
+              Garantir
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Diária Banner -->
+      <div class="mt-8 rounded-2xl p-6 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+            <i data-lucide="ticket" class="w-6 h-6 text-zinc-400"></i>
+          </div>
+          <div>
+            <h5 class="text-lg font-bold text-white uppercase">Treino Avulso / Diária</h5>
+            <p class="text-sm text-zinc-400">Quer treinar apenas hoje? Pague somente pelo dia.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-baseline gap-1">
+            <span class="text-sm font-semibold text-zinc-400">R$</span>
+            <span class="text-3xl font-extrabold text-white">25</span>
+            <span class="text-sm text-zinc-400">,00</span>
+          </div>
+          <button onclick="openBookingModal('Diária R$25')" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
+            Agendar
+          </button>
+        </div>
       </div>
 
       <!-- Parceiros Corporativos (Wellhub / TotalPass) -->
@@ -969,8 +863,8 @@
   <div id="toast-container"></div>
 
   <!-- JavaScript Scripts -->
-  <script src="js/mockData.js"></script>
-  <script src="js/app.js"></script>
+  <script src="/mockData.js"></script>
+  <script src="/app.js"></script>
   <script>
     lucide.createIcons();
     document.getElementById('current-year').textContent = new Date().getFullYear();

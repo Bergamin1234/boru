@@ -194,63 +194,18 @@ const INITIAL_LESSONS = [
 
 const INSTRUCTORS_DATA = [
   {
-    id: "rafael-silva",
-    name: "Kru Rafael Silva",
-    role: "Head Coach de Muay Thai & Striking",
-    cref: "Graduação Prajied Preto e Ouro",
-    bio: "Mais de 16 anos dedicados à arte marcial tailandesa. Passou por temporadas de treinamento intensivo em Bangcoc e Phuket, formando atletas que competem em eventos nacionais e internacionais.",
+    id: "felipe-boru",
+    name: "Kru Felipe Borü",
+    role: "Head Coach de Muay Thai & Fundador",
+    cref: "Grau Preto (Kru)",
+    bio: "Mais de anos dedicados à arte marcial tailandesa. Formando atletas e transformando vidas através da disciplina e excelência técnica do Muay Thai.",
     image: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=600&q=80",
-    specialties: ["Muay Thai Tradicional", "Clinch & Cotovelos", "Defesa Pessoal e Striking"],
+    specialties: ["Muay Thai Tradicional", "Clinch & Cotovelos", "Defesa Pessoal"],
     achievements: [
-      "Prajied Preto e Ouro pela Confederação de Muay Thai",
-      "Ex-Atleta Profissional com 28 lutas",
-      "Mais de 1.200 alunos formados no Norte do Brasil",
-      "Head Coach da Equipe de Competição BORÜ"
-    ]
-  },
-  {
-    id: "marcos-prado",
-    name: "Prof. Marcos Prado (Tubarão)",
-    role: "Head Coach de Jiu-Jitsu Brasileiro (BJJ)",
-    cref: "Faixa Preta 3º Grau CBJJ / IBJJF",
-    bio: "Referência no Jiu-Jitsu do Norte, faixa preta há mais de uma década. Mestre do jogo posicional justo e da defesa pessoal aplicada, com foco em disciplina, técnica refinada e evolução do iniciante ao competidor.",
-    image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
-    specialties: ["BJJ com Kimono (Gi)", "No-Gi (Sem Kimono)", "Jiu-Jitsu para Defesa Pessoal"],
-    achievements: [
-      "Faixa Preta 3º Grau Diplomado CBJJ/IBJJF",
-      "Bicampeão Sul-Americano de BJJ",
-      "Árbitro Oficial de Federações de Jiu-Jitsu",
-      "Especialista em Metodologia de Ensino para Iniciantes"
-    ]
-  },
-  {
-    id: "diego-albuquerque",
-    name: "Diego Albuquerque",
-    role: "Coordenador Técnico de MMA & Wrestling",
-    cref: "Faixa Preta de BJJ e Especialista em Luta Olímpica",
-    bio: "Veterano dos maiores eventos de MMA do cenário nacional com cartel expressivo. Une a técnica do wrestling americano com o jiu-jitsu brasileiro e o striking dinâmico no octógono.",
-    image: "https://images.unsplash.com/photo-1517344884509-a0c97ec11bcc?auto=format&fit=crop&w=600&q=80",
-    specialties: ["MMA Integrado", "Grade & Quedas (Wrestling)", "Ground and Pound Control"],
-    achievements: [
-      "Cartel Profissional de 12 vitórias no MMA",
-      "Treinador de Atletas Contratados em Eventos Internacionais",
-      "Especialista em Tática de Cage e Transição",
-      "Certificado em Biomecânica de Esportes de Combate"
-    ]
-  },
-  {
-    id: "bruno-castro",
-    name: "Bruno Castro",
-    role: "Fisiologista & Preparador Físico de Lutas",
-    cref: "CREF 004821-G/RO",
-    bio: "Bacharel em Educação Física e Pós-Graduado em Fisiologia do Exercício de Alto Rendimento. Responsável pelo programa 'Funcional Fight', que desenvolve potência, resistência cardíaca e queima de gordura acelerada.",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
-    specialties: ["Condicionamento Metabólico (HIIT)", "Prevenção de Lesões", "Ganho de Potência Explosiva"],
-    achievements: [
-      "Preparador Físico Oficial dos Atletas BORÜ",
-      "Especialista em Periodização para Rounds de Luta",
-      "Desenvolvedor da Metodologia Funcional Fight BORÜ",
-      "Mais de 10 anos de atuação em Porto Velho"
+      "Grau Preto em Muay Thai",
+      "Fundador do CT BORÜ",
+      "Centenas de alunos formados no Norte do Brasil",
+      "Especialista em Metodologia de Ensino"
     ]
   }
 ];
@@ -290,65 +245,28 @@ const FACILITIES_DATA = [
 
 const SCHEDULE_DATA = [
   {
-    day: "Segunda-feira",
+    day: "Segunda, Quarta e Sexta",
     periods: [
-      { time: "06:30 - 07:30", modality: "Funcional de Luta", level: "Geral", instructor: "Bruno Castro", shift: "manha" },
-      { time: "08:00 - 09:30", modality: "Jiu-Jitsu (BJJ)", level: "Todos os Níveis", instructor: "Marcos Prado", shift: "manha" },
-      { time: "12:00 - 13:00", modality: "Muay Thai", level: "Iniciante / Médio", instructor: "Rafael Silva", shift: "tarde" },
-      { time: "17:30 - 18:30", modality: "Kickboxing", level: "Técnico / Sparring", instructor: "Lucas Andrade", shift: "noite" },
-      { time: "18:45 - 20:00", modality: "Jiu-Jitsu (BJJ)", level: "Avançado / Competição", instructor: "Marcos Prado", shift: "noite" },
-      { time: "20:15 - 21:30", modality: "MMA", level: "Intermediário / Avançado", instructor: "Diego Albuquerque", shift: "noite" }
+      { time: "16:00 - 17:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "tarde" },
+      { time: "18:00 - 19:00", modality: "Muay Thai (KIDS)", level: "Infantil", instructor: "Felipe Borü", shift: "noite" },
+      { time: "19:00 - 20:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "noite" },
+      { time: "20:00 - 21:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "noite" }
     ]
   },
   {
-    day: "Terça-feira",
+    day: "Terça e Quinta",
     periods: [
-      { time: "07:00 - 08:00", modality: "Muay Thai", level: "Iniciante", instructor: "Rafael Silva", shift: "manha" },
-      { time: "09:00 - 10:00", modality: "Funcional de Luta", level: "Geral", instructor: "Bruno Castro", shift: "manha" },
-      { time: "15:00 - 16:30", modality: "MMA - Grade & Quedas", level: "Geral", instructor: "Diego Albuquerque", shift: "tarde" },
-      { time: "18:00 - 19:15", modality: "Muay Thai", level: "Intermediário", instructor: "Rafael Silva", shift: "noite" },
-      { time: "19:30 - 20:45", modality: "Jiu-Jitsu No-Gi (Sem Kimono)", level: "Todos os Níveis", instructor: "Marcos Prado", shift: "noite" },
-      { time: "21:00 - 22:00", modality: "Kickboxing", level: "Avançado", instructor: "Lucas Andrade", shift: "noite" }
-    ]
-  },
-  {
-    day: "Quarta-feira",
-    periods: [
-      { time: "06:30 - 07:30", modality: "Funcional de Luta", level: "Geral", instructor: "Bruno Castro", shift: "manha" },
-      { time: "08:00 - 09:30", modality: "Jiu-Jitsu (BJJ)", level: "Fundamentos", instructor: "Marcos Prado", shift: "manha" },
-      { time: "12:00 - 13:00", modality: "Muay Thai", level: "Geral", instructor: "Rafael Silva", shift: "tarde" },
-      { time: "18:00 - 19:00", modality: "Kickboxing", level: "Iniciante / Médio", instructor: "Lucas Andrade", shift: "noite" },
-      { time: "19:15 - 20:30", modality: "Jiu-Jitsu (BJJ)", level: "Geral & Rola", instructor: "Marcos Prado", shift: "noite" },
-      { time: "20:30 - 21:45", modality: "MMA Striking", level: "Competição", instructor: "Diego Albuquerque", shift: "noite" }
-    ]
-  },
-  {
-    day: "Quinta-feira",
-    periods: [
-      { time: "07:00 - 08:00", modality: "Muay Thai", level: "Geral", instructor: "Rafael Silva", shift: "manha" },
-      { time: "09:00 - 10:00", modality: "Funcional de Luta", level: "Força & Potência", instructor: "Bruno Castro", shift: "manha" },
-      { time: "16:00 - 17:15", modality: "Kickboxing", level: "Drills Técnicos", instructor: "Lucas Andrade", shift: "tarde" },
-      { time: "18:00 - 19:15", modality: "Muay Thai", level: "Avançado & Clinch", instructor: "Rafael Silva", shift: "noite" },
-      { time: "19:30 - 20:45", modality: "Jiu-Jitsu No-Gi", level: "Avançado", instructor: "Marcos Prado", shift: "noite" },
-      { time: "21:00 - 22:00", modality: "MMA Integrado", level: "Geral", instructor: "Diego Albuquerque", shift: "noite" }
-    ]
-  },
-  {
-    day: "Sexta-feira",
-    periods: [
-      { time: "06:30 - 07:30", modality: "Funcional de Luta", level: "Geral", instructor: "Bruno Castro", shift: "manha" },
-      { time: "08:00 - 09:30", modality: "Jiu-Jitsu (BJJ)", level: "Todos os Níveis", instructor: "Marcos Prado", shift: "manha" },
-      { time: "17:00 - 18:30", modality: "Open Mat (Tatame Aberto)", level: "Livre", instructor: "Equipe BORÜ", shift: "noite" },
-      { time: "18:45 - 20:00", modality: "Muay Thai Sparring", level: "Intermediário+", instructor: "Rafael Silva", shift: "noite" },
-      { time: "20:00 - 21:30", modality: "Sexta do Combate (MMA/BJJ)", level: "Geral", instructor: "Diego Albuquerque", shift: "noite" }
+      { time: "15:00 - 16:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "tarde" },
+      { time: "19:00 - 20:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "noite" },
+      { time: "20:00 - 21:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "noite" },
+      { time: "22:30 - 23:30", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "noite" }
     ]
   },
   {
     day: "Sábado",
     periods: [
-      { time: "08:30 - 09:45", modality: "Funcional Fight Power", level: "Geral", instructor: "Bruno Castro", shift: "manha" },
-      { time: "10:00 - 11:30", modality: "Jiu-Jitsu Master Class", level: "Todos os Níveis", instructor: "Marcos Prado", shift: "manha" },
-      { time: "11:30 - 13:00", modality: "Muay Thai & K1 Workshop", level: "Todos os Níveis", instructor: "Rafael Silva", shift: "manha" }
+      { time: "08:00 - 09:00", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "manha" },
+      { time: "12:30 - 13:30", modality: "Muay Thai (ADULTOS)", level: "Todos os Níveis", instructor: "Felipe Borü", shift: "tarde" }
     ]
   }
 ];

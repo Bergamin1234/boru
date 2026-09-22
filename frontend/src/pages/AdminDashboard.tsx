@@ -73,7 +73,7 @@ export default function AdminDashboard() {
         <div className="bg-[#141416] border border-zinc-800 p-8 rounded-2xl w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black text-white tracking-widest mb-1">BORÜ</h1>
-            <p className="text-red-500 font-bold text-sm tracking-widest uppercase">Admin</p>
+            <p className="text-red-500 font-bold text-sm tracking-widest uppercase">Acesso Professor</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-wider text-white">
-              PAINEL <span className="text-red-600">ADMINISTRATIVO</span>
+              PAINEL <span className="text-red-600">DO PROFESSOR</span>
             </h1>
             <p className="text-zinc-400 mt-1">Gestão de Alunos, Mensalidades e Triagem</p>
           </div>
