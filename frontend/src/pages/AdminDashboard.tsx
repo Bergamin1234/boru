@@ -10,7 +10,11 @@ export default function AdminDashboard() {
   
   const [metricas, setMetricas] = useState({ totalAlunos: 0, assinaturasAtivas: 0, inadimplentes: 0 });
   const [alunos, setAlunos] = useState<any[]>([]);
+  const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Aba ativa: 'alunos' | 'agendamentos'
+  const [abaAtiva, setAbaAtiva] = useState('alunos');
 
   // Estados do Modal
   const [showModal, setShowModal] = useState(false);
@@ -25,9 +29,13 @@ export default function AdminDashboard() {
   const carregarDashboard = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/admin/dashboard`);
-      setMetricas(response.data.metricas);
-      setAlunos(response.data.alunos);
+      const [dashRes, agendRes] = await Promise.all([
+        axios.get(`${API_URL}/admin/dashboard`),
+        axios.get(`${API_URL}/admin/agendamentos`)
+      ]);
+      setMetricas(dashRes.data.metricas);
+      setAlunos(dashRes.data.alunos);
+      setAgendamentos(agendRes.data);
     } catch (error) {
       console.error('Erro ao carregar dashboard', error);
     } finally {
@@ -174,68 +182,130 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* ALUNOS E MENSALIDADES */}
-            <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">Controle de Mensalidades</h2>
-                <button onClick={() => setShowModal(true)} className="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition">
-                  + Novo Aluno
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-xs font-semibold">
-                    <tr>
-                      <th className="px-6 py-4">Aluno</th>
-                      <th className="px-6 py-4">Plano</th>
-                      <th className="px-6 py-4">Vencimento</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {alunos.length === 0 && (
+            {/* TABS */}
+            <div className="flex gap-4 border-b border-zinc-800 pb-4">
+              <button 
+                onClick={() => setAbaAtiva('alunos')} 
+                className={`font-bold pb-2 transition ${abaAtiva === 'alunos' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                Alunos e Mensalidades
+              </button>
+              <button 
+                onClick={() => setAbaAtiva('agendamentos')} 
+                className={`font-bold pb-2 transition flex items-center gap-2 ${abaAtiva === 'agendamentos' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                Aulas Experimentais
+                {agendamentos.length > 0 && (
+                  <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">{agendamentos.length}</span>
+                )}
+              </button>
+            </div>
+
+            {/* CONTEÚDO DAS TABS */}
+            {abaAtiva === 'alunos' ? (
+              <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
+                <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-white">Controle de Mensalidades</h2>
+                  <button onClick={() => setShowModal(true)} className="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition">
+                    + Novo Aluno
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-xs font-semibold">
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
-                          Nenhum aluno cadastrado no banco de dados ainda.
-                        </td>
+                        <th className="px-6 py-4">Aluno</th>
+                        <th className="px-6 py-4">Plano</th>
+                        <th className="px-6 py-4">Vencimento</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-right">Ação</th>
                       </tr>
-                    )}
-                    {alunos.map((aluno) => (
-                      <tr key={aluno.id} className="hover:bg-[#1A1A1E]/50 transition">
-                        <td className="px-6 py-4 font-bold text-white">{aluno.nome}</td>
-                        <td className="px-6 py-4 text-zinc-400">{aluno.plano}</td>
-                        <td className="px-6 py-4">
-                          {aluno.diasVencimento === null ? (
-                            <span className="text-zinc-600">-</span>
-                          ) : aluno.diasVencimento < 0 ? (
-                            <span className="text-red-500 font-bold">Atrasado há {Math.abs(aluno.diasVencimento)} dias</span>
-                          ) : (
-                            <span className="text-yellow-500 font-bold">Faltam {aluno.diasVencimento} dias</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          {aluno.status === 'PAGO' ? (
-                            <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">
-                              Em Dia
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20 uppercase">
-                              Pendente
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-zinc-400 hover:text-white transition">
-                            Cobrar / Editar
-                          </button>
-                        </td>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {alunos.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                            Nenhum aluno cadastrado no banco de dados ainda.
+                          </td>
+                        </tr>
+                      )}
+                      {alunos.map((aluno) => (
+                        <tr key={aluno.id} className="hover:bg-[#1A1A1E]/50 transition">
+                          <td className="px-6 py-4 font-bold text-white">{aluno.nome}</td>
+                          <td className="px-6 py-4 text-zinc-400">{aluno.plano}</td>
+                          <td className="px-6 py-4">
+                            {aluno.diasVencimento === null ? (
+                              <span className="text-zinc-600">-</span>
+                            ) : aluno.diasVencimento < 0 ? (
+                              <span className="text-red-500 font-bold">Atrasado há {Math.abs(aluno.diasVencimento)} dias</span>
+                            ) : (
+                              <span className="text-yellow-500 font-bold">Faltam {aluno.diasVencimento} dias</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            {aluno.status === 'PAGO' ? (
+                              <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">
+                                Em Dia
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20 uppercase">
+                                Pendente
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button className="text-zinc-400 hover:text-white transition">
+                              Cobrar / Editar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : (
+              <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
+                <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-white">Agendamentos Experimentais</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-xs font-semibold">
+                      <tr>
+                        <th className="px-6 py-4">Nome</th>
+                        <th className="px-6 py-4">WhatsApp</th>
+                        <th className="px-6 py-4">Dia</th>
+                        <th className="px-6 py-4">Horário</th>
+                        <th className="px-6 py-4 text-right">Ação</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {agendamentos.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                            Nenhum agendamento experimental pendente.
+                          </td>
+                        </tr>
+                      )}
+                      {agendamentos.map((ag) => (
+                        <tr key={ag.id} className="hover:bg-[#1A1A1E]/50 transition">
+                          <td className="px-6 py-4 font-bold text-white">{ag.nome}</td>
+                          <td className="px-6 py-4 text-zinc-400">{ag.telefone}</td>
+                          <td className="px-6 py-4 font-bold text-amber-500">{ag.data}</td>
+                          <td className="px-6 py-4 font-bold text-white">{ag.horario}</td>
+                          <td className="px-6 py-4 text-right flex justify-end gap-2">
+                            <a href={`https://wa.me/55${ag.telefone.replace(/\D/g, '')}`} target="_blank" className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-bold transition">
+                              Chamar no Whats
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

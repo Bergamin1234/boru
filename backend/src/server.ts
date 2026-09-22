@@ -214,6 +214,92 @@ app.get('/api/admin/dashboard', async (req, res) => {
   }
 });
 
+// ==========================================
+// NOVAS ROTAS (CHECKOUT E AGENDAMENTO)
+// ==========================================
+
+// Criar novo aluno via Checkout no site
+app.post('/api/checkout', async (req, res) => {
+  const { nome, cpf, email, senha, plano, valor } = req.body;
+  if (!nome || !cpf || !senha) {
+    return res.status(400).json({ erro: 'Nome, CPF e senha são obrigatórios.' });
+  }
+
+  const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+  
+  try {
+    const novoAluno = await prisma.aluno.create({
+      data: {
+        nome,
+        cpf: cpfLimpo,
+        email,
+        senha, // Senha criada pelo próprio aluno
+        primeiroAcesso: false, // Não precisa trocar a senha
+        plano,
+        mensalidades: {
+          create: {
+            valor: parseFloat(valor),
+            dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000), // Daqui 30 dias
+            dataPagamento: new Date(),
+            status: 'PAGO' // Pago no ato do checkout
+          }
+        }
+      }
+    });
+
+    res.json({ mensagem: 'Pagamento aprovado e cadastro concluído!', aluno: novoAluno });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ erro: 'Já existe um aluno com este CPF ou E-mail.' });
+    }
+    res.status(500).json({ erro: 'Erro ao processar checkout.' });
+  }
+});
+
+// Renovar mensalidade (Portal do Aluno)
+app.post('/api/alunos/pagar', async (req, res) => {
+  const { alunoId, valor } = req.body;
+  try {
+    const mensalidade = await prisma.mensalidade.create({
+      data: {
+        alunoId,
+        valor: parseFloat(valor),
+        dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
+        dataPagamento: new Date(),
+        status: 'PAGO'
+      }
+    });
+    res.json({ mensagem: 'Mensalidade renovada com sucesso!', mensalidade });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao registrar pagamento.' });
+  }
+});
+
+// Criar Agendamento Experimental
+app.post('/api/agendamentos', async (req, res) => {
+  const { nome, telefone, data, horario } = req.body;
+  try {
+    const agendamento = await prisma.agendamentoExperimental.create({
+      data: { nome, telefone, data, horario, status: 'PENDENTE' }
+    });
+    res.json({ mensagem: 'Aula experimental agendada!', agendamento });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao agendar aula.' });
+  }
+});
+
+// Listar Agendamentos (Admin)
+app.get('/api/admin/agendamentos', async (req, res) => {
+  try {
+    const agendamentos = await prisma.agendamentoExperimental.findMany({
+      orderBy: { criadoEm: 'desc' }
+    });
+    res.json(agendamentos);
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao buscar agendamentos.' });
+  }
+});
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

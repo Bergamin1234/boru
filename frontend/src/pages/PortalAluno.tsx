@@ -223,81 +223,172 @@ export default function PortalAluno() {
   }
 
   // TELA DO PORTAL (LOGADO)
+  const [abaAtiva, setAbaAtiva] = useState('aulas');
+
+  const renovarMensalidade = async () => {
+    setLoading(true);
+    // Simular delay do PIX
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      await axios.post(`${API_URL}/alunos/pagar`, {
+        alunoId: alunoLogado.id,
+        valor: 160 // mock genérico para renovação, idealmente puxa do plano
+      });
+      alert('Pagamento via PIX confirmado! Mensalidade renovada por mais 30 dias.');
+      
+      // Atualiza o estado local para refletir (mock simples)
+      const novaMensalidade = { dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), status: 'PAGO' };
+      setAlunoLogado({
+        ...alunoLogado,
+        mensalidades: [novaMensalidade, ...(alunoLogado.mensalidades || [])]
+      });
+    } catch (error) {
+      alert('Erro ao renovar mensalidade.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calcularDiasVencimento = () => {
+    if (!alunoLogado?.mensalidades || alunoLogado.mensalidades.length === 0) return null;
+    const ultima = alunoLogado.mensalidades[0];
+    const agora = new Date();
+    const venc = new Date(ultima.dataVencimento);
+    const diff = venc.getTime() - agora.getTime();
+    return Math.ceil(diff / (1000 * 3600 * 24));
+  };
+
+  const dias = calcularDiasVencimento();
+
   return (
     <div className="fixed inset-0 overflow-y-auto bg-[#0B0B0C] text-zinc-100 font-sans p-6 z-[9999]">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* HEADER */}
-        <header className="flex items-center justify-between border-b border-zinc-800 pb-6">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
           <div>
             <h1 className="text-3xl font-black tracking-wider text-white">
               ÁREA DO <span className="text-red-600">ALUNO</span>
             </h1>
             <p className="text-zinc-400 mt-1">Bem-vindo de volta, {alunoLogado?.nome}!</p>
           </div>
-          <Link to="/" className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition">
-            Voltar ao Início
+          <Link to="/" onClick={() => setIsLoggedIn(false)} className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold transition text-center">
+            Sair (Logout)
           </Link>
         </header>
 
-        {/* MEU PLANO */}
-        <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            📋 Meu Plano
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-            <div>
-              <p className="text-zinc-400 text-sm">Plano Atual</p>
-              <p className="text-2xl font-bold text-red-500">{alunoLogado?.plano || 'Sem Plano Fixo'}</p>
-            </div>
-            <div className="text-right">
-              <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                Ativo
-              </span>
-            </div>
-          </div>
-        </section>
+        {/* TABS */}
+        <div className="flex gap-4 border-b border-zinc-800 pb-4">
+          <button 
+            onClick={() => setAbaAtiva('aulas')} 
+            className={`font-bold pb-2 transition ${abaAtiva === 'aulas' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            Meu Plano & Aulas
+          </button>
+          <button 
+            onClick={() => setAbaAtiva('financeiro')} 
+            className={`font-bold pb-2 transition ${abaAtiva === 'financeiro' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            Financeiro (Pagamentos)
+          </button>
+        </div>
 
-        {/* AULAS E CHECK-IN */}
-        <section>
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            🥊 Aulas Agendadas (Próximos 3 Dias)
-          </h2>
-          {aulas.length === 0 ? (
-            <p className="text-zinc-500">Nenhuma aula encontrada para os próximos dias.</p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {aulas.map((aula) => (
-                <div key={aula.id} className="bg-[#1A1A1E] border border-zinc-800 rounded-xl p-5 flex flex-col justify-between hover:border-red-500/50 transition">
-                  <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-bold text-zinc-500">{aula.tipo}</span>
-                      <span className="text-lg font-black text-white">{aula.horario}</span>
-                    </div>
-                    <h3 className="text-base font-semibold text-zinc-300">{aula.titulo}</h3>
-                    <p className="text-xs text-zinc-500 mt-1">Prof. Felipe Borü</p>
-                  </div>
-                  
-                  <div className="mt-6">
-                    {aula.checkinFeito ? (
-                      <button disabled className="w-full py-2.5 rounded-lg bg-green-600/20 text-green-500 font-bold text-sm border border-green-600/30 cursor-not-allowed">
-                        ✓ Check-in Confirmado
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => fazerCheckin(aula.id)}
-                        className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition transform active:scale-95"
-                      >
-                        Fazer Check-in
-                      </button>
-                    )}
-                  </div>
+        {abaAtiva === 'aulas' ? (
+          <>
+            {/* MEU PLANO */}
+            <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                📋 Meu Plano
+              </h2>
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                <div>
+                  <p className="text-zinc-400 text-sm">Plano Atual</p>
+                  <p className="text-2xl font-bold text-red-500">{alunoLogado?.plano || 'Sem Plano Fixo'}</p>
                 </div>
-              ))}
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Ativo
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* AULAS E CHECK-IN */}
+            <section>
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                🥊 Aulas Agendadas (Próximos 3 Dias)
+              </h2>
+              {aulas.length === 0 ? (
+                <p className="text-zinc-500">Nenhuma aula encontrada para os próximos dias.</p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {aulas.map((aula) => (
+                    <div key={aula.id} className="bg-[#1A1A1E] border border-zinc-800 rounded-xl p-5 flex flex-col justify-between hover:border-red-500/50 transition">
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-bold text-zinc-500">{aula.tipo}</span>
+                          <span className="text-lg font-black text-white">{aula.horario}</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-zinc-300">{aula.titulo}</h3>
+                        <p className="text-xs text-zinc-500 mt-1">Prof. Felipe Borü</p>
+                      </div>
+                      
+                      <div className="mt-6">
+                        {aula.checkinFeito ? (
+                          <button disabled className="w-full py-2.5 rounded-lg bg-green-600/20 text-green-500 font-bold text-sm border border-green-600/30 cursor-not-allowed">
+                            ✓ Check-in Confirmado
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => fazerCheckin(aula.id)}
+                            className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition transform active:scale-95"
+                          >
+                            Fazer Check-in
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-zinc-800">
+              <h2 className="text-xl font-bold text-white">Status da Assinatura</h2>
             </div>
-          )}
-        </section>
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
+                <div className="text-center md:text-left">
+                  <p className="text-zinc-400 text-sm mb-1">Dias restantes para renovação</p>
+                  {dias === null ? (
+                    <p className="text-3xl font-black text-zinc-500">Nenhuma mensalidade</p>
+                  ) : dias < 0 ? (
+                    <p className="text-3xl font-black text-red-500">Atrasado há {Math.abs(dias)} dias</p>
+                  ) : (
+                    <p className="text-4xl font-black text-green-500">{dias} <span className="text-lg font-semibold text-zinc-500">dias</span></p>
+                  )}
+                </div>
+                
+                <div className="w-full md:w-auto">
+                  <button 
+                    onClick={renovarMensalidade}
+                    disabled={loading || (dias !== null && dias > 5)} 
+                    className={`w-full md:w-auto px-8 py-4 rounded-xl font-black uppercase tracking-wider transition ${dias !== null && dias > 5 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50'}`}
+                  >
+                    {loading ? 'Gerando PIX...' : 'Renovar via PIX'}
+                  </button>
+                  {dias !== null && dias > 5 && (
+                    <p className="text-xs text-zinc-500 text-center mt-2">Disponível apenas 5 dias antes do vencimento.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
       </div>
     </div>
   );

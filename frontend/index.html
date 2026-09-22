@@ -81,10 +81,10 @@
         </a>
 
         <!-- Schedule Trial CTA -->
-        <button onclick="openBookingModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-red-900/40 hover:shadow-red-700/60 transition transform active:scale-95">
+        <a href="/agendar" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-red-900/40 hover:shadow-red-700/60 transition transform active:scale-95">
           <i data-lucide="flame" class="w-4 h-4 text-amber-300 animate-pulse"></i>
           <span>Aula Experimental</span>
-        </button>
+        </a>
       </div>
 
       <!-- Mobile Menu Toggle -->
@@ -115,10 +115,10 @@
           <i data-lucide="lock" class="w-4 h-4"></i>
           Acesso Professor
         </a>
-        <button onclick="closeMobileMenu(); openBookingModal();" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600 text-white font-bold text-sm shadow-md">
+        <a href="/agendar" onclick="closeMobileMenu()" class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-md transition">
           <i data-lucide="calendar-check" class="w-4 h-4"></i>
-          Agendar Aula Gratuita no WhatsApp
-        </button>
+          Agendar Aula Experimental
+        </a>
       </div>
     </div>
   </header>
@@ -153,7 +153,7 @@
 
           <!-- CTAs -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-            <button onclick="openBookingModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-base uppercase tracking-wider glow-red transition transform hover:-translate-y-0.5 active:scale-95">
+            <a href="/agendar" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-base uppercase tracking-wider glow-red transition transform hover:-translate-y-0.5 active:scale-95">
               <i data-lucide="check-circle-2" class="w-5 h-5 text-amber-300"></i>
               <span>Agendar Aula Gratuita</span>
             </button>
@@ -207,7 +207,7 @@
                     <p class="text-xs text-zinc-400">Acolhimento para iniciantes sem machucados</p>
                   </div>
                 </div>
-                <button onclick="openBookingModal()" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition">
+                <a href="/agendar" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition">
                   Experimentar
                 </button>
               </div>
@@ -297,9 +297,8 @@
           </div>
 
           <div class="pt-2 flex flex-wrap gap-4">
-            <button onclick="openBookingModal()" class="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm uppercase tracking-wider shadow-lg transition">
-              Agendar Minha Primeira Aula
-            </button>
+            <a href="/agendar" class="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm uppercase tracking-wider shadow-lg transition">
+              Agendar Minha Primeira Aula</a>
             <a href="#estrutura" class="px-6 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm transition">
               Ver Nossa Estrutura
             </a>
@@ -394,9 +393,9 @@
             </div>
             <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
               <span class="text-xs text-zinc-400 font-medium">Turmas: Manhã, Tarde e Noite</span>
-              <button onclick="openBookingModal('Muay Thai')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
+              <a href="/agendar" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
                 Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -525,9 +524,9 @@
             </div>
           </div>
           <div class="pt-6 mt-6 border-t border-zinc-800">
-            <button onclick="openBookingModal('Plano 2x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+            <a href="/checkout?plano=2x%20na%20semana&valor=140" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
               Assinar Plano
-            </button>
+            </a>
           </div>
         </div>
 
@@ -546,9 +545,9 @@
             </div>
           </div>
           <div class="pt-6 mt-6 border-t border-zinc-800">
-            <button onclick="openBookingModal('Plano 3x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+            <a href="/checkout?plano=3x%20na%20semana&valor=160" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
               Assinar Plano
-            </button>
+            </a>
           </div>
         </div>
 
@@ -567,9 +566,9 @@
             </div>
           </div>
           <div class="pt-6 mt-6 border-t border-zinc-800">
-            <button onclick="openBookingModal('Plano 5x na semana')" class="w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+            <a href="/checkout?plano=5x%20na%20semana&valor=200" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
               Assinar Plano
-            </button>
+            </a>
           </div>
         </div>
 
@@ -588,9 +587,9 @@
             </div>
           </div>
           <div class="pt-6 mt-4 border-t border-red-500">
-            <button onclick="openBookingModal('Plano Livre')" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
+            <a href="/checkout?plano=Livre&valor=280" class="block text-center w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
               Garantir
-            </button>
+            </a>
           </div>
         </div>
 
@@ -613,9 +612,9 @@
             <span class="text-3xl font-extrabold text-white">25</span>
             <span class="text-sm text-zinc-400">,00</span>
           </div>
-          <button onclick="openBookingModal('Diária R$25')" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
+          <a href="/checkout?plano=Diária&valor=25" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
             Agendar
-          </button>
+          </a>
         </div>
       </div>
 
@@ -724,10 +723,10 @@
               <i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i>
               @borucentrodecombate
             </a>
-            <button onclick="openBookingModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm">
+            <a href="/agendar" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm">
               <i data-lucide="send" class="w-4 h-4"></i>
               Conversar no WhatsApp
-            </button>
+            </a>
           </div>
         </div>
 
@@ -774,11 +773,12 @@
           <a href="#professores" class="hover:text-zinc-300 transition">Professores</a>
           <a href="#estrutura" class="hover:text-zinc-300 transition">Estrutura</a>
           <a href="#horarios" class="hover:text-zinc-300 transition">Horários</a>
-          <a href="portal.html" class="hover:text-red-400 transition font-bold">Área do Aluno</a>
+          <a href="/portal" class="hover:text-red-400 transition font-bold">Área do Aluno</a>
         </div>
 
-        <div class="text-xs text-center md:text-right">
-          &copy; <span id="current-year"></span> BORÜ Centro de Combate. Todos os direitos reservados.
+        <div class="text-xs text-center md:text-right flex flex-col gap-1 items-end">
+          <span>&copy; <span id="current-year"></span> BORÜ Centro de Combate. Todos os direitos reservados.</span>
+          <a href="/admin" class="hover:text-red-500 transition opacity-30 hover:opacity-100 mt-1">Acesso de Professor</a>
         </div>
 
       </div>
