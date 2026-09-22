@@ -195,6 +195,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
         nome: aluno.nome,
         plano: aluno.plano || 'Sem Plano Fixo',
         cpf: aluno.cpf,
+        telefone: aluno.telefone,
         status: statusMensalidade,
         diasVencimento
       };
@@ -211,6 +212,43 @@ app.get('/api/admin/dashboard', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ erro: 'Erro ao buscar dados do painel.' });
+  }
+});
+
+// Admin registra um pagamento manual (Dinheiro/Pix)
+app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const aluno = await prisma.aluno.findUnique({
+      where: { id },
+      include: { mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 } }
+    });
+
+    if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado' });
+
+    let novoVencimento = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000); // Daqui 30 dias
+
+    // Se já tinha mensalidade, joga +30 dias pra frente da última data
+    if (aluno.mensalidades.length > 0) {
+      const ultima = aluno.mensalidades[0];
+      if (ultima.dataVencimento > new Date()) {
+        novoVencimento = new Date(ultima.dataVencimento.getTime() + 30 * 24 * 60 * 60 * 1000);
+      }
+    }
+
+    const mensalidade = await prisma.mensalidade.create({
+      data: {
+        alunoId: id,
+        valor: aluno.mensalidades[0]?.valor || 160.00,
+        dataVencimento: novoVencimento,
+        dataPagamento: new Date(),
+        status: 'PAGO'
+      }
+    });
+
+    res.json({ mensagem: 'Pagamento registrado com sucesso!', mensalidade });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao registrar pagamento manual.' });
   }
 });
 

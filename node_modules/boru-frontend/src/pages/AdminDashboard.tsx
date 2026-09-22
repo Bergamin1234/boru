@@ -65,6 +65,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleCobrar = (aluno: any) => {
+    const tel = aluno.telefone || '5569999999999';
+    const msg = encodeURIComponent(`Olá ${aluno.nome}, sua mensalidade do plano ${aluno.plano} consta como pendente no nosso sistema. Caso já tenha realizado o pagamento, desconsidere!`);
+    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  };
+
+  const handleRegistrarPagamento = async (aluno: any) => {
+    if (confirm(`Deseja registrar o pagamento de ${aluno.nome} e renovar por +30 dias?`)) {
+      try {
+        const response = await axios.post(`${API_URL}/admin/alunos/${aluno.id}/pagar`);
+        alert(response.data.mensagem);
+        carregarDashboard();
+      } catch (error: any) {
+        alert(error.response?.data?.erro || 'Erro ao registrar pagamento.');
+      }
+    }
+  };
+
   // Formatação de CPF no formulário do Admin
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let v = e.target.value.replace(/\D/g, "");
@@ -254,9 +272,22 @@ export default function AdminDashboard() {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button className="text-zinc-400 hover:text-white transition">
-                              Cobrar / Editar
-                            </button>
+                            <div className="flex gap-2 justify-end">
+                              <button 
+                                onClick={() => handleRegistrarPagamento(aluno)} 
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white font-medium text-xs rounded transition"
+                                title="Registrar Pagamento"
+                              >
+                                Pago
+                              </button>
+                              <button 
+                                onClick={() => handleCobrar(aluno)} 
+                                className="px-3 py-1 bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-300 font-medium text-xs rounded transition"
+                                title="Cobrar via WhatsApp"
+                              >
+                                Cobrar
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
