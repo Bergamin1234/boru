@@ -195,14 +195,14 @@ const INITIAL_LESSONS = [
 const INSTRUCTORS_DATA = [
   {
     id: "felipe-boru",
-    name: "Kru Felipe Borü",
+    name: "Felipe Borü",
     role: "Head Coach de Muay Thai & Fundador",
-    cref: "Grau Preto (Kru)",
+    cref: "Prajied Azul Escuro e Preto",
     bio: "Mais de anos dedicados à arte marcial tailandesa. Formando atletas e transformando vidas através da disciplina e excelência técnica do Muay Thai.",
     image: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=600&q=80",
     specialties: ["Muay Thai Tradicional", "Clinch & Cotovelos", "Defesa Pessoal"],
     achievements: [
-      "Grau Preto em Muay Thai",
+      "Prajied Azul Escuro e Preto em Muay Thai",
       "Fundador do CT BORÜ",
       "Centenas de alunos formados no Norte do Brasil",
       "Especialista em Metodologia de Ensino"

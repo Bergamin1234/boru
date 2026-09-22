@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import PortalAluno from './pages/PortalAluno';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
@@ -29,10 +29,26 @@ function GlobalLinkInterceptor() {
   return null;
 }
 
+function BodyClassManager() {
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/' || location.pathname === '';
+
+  useEffect(() => {
+    if (!isLandingPage) {
+      document.body.classList.add('react-active');
+    } else {
+      document.body.classList.remove('react-active');
+    }
+  }, [isLandingPage]);
+
+  return null;
+}
+
 function App() {
   return (
     <Router>
       <GlobalLinkInterceptor />
+      <BodyClassManager />
       <Routes>
         <Route path="/" element={null} />
         <Route path="/portal" element={<PortalAluno />} />

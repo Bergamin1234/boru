@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BORÜ Centro de Combate | CT de Artes Marciais & Alta Performance em Porto Velho</title>
-  <meta name="description" content="Conheça o Centro de Treinamento BORÜ em Porto Velho - RO. Estrutura de ponta, professores faixa preta em Muay Thai, Jiu-Jitsu, MMA, Kickboxing e Funcional. Agende sua aula experimental gratuita!">
+  <meta name="description" content="Conheça o Centro de Treinamento BORÜ em Porto Velho - RO. Estrutura de ponta, professores graduados em Muay Thai, Jiu-Jitsu, MMA, Kickboxing e Funcional. Agende sua aula experimental gratuita!">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,6 +33,12 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
+
+  <style>
+    body.react-active > *:not(#root):not(script) {
+      display: none !important;
+    }
+  </style>
 </head>
 <body class="bg-[#0B0B0C] text-zinc-100 min-h-screen selection:bg-red-600 selection:text-white">
 
@@ -56,7 +62,7 @@
       </a>
 
       <!-- Desktop Navigation (Modelo Portfólio / CT Completo) -->
-      <nav class="hidden xl:flex items-center gap-6 text-sm font-medium text-zinc-300">
+      <nav class="hidden xl:flex items-center gap-4 text-sm font-medium text-zinc-300 whitespace-nowrap">
         <a href="#o-que-e-o-ct" class="hover:text-red-500 transition">O Que É o CT</a>
         <a href="#estrutura" class="hover:text-red-500 transition">Estrutura</a>
         <a href="#modalidades" class="hover:text-red-500 transition">Modalidades</a>
@@ -156,7 +162,7 @@
             <a href="/agendar" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-base uppercase tracking-wider glow-red transition transform hover:-translate-y-0.5 active:scale-95">
               <i data-lucide="check-circle-2" class="w-5 h-5 text-amber-300"></i>
               <span>Agendar Aula Gratuita</span>
-            </button>
+            </a>
 
             <a href="#o-que-e-o-ct" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-4 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-100 font-bold text-base transition transform hover:-translate-y-0.5">
               <i data-lucide="compass" class="w-5 h-5 text-red-500"></i>
@@ -172,7 +178,7 @@
             </div>
             <div>
               <div class="font-display text-2xl sm:text-3xl font-bold text-red-500">100%</div>
-              <div class="text-xs text-zinc-400 font-medium">Mestres Faixa Preta</div>
+              <div class="text-xs text-zinc-400 font-medium">Mestres Graduados</div>
             </div>
             <div>
               <div class="font-display text-2xl sm:text-3xl font-bold text-amber-400">180m²</div>
@@ -209,7 +215,7 @@
                 </div>
                 <a href="/agendar" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition">
                   Experimentar
-                </button>
+                </a>
               </div>
             </div>
           </div>
