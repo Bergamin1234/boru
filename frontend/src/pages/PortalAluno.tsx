@@ -18,6 +18,22 @@ export default function PortalAluno() {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
+  // TELA DO PORTAL (LOGADO) - Aba ativa e Chatbot
+  const [abaAtiva, setAbaAtiva] = useState('aulas');
+  
+  // Estado do Chatbot IA
+  const [chatMessages, setChatMessages] = useState([{ sender: 'bot', text: 'Sawasdee Krap! Sou o Tutor IA do CT BORÜ. Como posso ajudar no seu treino hoje?' }]);
+  const [chatInput, setChatInput] = useState('');
+
+  const handleSendChat = () => {
+    if (!chatInput.trim()) return;
+    setChatMessages([...chatMessages, { sender: 'user', text: chatInput }]);
+    setChatInput('');
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { sender: 'bot', text: 'Entendi! Para melhorar o seu chute, concentre-se na rotação do quadril. Essa dica é essencial no Muay Thai. Quer que eu busque mais dicas nos registros do mestre Felipe?' }]);
+    }, 1500);
+  };
+
   const validarCPF = (cpf: string) => {
     cpf = cpf.replace(/[^\d]+/g, '');
     if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -223,8 +239,6 @@ export default function PortalAluno() {
   }
 
   // TELA DO PORTAL (LOGADO)
-  const [abaAtiva, setAbaAtiva] = useState('aulas');
-
   const renovarMensalidade = async () => {
     setLoading(true);
     // Simular delay do PIX
@@ -291,28 +305,62 @@ export default function PortalAluno() {
           >
             Financeiro (Pagamentos)
           </button>
+          <button 
+            onClick={() => setAbaAtiva('chatbot')} 
+            className={`font-bold pb-2 transition flex items-center gap-2 ${abaAtiva === 'chatbot' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bot"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+            Tutor Virtual (IA)
+          </button>
         </div>
 
         {abaAtiva === 'aulas' ? (
           <>
-            {/* MEU PLANO */}
-            <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                📋 Meu Plano
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <div>
+            {/* MEU PLANO E GAMIFICAÇÃO */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  📋 Meu Plano
+                </h2>
+                <div className="flex flex-col gap-2">
                   <p className="text-zinc-400 text-sm">Plano Atual</p>
                   <p className="text-2xl font-bold text-red-500">{alunoLogado?.plano || 'Sem Plano Fixo'}</p>
+                  <div className="mt-2">
+                    <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                      Ativo
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                    Ativo
-                  </span>
+              </section>
+
+              {/* BARRA DE PROGRESSO RPG */}
+              <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sword"><line x1="14.5" x2="22.5" y1="9.5" y2="1.5"/><polyline points="16 3 21 3 21 8"/><line x1="8" x2="14.5" y1="16" y2="9.5"/><polyline points="6 14 10 18"/><path d="M4 22l-1.5-1.5c-.8-.8-.8-2 0-2.8l1.7-1.7c.8-.8 2-.8 2.8 0L8.5 17.5c.8.8.8 2 0 2.8L7 22l-3 0z"/></svg>
                 </div>
-              </div>
-            </section>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 relative z-10">
+                  ⭐ Nível do Lutador
+                </h2>
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-orange-600 flex justify-center items-center font-black text-2xl shadow-lg border-2 border-[#1A1A1E] text-white">
+                    4
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-zinc-400 font-bold uppercase tracking-wider">Iniciante Avançado</span>
+                      <span className="text-zinc-500">1200 / 2000 XP</span>
+                    </div>
+                    <div className="w-full bg-[#1A1A1E] rounded-full h-3 border border-zinc-800">
+                      <div className="bg-gradient-to-r from-red-600 to-orange-500 h-full rounded-full w-[60%] relative">
+                        <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-2">Você ganha XP toda vez que faz check-in no CT!</p>
+                  </div>
+                </div>
+              </section>
+            </div>
 
             {/* AULAS E CHECK-IN */}
             <section>
@@ -354,7 +402,7 @@ export default function PortalAluno() {
               )}
             </section>
           </>
-        ) : (
+        ) : abaAtiva === 'financeiro' ? (
           <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
             <div className="p-6 border-b border-zinc-800">
               <h2 className="text-xl font-bold text-white">Status da Assinatura</h2>
@@ -387,7 +435,43 @@ export default function PortalAluno() {
               </div>
             </div>
           </section>
-        )}
+        ) : abaAtiva === 'chatbot' ? (
+          <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden flex flex-col" style={{ height: '600px' }}>
+            <div className="bg-red-600 p-4 text-white flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex justify-center items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bot"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+              </div>
+              <div>
+                <h3 className="font-bold">Boru Tutor Virtual</h3>
+                <p className="text-[10px] uppercase tracking-wider text-red-200">Inteligência Artificial de Treino</p>
+              </div>
+            </div>
+            
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#0B0B0C]">
+              {chatMessages.map((m, i) => (
+                <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.sender === 'user' ? 'bg-red-600 text-white rounded-br-none' : 'bg-[#1A1A1E] border border-zinc-800 text-zinc-300 rounded-bl-none shadow-sm'}`}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 bg-[#141416] border-t border-zinc-800 flex gap-2">
+              <input 
+                type="text" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Pergunte sobre técnicas de Muay Thai..."
+                className="flex-1 px-4 py-3 bg-[#1A1A1E] text-white border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-red-500 transition"
+                onKeyPress={(e) => e.key === 'Enter' && handleSendChat()}
+              />
+              <button onClick={handleSendChat} className="px-6 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">
+                Enviar
+              </button>
+            </div>
+          </section>
+        ) : null}
 
       </div>
     </div>
