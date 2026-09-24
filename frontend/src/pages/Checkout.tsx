@@ -115,36 +115,60 @@ export default function Checkout() {
                 <div className="space-y-6">
                   <h2 className="text-lg font-bold mb-4">Escolha a Forma de Pagamento</h2>
                   
-                  <button disabled={loading} onClick={() => finalizarPagamento('PIX')} className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-700 hover:border-emerald-500 bg-zinc-900/50 hover:bg-emerald-500/10 transition group text-left">
+                  {/* --- INÍCIO DA INTEGRAÇÃO DO GATEWAY DE PAGAMENTO (UI) --- */}
+                  {/* Desenvolvedor: Aqui você pode inserir os Elementos do Stripe (Elements) ou do Mercado Pago (CardForm) */}
+                  
+                  <div className="space-y-4 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold mb-2">Pagar com Cartão de Crédito</p>
+                    
+                    <div>
+                      <label className="block text-zinc-400 text-xs font-semibold mb-1">Número do Cartão</label>
+                      <input type="text" placeholder="0000 0000 0000 0000" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-zinc-400 text-xs font-semibold mb-1">Validade</label>
+                        <input type="text" placeholder="MM/AA" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-zinc-400 text-xs font-semibold mb-1">CVC</label>
+                        <input type="text" placeholder="123" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-zinc-400 text-xs font-semibold mb-1">Nome no Cartão</label>
+                      <input type="text" placeholder="Nome impresso" className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:border-red-500 outline-none" />
+                    </div>
+                    
+                    <button disabled={loading} onClick={() => finalizarPagamento('Cartão de Crédito')} className="w-full mt-2 py-3 rounded-xl bg-red-600 hover:bg-red-700 font-bold uppercase tracking-widest text-sm transition">
+                      Confirmar Assinatura
+                    </button>
+                  </div>
+
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-zinc-800"></div>
+                    <span className="flex-shrink-0 mx-4 text-zinc-600 text-xs">OU</span>
+                    <div className="flex-grow border-t border-zinc-800"></div>
+                  </div>
+
+                  <button disabled={loading} onClick={() => finalizarPagamento('PIX')} className="w-full flex items-center justify-between p-4 rounded-xl border border-emerald-900/50 hover:border-emerald-500 bg-emerald-900/10 hover:bg-emerald-500/10 transition group text-left">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                        {/* Simular icon do pix */}
                         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                       </div>
                       <div>
-                        <p className="font-bold text-white group-hover:text-emerald-500 transition">Pagar com PIX</p>
-                        <p className="text-xs text-zinc-400">Aprovação imediata</p>
+                        <p className="font-bold text-emerald-500 group-hover:text-emerald-400 transition">Gerar PIX Copia e Cola</p>
+                        <p className="text-xs text-emerald-500/70">Aprovação imediata</p>
                       </div>
                     </div>
                   </button>
+                  {/* --- FIM DA INTEGRAÇÃO DO GATEWAY --- */}
 
-                  <button disabled={loading} onClick={() => finalizarPagamento('Cartão de Crédito')} className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-900/50 hover:bg-red-500/10 transition group text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300">
-                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                      </div>
-                      <div>
-                        <p className="font-bold text-white group-hover:text-red-500 transition">Cartão de Crédito</p>
-                        <p className="text-xs text-zinc-400">Até 3x sem juros</p>
-                      </div>
-                    </div>
-                  </button>
-
-                  <button onClick={() => setStep(1)} className="w-full text-center text-sm font-semibold text-zinc-500 hover:text-white pt-4">
+                  <button onClick={() => setStep(1)} className="w-full text-center text-sm font-semibold text-zinc-500 hover:text-white pt-2">
                     Voltar e editar dados
                   </button>
                   
-                  {loading && <p className="text-center text-amber-500 font-bold mt-4 animate-pulse">Processando pagamento...</p>}
+                  {loading && <p className="text-center text-amber-500 font-bold mt-2 animate-pulse">Processando pagamento no gateway...</p>}
                 </div>
               )}
             </div>

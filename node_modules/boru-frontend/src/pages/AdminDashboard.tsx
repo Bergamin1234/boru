@@ -86,6 +86,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const atualizarPrajied = async (alunoId: string, prajied: string) => {
+    try {
+      await axios.patch(`${API_URL}/admin/alunos/${alunoId}/prajied`, { prajied });
+      alert(`Graduação alterada para ${prajied} com sucesso!`);
+      carregarDashboard();
+    } catch (error: any) {
+      alert(error.response?.data?.erro || 'Erro ao atualizar Prajied.');
+    }
+  };
+
   // Formatação de CPF no formulário do Admin
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let v = e.target.value.replace(/\D/g, "");
@@ -243,6 +253,7 @@ export default function AdminDashboard() {
                       <tr>
                         <th className="px-6 py-4">Aluno</th>
                         <th className="px-6 py-4">Plano</th>
+                        <th className="px-6 py-4">Prajied</th>
                         <th className="px-6 py-4">Vencimento</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4 text-right">Ação</th>
@@ -251,7 +262,7 @@ export default function AdminDashboard() {
                     <tbody className="divide-y divide-zinc-800">
                       {alunos.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                          <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
                             Nenhum aluno cadastrado no banco de dados ainda.
                           </td>
                         </tr>
@@ -260,6 +271,21 @@ export default function AdminDashboard() {
                         <tr key={aluno.id} className="hover:bg-[#1A1A1E]/50 transition">
                           <td className="px-6 py-4 font-bold text-white">{aluno.nome}</td>
                           <td className="px-6 py-4 text-zinc-400">{aluno.plano}</td>
+                          <td className="px-6 py-4">
+                            <select 
+                              value={aluno.prajied || 'Branco'}
+                              onChange={(e) => atualizarPrajied(aluno.id, e.target.value)}
+                              className="bg-[#1A1A1E] border border-zinc-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-red-500"
+                            >
+                              <option value="Branco">Branco</option>
+                              <option value="Branco e Vermelho">Branco e Vermelho</option>
+                              <option value="Vermelho">Vermelho</option>
+                              <option value="Vermelho e Azul">Vermelho e Azul</option>
+                              <option value="Azul Claro">Azul Claro</option>
+                              <option value="Azul Escuro">Azul Escuro (Instrutor)</option>
+                              <option value="Preto">Preto (Mestre)</option>
+                            </select>
+                          </td>
                           <td className="px-6 py-4">
                             {aluno.diasVencimento === null ? (
                               <span className="text-zinc-600">-</span>

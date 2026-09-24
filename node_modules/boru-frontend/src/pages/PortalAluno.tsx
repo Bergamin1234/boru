@@ -25,13 +25,29 @@ export default function PortalAluno() {
   const [chatMessages, setChatMessages] = useState([{ sender: 'bot', text: 'Sawasdee Krap! Sou o Tutor IA do CT BORÜ. Como posso ajudar no seu treino hoje?' }]);
   const [chatInput, setChatInput] = useState('');
 
-  const handleSendChat = () => {
+  const handleSendChat = async () => {
     if (!chatInput.trim()) return;
-    setChatMessages([...chatMessages, { sender: 'user', text: chatInput }]);
+    const userMessage = chatInput;
+    setChatMessages([...chatMessages, { sender: 'user', text: userMessage }]);
     setChatInput('');
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { sender: 'bot', text: 'Entendi! Para melhorar o seu chute, concentre-se na rotação do quadril. Essa dica é essencial no Muay Thai. Quer que eu busque mais dicas nos registros do mestre Felipe?' }]);
-    }, 1500);
+    
+    // Adiciona uma mensagem de "pensando..." temporária
+    setChatMessages(prev => [...prev, { sender: 'bot', text: 'Pensando...', isTyping: true }]);
+    
+    try {
+      const response = await axios.post(`${API_URL}/chat`, { mensagem: userMessage });
+      setChatMessages(prev => {
+        const historico = [...prev];
+        historico.pop(); // Remove o "Pensando..."
+        return [...historico, { sender: 'bot', text: response.data.text }];
+      });
+    } catch (error) {
+      setChatMessages(prev => {
+        const historico = [...prev];
+        historico.pop();
+        return [...historico, { sender: 'bot', text: 'Desculpe, meu servidor AI está fora do ar no momento.' }];
+      });
+    }
   };
 
   const validarCPF = (cpf: string) => {
@@ -239,16 +255,18 @@ export default function PortalAluno() {
   }
 
   // TELA DO PORTAL (LOGADO)
-  const renovarMensalidade = async () => {
+  const renovarMensalidade = async (metodo: string = 'pix') => {
     setLoading(true);
-    // Simular delay do PIX
+    // Simular delay do Gateway
     await new Promise(r => setTimeout(r, 1500));
     try {
-      await axios.post(`${API_URL}/alunos/pagar`, {
+      await axios.post(`${API_URL}/pagamentos/processar`, {
         alunoId: alunoLogado.id,
-        valor: 160 // mock genérico para renovação, idealmente puxa do plano
+        valor: 160, // mock genérico para renovação, idealmente puxa do plano
+        metodoPagamento: metodo,
+        cartaoToken: metodo === 'cartao' ? 'tok_mock123' : undefined
       });
-      alert('Pagamento via PIX confirmado! Mensalidade renovada por mais 30 dias.');
+      alert(`Pagamento via ${metodo.toUpperCase()} aprovado com sucesso! Mensalidade renovada.`);
       
       // Atualiza o estado local para refletir (mock simples)
       const novaMensalidade = { dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), status: 'PAGO' };
@@ -257,7 +275,7 @@ export default function PortalAluno() {
         mensalidades: [novaMensalidade, ...(alunoLogado.mensalidades || [])]
       });
     } catch (error) {
-      alert('Erro ao renovar mensalidade.');
+      alert('Erro ao processar pagamento. Tente novamente mais tarde.');
     } finally {
       setLoading(false);
     }
@@ -334,29 +352,34 @@ export default function PortalAluno() {
                 </div>
               </section>
 
-              {/* BARRA DE PROGRESSO RPG */}
+              {/* PRAJIED / GRADUAÇÃO */}
               <section className="bg-[#141416] border border-zinc-800 rounded-xl p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sword"><line x1="14.5" x2="22.5" y1="9.5" y2="1.5"/><polyline points="16 3 21 3 21 8"/><line x1="8" x2="14.5" y1="16" y2="9.5"/><polyline points="6 14 10 18"/><path d="M4 22l-1.5-1.5c-.8-.8-.8-2 0-2.8l1.7-1.7c.8-.8 2-.8 2.8 0L8.5 17.5c.8.8.8 2 0 2.8L7 22l-3 0z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-award"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
                 </div>
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 relative z-10">
-                  ⭐ Nível do Lutador
+                  ⭐ Sua Graduação
                 </h2>
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 to-orange-600 flex justify-center items-center font-black text-2xl shadow-lg border-2 border-[#1A1A1E] text-white">
-                    4
+                  {/* Círculo com a cor do Prajied */}
+                  <div className={`w-14 h-14 rounded-full flex justify-center items-center shadow-lg border-2 border-[#1A1A1E] ${
+                    alunoLogado?.prajied === 'Branco' ? 'bg-white text-zinc-900' :
+                    alunoLogado?.prajied === 'Branco e Vermelho' ? 'bg-gradient-to-r from-white to-red-500' :
+                    alunoLogado?.prajied === 'Vermelho' ? 'bg-red-500 text-white' :
+                    alunoLogado?.prajied === 'Vermelho e Azul' ? 'bg-gradient-to-r from-red-500 to-blue-500 text-white' :
+                    alunoLogado?.prajied === 'Azul Claro' ? 'bg-blue-400 text-white' :
+                    alunoLogado?.prajied === 'Azul Escuro' ? 'bg-blue-800 text-white' :
+                    alunoLogado?.prajied === 'Preto' ? 'bg-black border-2 border-zinc-500 text-white' :
+                    'bg-white text-zinc-900'
+                  }`}>
+                    {/* Pode adicionar um iconezinho dentro se quiser */}
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-zinc-400 font-bold uppercase tracking-wider">Iniciante Avançado</span>
-                      <span className="text-zinc-500">1200 / 2000 XP</span>
+                      <span className="text-zinc-400 font-bold uppercase tracking-wider">Prajied</span>
                     </div>
-                    <div className="w-full bg-[#1A1A1E] rounded-full h-3 border border-zinc-800">
-                      <div className="bg-gradient-to-r from-red-600 to-orange-500 h-full rounded-full w-[60%] relative">
-                        <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-zinc-500 mt-2">Você ganha XP toda vez que faz check-in no CT!</p>
+                    <p className="text-lg font-black text-white">{alunoLogado?.prajied || 'Branco'}</p>
+                    <p className="text-[10px] text-zinc-500 mt-2">Apenas os professores podem atualizar sua graduação.</p>
                   </div>
                 </div>
               </section>
@@ -405,10 +428,10 @@ export default function PortalAluno() {
         ) : abaAtiva === 'financeiro' ? (
           <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
             <div className="p-6 border-b border-zinc-800">
-              <h2 className="text-xl font-bold text-white">Status da Assinatura</h2>
+              <h2 className="text-xl font-bold text-white">Renovação e Pagamentos</h2>
             </div>
             <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
+              <div className="flex flex-col md:flex-row gap-8 justify-between items-start">
                 <div className="text-center md:text-left">
                   <p className="text-zinc-400 text-sm mb-1">Dias restantes para renovação</p>
                   {dias === null ? (
@@ -418,19 +441,38 @@ export default function PortalAluno() {
                   ) : (
                     <p className="text-4xl font-black text-green-500">{dias} <span className="text-lg font-semibold text-zinc-500">dias</span></p>
                   )}
+                  <p className="text-zinc-500 text-xs mt-2">Valor atual do seu plano: <strong className="text-zinc-300">R$ 160,00</strong></p>
                 </div>
                 
-                <div className="w-full md:w-auto">
-                  <button 
-                    onClick={renovarMensalidade}
-                    disabled={loading || (dias !== null && dias > 5)} 
-                    className={`w-full md:w-auto px-8 py-4 rounded-xl font-black uppercase tracking-wider transition ${dias !== null && dias > 5 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50'}`}
-                  >
-                    {loading ? 'Gerando PIX...' : 'Renovar via PIX'}
-                  </button>
-                  {dias !== null && dias > 5 && (
-                    <p className="text-xs text-zinc-500 text-center mt-2">Disponível apenas 5 dias antes do vencimento.</p>
-                  )}
+                <div className="w-full md:w-1/2 bg-[#1A1A1E] p-5 rounded-xl border border-zinc-800">
+                  <h3 className="text-white font-bold mb-4">Escolha a forma de pagamento</h3>
+                  
+                  {/* --- INÍCIO DA INTEGRAÇÃO DO GATEWAY DE PAGAMENTO --- */}
+                  <div className="space-y-4">
+                    <button 
+                      onClick={() => renovarMensalidade('cartao')}
+                      disabled={loading || (dias !== null && dias > 5)} 
+                      className={`w-full px-8 py-3 rounded-xl font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 ${dias !== null && dias > 5 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50'}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                      {loading ? 'Processando...' : 'Pagar com Cartão (Stripe/MercadoPago)'}
+                    </button>
+
+                    <button 
+                      onClick={() => renovarMensalidade('pix')}
+                      disabled={loading || (dias !== null && dias > 5)} 
+                      className={`w-full px-8 py-3 rounded-xl font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 ${dias !== null && dias > 5 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-[#00B1EA] hover:bg-[#0098C7] text-white shadow-lg'}`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                      {loading ? 'Gerando...' : 'Gerar PIX Copia e Cola'}
+                    </button>
+                    
+                    <p className="text-[10px] text-zinc-500 text-center">
+                      * Desenvolvedor: Insira os elementos do seu Gateway de Pagamento aqui. A rota de backend já está em <code>/api/pagamentos/processar</code>.
+                    </p>
+                  </div>
+                  {/* --- FIM DA INTEGRAÇÃO DO GATEWAY --- */}
+
                 </div>
               </div>
             </div>

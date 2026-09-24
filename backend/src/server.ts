@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -197,7 +198,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
         cpf: aluno.cpf,
         telefone: aluno.telefone,
         status: statusMensalidade,
-        diasVencimento
+        diasVencimento,
+        prajied: aluno.prajied
       };
     });
 
@@ -212,6 +214,21 @@ app.get('/api/admin/dashboard', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ erro: 'Erro ao buscar dados do painel.' });
+  }
+});
+
+// Admin atualiza o Prajied do aluno
+app.patch('/api/admin/alunos/:id/prajied', async (req, res) => {
+  const { id } = req.params;
+  const { prajied } = req.body;
+  try {
+    const aluno = await prisma.aluno.update({
+      where: { id },
+      data: { prajied }
+    });
+    res.json({ mensagem: 'Prajied atualizado com sucesso!', aluno });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao atualizar Prajied.' });
   }
 });
 
@@ -275,7 +292,7 @@ app.get('/api/admin/presencas', async (req, res) => {
 
 // Criar novo aluno via Checkout no site
 app.post('/api/checkout', async (req, res) => {
-  const { nome, cpf, email, senha, plano, valor } = req.body;
+  const { nome, cpf, email, senha, plano, valor, metodoPagamento, cartaoToken } = req.body;
   if (!nome || !cpf || !senha) {
     return res.status(400).json({ erro: 'Nome, CPF e senha são obrigatórios.' });
   }
@@ -283,6 +300,14 @@ app.post('/api/checkout', async (req, res) => {
   const cpfLimpo = cpf.replace(/[^\d]+/g, '');
   
   try {
+    // -------------------------------------------------------------
+    // ATENÇÃO DESENVOLVEDOR: INSERIR GATEWAY DE PAGAMENTO AQUI
+    // -------------------------------------------------------------
+    // Aqui você integra a API do Stripe ou Mercado Pago
+    // Ex: const payment = await mercadoPago.payment.create({ ... })
+    // Se aprovado, continua para a criação no banco abaixo:
+    // -------------------------------------------------------------
+
     const novoAluno = await prisma.aluno.create({
       data: {
         nome,
@@ -355,6 +380,90 @@ app.get('/api/admin/agendamentos', async (req, res) => {
   }
 });
 
+
+// ==========================================
+// INTELIGÊNCIA ARTIFICIAL E CHATBOT
+// ==========================================
+app.post('/api/chat', async (req, res) => {
+  const { mensagem } = req.body;
+  
+  if (!process.env.GEMINI_API_KEY) {
+    const respostas = [
+      "Para um jab perfeito, mantenha a guarda alta com a mão de trás!",
+      "Lembre-se de girar o pé de apoio quando for chutar com a perna de trás.",
+      "A respiração é tudo! Solte o ar junto com o golpe."
+    ];
+    return res.json({ text: "⚠️ [Modo Offline - Insira a chave GEMINI_API_KEY no .env para ativar a IA] Dica: " + respostas[Math.floor(Math.random() * respostas.length)] });
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const prompt = "Você é um mestre experiente de Muay Thai do CT Borü. Responda perguntas sobre treinos de forma motivadora, curta e direta (máximo 2 parágrafos). Dê dicas técnicas precisas de artes marciais.\n\nPergunta do Aluno: " + mensagem;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    
+    res.json({ text: response.text });
+  } catch (error: any) {
+    res.status(500).json({ erro: 'Erro ao comunicar com a IA', detalhe: error.message });
+  }
+});
+
+// ==========================================
+// INTEGRAÇÃO DE PAGAMENTO (STRIPE / MERCADO PAGO)
+// ==========================================
+app.post('/api/pagamentos/processar', async (req, res) => {
+  const { alunoId, valor, metodoPagamento, cartaoToken } = req.body;
+  
+  try {
+    // -------------------------------------------------------------
+    // ATENÇÃO DESENVOLVEDOR: INSERIR CREDENCIAIS E SDK DO GATEWAY AQUI!
+    // -------------------------------------------------------------
+    // Exemplo de integração com Mercado Pago:
+    // import { MercadoPagoConfig, Payment } from 'mercadopago';
+    // const client = new MercadoPagoConfig({ accessToken: 'APP_USR-SEU_ACCESS_TOKEN_AQUI' });
+    // const payment = new Payment(client);
+    //
+    // const result = await payment.create({
+    //   body: {
+    //     transaction_amount: valor,
+    //     token: cartaoToken, // Token gerado no frontend
+    //     description: 'Mensalidade CT BORÜ',
+    //     payment_method_id: metodoPagamento, // 'pix', 'visa', 'master'
+    //     payer: { email: "emaildoaluno@gmail.com" }
+    //   }
+    // });
+    // -------------------------------------------------------------
+
+    let dataPagamento = new Date();
+    let status = 'PAGO';
+
+    // Mock salvando no banco após "aprovação"
+    let alunoObj = null;
+    if (alunoId) {
+       alunoObj = await prisma.aluno.findUnique({ where: { id: alunoId } });
+    }
+
+    if (alunoObj) {
+      const mensalidade = await prisma.mensalidade.create({
+        data: {
+          alunoId: alunoObj.id,
+          valor: parseFloat(valor),
+          dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
+          dataPagamento,
+          status
+        }
+      });
+      res.json({ sucesso: true, mensagem: 'Pagamento processado com sucesso!', transacaoId: 'tx_' + Math.random().toString(36).substring(7), mensalidade });
+    } else {
+      res.json({ sucesso: true, mensagem: 'Pagamento avulso processado com sucesso!', transacaoId: 'tx_' + Math.random().toString(36).substring(7) });
+    }
+  } catch (error) {
+    res.status(500).json({ erro: 'Falha no gateway de pagamento' });
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
