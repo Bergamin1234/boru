@@ -252,6 +252,23 @@ app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
   }
 });
 
+// Admin visualiza as presenças/check-ins dos alunos
+app.get('/api/admin/presencas', async (req, res) => {
+  try {
+    const presencas = await prisma.agendamentoPresenca.findMany({
+      include: {
+        aluno: { select: { nome: true, plano: true } },
+        evento: { select: { titulo: true, dataInicio: true } }
+      },
+      orderBy: { criadoEm: 'desc' },
+      take: 50 // ltimos 50 check-ins
+    });
+    res.json(presencas);
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao buscar presenças.' });
+  }
+});
+
 // ==========================================
 // NOVAS ROTAS (CHECKOUT E AGENDAMENTO)
 // ==========================================

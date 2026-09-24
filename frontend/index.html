@@ -63,13 +63,13 @@
 
       <!-- Desktop Navigation (Modelo Portfólio / CT Completo) -->
       <nav class="hidden xl:flex items-center gap-4 text-sm font-medium text-zinc-300 whitespace-nowrap">
+        <a href="#planos" class="hover:text-red-500 transition">Planos</a>
+        <a href="#horarios" class="hover:text-red-500 transition">Horários</a>
         <a href="#o-que-e-o-ct" class="hover:text-red-500 transition">O Que É o CT</a>
         <a href="#estrutura" class="hover:text-red-500 transition">Estrutura</a>
         <a href="#modalidades" class="hover:text-red-500 transition">Modalidades</a>
         <a href="#professores" class="hover:text-red-500 transition">Professores</a>
         <a href="#galeria" class="hover:text-red-500 transition">Galeria</a>
-        <a href="#horarios" class="hover:text-red-500 transition">Horários</a>
-        <a href="#planos" class="hover:text-red-500 transition">Planos</a>
         <a href="#faq" class="hover:text-red-500 transition">FAQ</a>
       </nav>
 
@@ -102,13 +102,13 @@
     <!-- Mobile Dropdown Menu -->
     <div id="mobile-menu" class="hidden xl:hidden bg-[#141416] border-b border-zinc-800 px-6 py-6 space-y-4 max-h-[85vh] overflow-y-auto">
       <nav class="flex flex-col space-y-3 text-base font-semibold">
+        <a href="#planos" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Planos & Parcerias</a>
+        <a href="#horarios" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Grade de Horários</a>
         <a href="#o-que-e-o-ct" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">O Que É o CT BORÜ</a>
         <a href="#estrutura" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Estrutura & Espaço</a>
         <a href="#modalidades" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Modalidades de Luta</a>
         <a href="#professores" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Nossos Professores / Mestres</a>
         <a href="#galeria" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Galeria do Tatame</a>
-        <a href="#horarios" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Grade de Horários</a>
-        <a href="#planos" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Planos & Parcerias</a>
         <a href="#faq" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Dúvidas Frequentes (FAQ)</a>
         <a href="#localizacao" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Onde Estamos</a>
       </nav>
@@ -222,6 +222,203 @@
         </div>
 
       </div>
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
+  <section id="planos" class="py-24 bg-[#141416] border-y border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Valores Transparentes</h2>
+        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+          Planos de Treinamento
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Sem taxa de matrícula oculta. Condições facilitadas para você focar apenas na sua evolução.
+        </p>
+      </div>
+
+      <!-- Planos Mensais -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+        
+        <!-- 2x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">2x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="target" class="w-12 h-12 text-zinc-600"></i>
+            </div>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">140</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
+          </div>
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <a href="/checkout?plano=2x%20na%20semana&valor=140" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
+            </a>
+          </div>
+        </div>
+
+        <!-- 3x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">3x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="flame" class="w-12 h-12 text-zinc-500"></i>
+            </div>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">160</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
+          </div>
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <a href="/checkout?plano=3x%20na%20semana&valor=160" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
+            </a>
+          </div>
+        </div>
+
+        <!-- 5x na semana -->
+        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
+          <div class="space-y-4 text-center">
+            <h4 class="font-display text-3xl font-bold text-white uppercase">5x</h4>
+            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
+            <div class="flex justify-center mt-4">
+              <i data-lucide="zap" class="w-12 h-12 text-zinc-400"></i>
+            </div>
+            <div class="flex items-baseline justify-center gap-1 mt-6">
+              <span class="text-sm font-semibold text-zinc-400">R$</span>
+              <span class="text-4xl font-extrabold text-white">200</span>
+              <span class="text-sm text-zinc-400">,00</span>
+            </div>
+          </div>
+          <div class="pt-6 mt-6 border-t border-zinc-800">
+            <a href="/checkout?plano=5x%20na%20semana&valor=200" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
+              Assinar Plano
+            </a>
+          </div>
+        </div>
+
+        <!-- Livre -->
+        <div class="p-6 rounded-2xl bg-red-700 border-2 border-red-500 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
+          <div class="space-y-2 text-center">
+            <h4 class="font-display text-4xl font-bold text-white uppercase">Livre</h4>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-red-200 block">6x na semana<br>Todos os horários</span>
+            <div class="flex justify-center mt-2 pb-2">
+              <i data-lucide="award" class="w-14 h-14 text-amber-300 drop-shadow-md"></i>
+            </div>
+            <div class="flex items-baseline justify-center gap-1 mt-4">
+              <span class="text-sm font-semibold text-red-200">R$</span>
+              <span class="text-5xl font-extrabold text-white">280</span>
+              <span class="text-sm text-red-200">,00</span>
+            </div>
+          </div>
+          <div class="pt-6 mt-4 border-t border-red-500">
+            <a href="/checkout?plano=Livre&valor=280" class="block text-center w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
+              Garantir
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Diária Banner -->
+      <div class="mt-8 rounded-2xl p-6 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+            <i data-lucide="ticket" class="w-6 h-6 text-zinc-400"></i>
+          </div>
+          <div>
+            <h5 class="text-lg font-bold text-white uppercase">Treino Avulso / Diária</h5>
+            <p class="text-sm text-zinc-400">Quer treinar apenas hoje? Pague somente pelo dia.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-baseline gap-1">
+            <span class="text-sm font-semibold text-zinc-400">R$</span>
+            <span class="text-3xl font-extrabold text-white">25</span>
+            <span class="text-sm text-zinc-400">,00</span>
+          </div>
+          <a href="/checkout?plano=Diária&valor=25" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
+            Agendar
+          </a>
+        </div>
+      </div>
+
+      <!-- Parceiros Corporativos (Wellhub / TotalPass) -->
+      <div class="mt-16 p-8 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-center">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Parceiros Corporativos Aceitos no CT</h4>
+        <div class="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-80 hover:opacity-100 transition">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center font-black text-white text-lg">W</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">Wellhub</span>
+              <span class="block text-[11px] text-zinc-400">(Antigo Gympass)</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">TotalPass</span>
+              <span class="block text-[11px] text-zinc-400">Check-in Liberado</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-black text-zinc-900 text-lg">B</div>
+            <div class="text-left">
+              <span class="font-bold text-white text-base">Convênios Locais</span>
+              <span class="block text-[11px] text-zinc-400">Empresas & OAB/RO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SEÇÃO: GRADE DE HORÁRIOS ================= -->
+  <section id="horarios" class="py-20 bg-[#0B0B0C]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
+        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Grade Completa</h2>
+        <h3 class="font-display text-3xl sm:text-5xl font-extrabold text-white uppercase">
+          Horários de Treino
+        </h3>
+        <p class="text-zinc-400 text-sm">
+          Filtre por turno para encontrar o melhor horário para seu dia a dia.
+        </p>
+      </div>
+
+      <!-- Shift Filter Tabs -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-8" id="schedule-filters">
+        <button class="schedule-filter-btn active px-5 py-2.5 rounded-lg text-sm font-bold transition bg-red-600 text-white" data-filter="all">
+          Todos os Turnos
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="manha">
+          <i data-lucide="sun" class="w-4 h-4 inline mr-1 text-amber-400"></i> Manhã (06h - 11h)
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="tarde">
+          <i data-lucide="cloud-sun" class="w-4 h-4 inline mr-1 text-orange-400"></i> Tarde (12h - 17h)
+        </button>
+        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="noite">
+          <i data-lucide="moon" class="w-4 h-4 inline mr-1 text-indigo-400"></i> Noite (17h - 22h)
+        </button>
+      </div>
+
+      <!-- Schedule Dynamic Container -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="schedule-container">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+
     </div>
   </section>
 
@@ -455,203 +652,6 @@
           </div>
         </div>
 
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================= SEÇÃO: GRADE DE HORÁRIOS ================= -->
-  <section id="horarios" class="py-20 bg-[#0B0B0C]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
-        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Grade Completa</h2>
-        <h3 class="font-display text-3xl sm:text-5xl font-extrabold text-white uppercase">
-          Horários de Treino
-        </h3>
-        <p class="text-zinc-400 text-sm">
-          Filtre por turno para encontrar o melhor horário para seu dia a dia.
-        </p>
-      </div>
-
-      <!-- Shift Filter Tabs -->
-      <div class="flex flex-wrap items-center justify-center gap-2 mb-8" id="schedule-filters">
-        <button class="schedule-filter-btn active px-5 py-2.5 rounded-lg text-sm font-bold transition bg-red-600 text-white" data-filter="all">
-          Todos os Turnos
-        </button>
-        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="manha">
-          <i data-lucide="sun" class="w-4 h-4 inline mr-1 text-amber-400"></i> Manhã (06h - 11h)
-        </button>
-        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="tarde">
-          <i data-lucide="cloud-sun" class="w-4 h-4 inline mr-1 text-orange-400"></i> Tarde (12h - 17h)
-        </button>
-        <button class="schedule-filter-btn px-5 py-2.5 rounded-lg text-sm font-semibold transition bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700" data-filter="noite">
-          <i data-lucide="moon" class="w-4 h-4 inline mr-1 text-indigo-400"></i> Noite (17h - 22h)
-        </button>
-      </div>
-
-      <!-- Schedule Dynamic Container -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="schedule-container">
-        <!-- Renderizado dinamicamente via app.js -->
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
-  <section id="planos" class="py-24 bg-[#141416] border-y border-zinc-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Valores Transparentes</h2>
-        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
-          Planos de Treinamento
-        </h3>
-        <p class="text-zinc-400 text-sm">
-          Sem taxa de matrícula oculta. Condições facilitadas para você focar apenas na sua evolução.
-        </p>
-      </div>
-
-      <!-- Planos Mensais -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-        
-        <!-- 2x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">2x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="target" class="w-12 h-12 text-zinc-600"></i>
-            </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">140</span>
-              <span class="text-sm text-zinc-400">,00</span>
-            </div>
-          </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=2x%20na%20semana&valor=140" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
-            </a>
-          </div>
-        </div>
-
-        <!-- 3x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">3x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="flame" class="w-12 h-12 text-zinc-500"></i>
-            </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">160</span>
-              <span class="text-sm text-zinc-400">,00</span>
-            </div>
-          </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=3x%20na%20semana&valor=160" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
-            </a>
-          </div>
-        </div>
-
-        <!-- 5x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">5x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="zap" class="w-12 h-12 text-zinc-400"></i>
-            </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">200</span>
-              <span class="text-sm text-zinc-400">,00</span>
-            </div>
-          </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=5x%20na%20semana&valor=200" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
-            </a>
-          </div>
-        </div>
-
-        <!-- Livre -->
-        <div class="p-6 rounded-2xl bg-red-700 border-2 border-red-500 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
-          <div class="space-y-2 text-center">
-            <h4 class="font-display text-4xl font-bold text-white uppercase">Livre</h4>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-red-200 block">6x na semana<br>Todos os horários</span>
-            <div class="flex justify-center mt-2 pb-2">
-              <i data-lucide="award" class="w-14 h-14 text-amber-300 drop-shadow-md"></i>
-            </div>
-            <div class="flex items-baseline justify-center gap-1 mt-4">
-              <span class="text-sm font-semibold text-red-200">R$</span>
-              <span class="text-5xl font-extrabold text-white">280</span>
-              <span class="text-sm text-red-200">,00</span>
-            </div>
-          </div>
-          <div class="pt-6 mt-4 border-t border-red-500">
-            <a href="/checkout?plano=Livre&valor=280" class="block text-center w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
-              Garantir
-            </a>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Diária Banner -->
-      <div class="mt-8 rounded-2xl p-6 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
-            <i data-lucide="ticket" class="w-6 h-6 text-zinc-400"></i>
-          </div>
-          <div>
-            <h5 class="text-lg font-bold text-white uppercase">Treino Avulso / Diária</h5>
-            <p class="text-sm text-zinc-400">Quer treinar apenas hoje? Pague somente pelo dia.</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-6">
-          <div class="flex items-baseline gap-1">
-            <span class="text-sm font-semibold text-zinc-400">R$</span>
-            <span class="text-3xl font-extrabold text-white">25</span>
-            <span class="text-sm text-zinc-400">,00</span>
-          </div>
-          <a href="/checkout?plano=Diária&valor=25" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
-            Agendar
-          </a>
-        </div>
-      </div>
-
-      <!-- Parceiros Corporativos (Wellhub / TotalPass) -->
-      <div class="mt-16 p-8 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-center">
-        <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Parceiros Corporativos Aceitos no CT</h4>
-        <div class="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-80 hover:opacity-100 transition">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center font-black text-white text-lg">W</div>
-            <div class="text-left">
-              <span class="font-bold text-white text-base">Wellhub</span>
-              <span class="block text-[11px] text-zinc-400">(Antigo Gympass)</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
-            <div class="text-left">
-              <span class="font-bold text-white text-base">TotalPass</span>
-              <span class="block text-[11px] text-zinc-400">Check-in Liberado</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-black text-zinc-900 text-lg">B</div>
-            <div class="text-left">
-              <span class="font-bold text-white text-base">Convênios Locais</span>
-              <span class="block text-[11px] text-zinc-400">Empresas & OAB/RO</span>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div>

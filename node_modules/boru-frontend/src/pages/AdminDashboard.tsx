@@ -11,9 +11,10 @@ export default function AdminDashboard() {
   const [metricas, setMetricas] = useState({ totalAlunos: 0, assinaturasAtivas: 0, inadimplentes: 0 });
   const [alunos, setAlunos] = useState<any[]>([]);
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
+  const [presencas, setPresencas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Aba ativa: 'alunos' | 'agendamentos'
+  // Aba ativa: 'alunos' | 'agendamentos' | 'presencas'
   const [abaAtiva, setAbaAtiva] = useState('alunos');
 
   // Estados do Modal
@@ -29,13 +30,15 @@ export default function AdminDashboard() {
   const carregarDashboard = async () => {
     setLoading(true);
     try {
-      const [dashRes, agendRes] = await Promise.all([
+      const [dashRes, agendRes, presencasRes] = await Promise.all([
         axios.get(`${API_URL}/admin/dashboard`),
-        axios.get(`${API_URL}/admin/agendamentos`)
+        axios.get(`${API_URL}/admin/agendamentos`),
+        axios.get(`${API_URL}/admin/presencas`)
       ]);
       setMetricas(dashRes.data.metricas);
       setAlunos(dashRes.data.alunos);
       setAgendamentos(agendRes.data);
+      setPresencas(presencasRes.data);
     } catch (error) {
       console.error('Erro ao carregar dashboard', error);
     } finally {
@@ -217,6 +220,12 @@ export default function AdminDashboard() {
                   <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">{agendamentos.length}</span>
                 )}
               </button>
+              <button 
+                onClick={() => setAbaAtiva('presencas')} 
+                className={`font-bold pb-2 transition flex items-center gap-2 ${abaAtiva === 'presencas' ? 'text-red-500 border-b-2 border-red-500' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                Frequência e Check-ins
+              </button>
             </div>
 
             {/* CONTEÚDO DAS TABS */}
@@ -295,7 +304,7 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </section>
-            ) : (
+            ) : abaAtiva === 'agendamentos' ? (
               <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
                 <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                   <h2 className="text-xl font-bold text-white">Agendamentos Experimentais</h2>
@@ -336,7 +345,50 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </section>
-            )}
+            ) : abaAtiva === 'presencas' ? (
+              <section className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden">
+                <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-white">Últimos Check-ins (Presenças)</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-xs font-semibold">
+                      <tr>
+                        <th className="px-6 py-4">Data do Check-in</th>
+                        <th className="px-6 py-4">Aluno</th>
+                        <th className="px-6 py-4">Plano</th>
+                        <th className="px-6 py-4">Aula</th>
+                        <th className="px-6 py-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {presencas.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                            Nenhum check-in registrado ainda.
+                          </td>
+                        </tr>
+                      )}
+                      {presencas.map((p) => (
+                        <tr key={p.id} className="hover:bg-[#1A1A1E]/50 transition">
+                          <td className="px-6 py-4 text-zinc-400">
+                            {new Date(p.criadoEm).toLocaleString('pt-BR')}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-white">{p.aluno.nome}</td>
+                          <td className="px-6 py-4 text-zinc-400">{p.aluno.plano}</td>
+                          <td className="px-6 py-4 font-bold text-white">{p.evento.titulo}</td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">
+                              AGENDADO
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : null}
           </>
         )}
       </div>
