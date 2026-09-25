@@ -8,7 +8,10 @@
   "scripts": {
     "dev:backend": "npm run dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
-    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }
