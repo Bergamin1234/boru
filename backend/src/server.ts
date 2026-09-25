@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -64,8 +63,10 @@ app.post('/api/alunos/alterar-senha', async (req, res) => {
   }
 });
 
-// Listar aulas de hoje e próximas
+// Listar aulas de hoje e próximas (com status de check-in se alunoId for informado)
 app.get('/api/aulas', async (req, res) => {
+  const { alunoId } = req.query;
+
   try {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -77,10 +78,28 @@ app.get('/api/aulas', async (req, res) => {
       where: {
         dataInicio: { gte: hoje, lte: limite }
       },
+      include: alunoId ? {
+        agendamentos: {
+          where: { alunoId: String(alunoId) }
+        }
+      } : undefined,
       orderBy: { dataInicio: 'asc' }
     });
 
-    res.json(aulas);
+    const aulasFormatadas = aulas.map((aula: any) => {
+      const meuCheckin = aula.agendamentos && aula.agendamentos.length > 0 ? aula.agendamentos[0] : null;
+      return {
+        id: aula.id,
+        titulo: aula.titulo,
+        dataInicio: aula.dataInicio,
+        dataFim: aula.dataFim,
+        checkinFeito: Boolean(meuCheckin),
+        checkinStatus: meuCheckin ? meuCheckin.status : null,
+        checkinId: meuCheckin ? meuCheckin.id : null
+      };
+    });
+
+    res.json(aulasFormatadas);
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao buscar aulas.' });
   }
@@ -90,19 +109,35 @@ app.get('/api/aulas', async (req, res) => {
 app.post('/api/checkin', async (req, res) => {
   const { alunoId, eventoId } = req.body;
 
+  if (!alunoId || !eventoId) {
+    return res.status(400).json({ erro: 'Aluno e Aula são obrigatórios para o check-in.' });
+  }
+
   try {
+    // Verifica se já fez checkin nesta aula
+    const checkinExistente = await prisma.agendamentoPresenca.findFirst({
+      where: { alunoId, eventoId }
+    });
+
+    if (checkinExistente) {
+      return res.status(400).json({ erro: 'Você já realizou check-in nesta aula.', checkin: checkinExistente });
+    }
+
+    const evento = await prisma.eventoDeAula.findUnique({
+      where: { id: eventoId }
+    });
+
     const checkin = await prisma.agendamentoPresenca.create({
       data: {
         alunoId,
         eventoId,
-        status: 'AGENDADO'
+        data: evento ? evento.dataInicio : new Date(),
+        status: 'AGENDADO' // Fica aguardando confirmação do professor
       }
     });
-    res.json({ mensagem: 'Check-in realizado com sucesso!', checkin });
+
+    res.json({ mensagem: 'Check-in realizado com sucesso! Aguardando confirmação do professor.', checkin });
   } catch (error: any) {
-    if (error.code === 'P2002') {
-      return res.status(400).json({ erro: 'Você já fez check-in nesta aula.' });
-    }
     res.status(500).json({ erro: 'Erro ao realizar check-in.' });
   }
 });
@@ -114,15 +149,13 @@ app.post('/api/checkin', async (req, res) => {
 
 // Admin cria um novo Aluno
 app.post('/api/admin/alunos', async (req, res) => {
-  const { nome, cpf, email, plano, valorMensalidade } = req.body;
+  const { nome, cpf, email, telefone, plano, valorMensalidade } = req.body;
   
   if (!nome || !cpf) {
     return res.status(400).json({ erro: 'Nome e CPF são obrigatórios.' });
   }
 
   const cpfLimpo = cpf.replace(/[^\d]+/g, '');
-  
-  // Gera uma senha temporária (simulação de envio por email)
   const senhaTemporaria = Math.floor(100000 + Math.random() * 900000).toString();
 
   try {
@@ -131,7 +164,8 @@ app.post('/api/admin/alunos', async (req, res) => {
         nome,
         cpf: cpfLimpo,
         email,
-        plano,
+        telefone,
+        plano: plano || '2x na semana',
         senha: senhaTemporaria,
         primeiroAcesso: true,
         mensalidades: {
@@ -143,12 +177,6 @@ app.post('/api/admin/alunos', async (req, res) => {
         }
       }
     });
-
-    console.log(`\n\n📧 EMAIL ENVIADO PARA ${email || 'o aluno'}:`);
-    console.log(`Assunto: Bem-vindo ao BORÜ Centro de Combate`);
-    console.log(`Olá ${nome}, seu cadastro foi concluído!`);
-    console.log(`Acesse o Portal do Aluno com seu CPF e a senha temporária: ${senhaTemporaria}`);
-    console.log(`Você deverá criar uma nova senha no primeiro acesso.\n\n`);
 
     res.json({ mensagem: 'Aluno criado com sucesso!', aluno: novoAluno, senhaTemporaria });
   } catch (error: any) {
@@ -162,9 +190,8 @@ app.post('/api/admin/alunos', async (req, res) => {
 app.get('/api/admin/dashboard', async (req, res) => {
   try {
     const totalAlunos = await prisma.aluno.count();
-    
-    // Alunos com mensalidade atrasada
     const agora = new Date();
+
     const inadimplentesCount = await prisma.mensalidade.count({
       where: {
         status: 'ATRASADO',
@@ -172,7 +199,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
       }
     });
 
-    // Lista de todos os alunos com sua última mensalidade
     const alunos = await prisma.aluno.findMany({
       include: {
         mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 }
@@ -189,13 +215,17 @@ app.get('/api/admin/dashboard', async (req, res) => {
         statusMensalidade = ultimaMensalidade.status;
         const diferencaTempo = ultimaMensalidade.dataVencimento.getTime() - agora.getTime();
         diasVencimento = Math.ceil(diferencaTempo / (1000 * 3600 * 24));
+        if (diasVencimento < 0 && statusMensalidade !== 'PAGO') {
+          statusMensalidade = 'ATRASADO';
+        }
       }
 
       return {
         id: aluno.id,
         nome: aluno.nome,
-        plano: aluno.plano || 'Sem Plano Fixo',
+        plano: aluno.plano || '2x na semana',
         cpf: aluno.cpf,
+        email: aluno.email,
         telefone: aluno.telefone,
         status: statusMensalidade,
         diasVencimento,
@@ -243,13 +273,12 @@ app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
 
     if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado' });
 
-    let novoVencimento = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000); // Daqui 30 dias
+    let novoVencimento = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    // Se já tinha mensalidade, joga +30 dias pra frente da última data
     if (aluno.mensalidades.length > 0) {
       const ultima = aluno.mensalidades[0];
-      if (ultima.dataVencimento > new Date()) {
-        novoVencimento = new Date(ultima.dataVencimento.getTime() + 30 * 24 * 60 * 60 * 1000);
+      if (new Date(ultima.dataVencimento) > new Date()) {
+        novoVencimento = new Date(new Date(ultima.dataVencimento).getTime() + 30 * 24 * 60 * 60 * 1000);
       }
     }
 
@@ -274,11 +303,11 @@ app.get('/api/admin/presencas', async (req, res) => {
   try {
     const presencas = await prisma.agendamentoPresenca.findMany({
       include: {
-        aluno: { select: { nome: true, plano: true } },
-        evento: { select: { titulo: true, dataInicio: true } }
+        aluno: { select: { id: true, nome: true, plano: true, telefone: true } },
+        evento: { select: { id: true, titulo: true, dataInicio: true } }
       },
-      orderBy: { criadoEm: 'desc' },
-      take: 50 // ltimos 50 check-ins
+      orderBy: { data: 'desc' },
+      take: 100
     });
     res.json(presencas);
   } catch (error) {
@@ -286,13 +315,411 @@ app.get('/api/admin/presencas', async (req, res) => {
   }
 });
 
+// Admin altera o status da presença (Confirmar presença, Falta Justificada, Ausente)
+app.patch('/api/admin/presencas/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status, justificativa } = req.body;
+
+  try {
+    const presenca = await prisma.agendamentoPresenca.update({
+      where: { id },
+      data: {
+        status, // 'PRESENTE', 'JUSTIFICADO', 'AUSENTE', 'AGENDADO'
+        justificativa: justificativa !== undefined ? justificativa : undefined
+      },
+      include: {
+        aluno: true,
+        evento: true
+      }
+    });
+
+    res.json({ mensagem: 'Status da presença atualizado com sucesso!', presenca });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao atualizar presença.' });
+  }
+});
+
 // ==========================================
-// NOVAS ROTAS (CHECKOUT E AGENDAMENTO)
+// CALENDÁRIO DO ALUNO E CÁLCULO DE FREQUÊNCIA
+// ==========================================
+
+// Obter dados do calendário e presença de um aluno para um determinado mês/ano
+app.get('/api/admin/alunos/:id/calendario', async (req, res) => {
+  const { id } = req.params;
+  const agora = new Date();
+  const mes = parseInt(req.query.mes as string) || (agora.getMonth() + 1); // 1 a 12
+  const ano = parseInt(req.query.ano as string) || agora.getFullYear();
+
+  try {
+    const aluno = await prisma.aluno.findUnique({
+      where: { id },
+      include: {
+        mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 }
+      }
+    });
+
+    if (!aluno) {
+      return res.status(404).json({ erro: 'Aluno não encontrado.' });
+    }
+
+    // Intervalo do mês selecionado
+    const dataInicioMes = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
+    const dataFimMes = new Date(ano, mes, 0, 23, 59, 59, 999);
+
+    const presencas = await prisma.agendamentoPresenca.findMany({
+      where: {
+        alunoId: id,
+        data: {
+          gte: dataInicioMes,
+          lte: dataFimMes
+        }
+      },
+      include: {
+        evento: true
+      },
+      orderBy: { data: 'asc' }
+    });
+
+    // Mapeamento por data em formato YYYY-MM-DD
+    const presencasPorDia: Record<string, any[]> = {};
+    presencas.forEach(p => {
+      const dataIso = new Date(p.data).toISOString().split('T')[0];
+      if (!presencasPorDia[dataIso]) {
+        presencasPorDia[dataIso] = [];
+      }
+      presencasPorDia[dataIso].push(p);
+    });
+
+    // Contadores
+    const presentesCount = presencas.filter(p => p.status === 'PRESENTE').length;
+    const justificadasCount = presencas.filter(p => p.status === 'JUSTIFICADO').length;
+    const agendadosCount = presencas.filter(p => p.status === 'AGENDADO').length;
+    const ausentesCount = presencas.filter(p => p.status === 'AUSENTE').length;
+
+    // Frequência esperada de acordo com o plano do aluno
+    // Ex: "2x na semana" -> 2 aulas por semana x 4 semanas = 8 aulas
+    // Ex: "3x na semana" -> 3 aulas por semana x 4 semanas = 12 aulas
+    // Ex: "Todos os Horários" -> 5 aulas x 4 semanas = 20 aulas
+    // Ex: "Diária" -> 1 aula
+    const plano = (aluno.plano || '').toLowerCase();
+    let aulasPorSemana = 2;
+    if (plano.includes('3x') || plano.includes('tres')) {
+      aulasPorSemana = 3;
+    } else if (plano.includes('todos') || plano.includes('livre')) {
+      aulasPorSemana = 5;
+    } else if (plano.includes('diaria') || plano.includes('diária')) {
+      aulasPorSemana = 1;
+    } else {
+      aulasPorSemana = 2;
+    }
+
+    const semanasNoMes = 4;
+    const aulasEsperadasNoMes = aulasPorSemana * semanasNoMes;
+
+    // Presenças válidas: Presenças confirmadas + Faltas Justificadas
+    const presencasEfetivas = presentesCount + justificadasCount;
+    
+    // Porcentagem calculada
+    let porcentagem = 0;
+    if (aulasEsperadasNoMes > 0) {
+      porcentagem = Math.min(100, Math.round((presencasEfetivas / aulasEsperadasNoMes) * 100));
+    }
+
+    // Dados da mensalidade
+    const ultimaMensalidade = aluno.mensalidades[0];
+    let diasParaVencer = null;
+    let statusMensalidade = 'PAGO';
+
+    if (ultimaMensalidade) {
+      statusMensalidade = ultimaMensalidade.status;
+      const diffTime = new Date(ultimaMensalidade.dataVencimento).getTime() - agora.getTime();
+      diasParaVencer = Math.ceil(diffTime / (1000 * 3600 * 24));
+      if (diasParaVencer < 0 && statusMensalidade !== 'PAGO') {
+        statusMensalidade = 'ATRASADO';
+      }
+    }
+
+    res.json({
+      aluno: {
+        id: aluno.id,
+        nome: aluno.nome,
+        cpf: aluno.cpf,
+        telefone: aluno.telefone,
+        email: aluno.email,
+        plano: aluno.plano || '2x na semana',
+        prajied: aluno.prajied
+      },
+      periodo: { mes, ano },
+      estatisticas: {
+        aulasPorSemana,
+        aulasEsperadasNoMes,
+        presentes: presentesCount,
+        justificadas: justificadasCount,
+        agendadasPendentes: agendadosCount,
+        ausentes: ausentesCount,
+        presencasEfetivas,
+        porcentagemPresenca: porcentagem
+      },
+      mensalidade: {
+        status: statusMensalidade,
+        diasParaVencer,
+        dataVencimento: ultimaMensalidade?.dataVencimento || null,
+        valor: ultimaMensalidade?.valor || 160.00
+      },
+      presencas,
+      presencasPorDia
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ erro: 'Erro ao carregar calendário do aluno.' });
+  }
+});
+
+// Admin adiciona ou altera presença / falta justificada diretamente no calendário
+app.post('/api/admin/alunos/:id/presenca', async (req, res) => {
+  const { id } = req.params;
+  const { data, status, justificativa, eventoId } = req.body;
+
+  if (!data || !status) {
+    return res.status(400).json({ erro: 'Data e status são obrigatórios.' });
+  }
+
+  try {
+    const dataAlvo = new Date(data);
+    const inicioDia = new Date(dataAlvo);
+    inicioDia.setHours(0, 0, 0, 0);
+    const fimDia = new Date(dataAlvo);
+    fimDia.setHours(23, 59, 59, 999);
+
+    // Procura se já existe registro de presença neste dia
+    let registro = await prisma.agendamentoPresenca.findFirst({
+      where: {
+        alunoId: id,
+        data: {
+          gte: inicioDia,
+          lte: fimDia
+        }
+      }
+    });
+
+    if (registro) {
+      registro = await prisma.agendamentoPresenca.update({
+        where: { id: registro.id },
+        data: {
+          status,
+          justificativa: justificativa || null,
+          ...(eventoId ? { eventoId } : {})
+        }
+      });
+    } else {
+      registro = await prisma.agendamentoPresenca.create({
+        data: {
+          alunoId: id,
+          data: dataAlvo,
+          status,
+          justificativa: justificativa || null,
+          eventoId: eventoId || null
+        }
+      });
+    }
+
+    res.json({ mensagem: 'Presença atualizada no calendário com sucesso!', registro });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ erro: 'Erro ao registrar presença no calendário.' });
+  }
+});
+
+// Admin remove registro de presença de um dia
+app.delete('/api/admin/alunos/:id/presenca', async (req, res) => {
+  const { id } = req.params;
+  const { data, presencaId } = req.body;
+
+  try {
+    if (presencaId) {
+      await prisma.agendamentoPresenca.delete({
+        where: { id: presencaId }
+      });
+    } else if (data) {
+      const dataAlvo = new Date(data);
+      const inicioDia = new Date(dataAlvo);
+      inicioDia.setHours(0, 0, 0, 0);
+      const fimDia = new Date(dataAlvo);
+      fimDia.setHours(23, 59, 59, 999);
+
+      await prisma.agendamentoPresenca.deleteMany({
+        where: {
+          alunoId: id,
+          data: {
+            gte: inicioDia,
+            lte: fimDia
+          }
+        }
+      });
+    }
+
+    res.json({ mensagem: 'Registro removido com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao remover registro.' });
+  }
+});
+
+
+// ==========================================
+// AULAS EXPERIMENTAIS & LEAD FOLLOW-UP
+// ==========================================
+
+// Criar Agendamento Experimental (Pelo formulário público do site)
+app.post('/api/agendamentos', async (req, res) => {
+  const { nome, telefone, data, horario } = req.body;
+  try {
+    const agendamento = await prisma.agendamentoExperimental.create({
+      data: {
+        nome,
+        telefone,
+        data,
+        horario,
+        status: 'PENDENTE'
+      }
+    });
+    res.json({ mensagem: 'Aula experimental agendada!', agendamento });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao agendar aula.' });
+  }
+});
+
+// Listar Agendamentos categorizados para o Admin
+app.get('/api/admin/agendamentos', async (req, res) => {
+  try {
+    const todos = await prisma.agendamentoExperimental.findMany({
+      orderBy: { criadoEm: 'desc' }
+    });
+
+    const agora = new Date();
+
+    // 1: Pendentes (agendados para fazer a aula)
+    const pendentes = todos.filter(a => a.status === 'PENDENTE');
+
+    // 2: Pós-Aula (Já realizou a aula experimental, mas ainda não fechou contrato)
+    const posAula = todos
+      .filter(a => a.status === 'REALIZADA')
+      .map(item => {
+        const dataReferencia = item.dataRealizada ? new Date(item.dataRealizada) : new Date(item.criadoEm);
+        const diferencaMs = agora.getTime() - dataReferencia.getTime();
+        const diasDesdeAula = Math.max(0, Math.floor(diferencaMs / (1000 * 60 * 60 * 24)));
+
+        return {
+          ...item,
+          diasDesdeAula,
+          dataRealizadaFormatada: dataReferencia.toLocaleDateString('pt-BR')
+        };
+      })
+      .sort((a, b) => b.diasDesdeAula - a.diasDesdeAula); // Mais antigos primeiro para follow-up urgente
+
+    // 3: Fecharam contrato ou Desistiram
+    const finalizados = todos.filter(a => a.status === 'FECHOU_CONTRATO' || a.status === 'DESISTIU');
+
+    res.json({
+      pendentes,
+      posAula,
+      finalizados,
+      todos
+    });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao buscar agendamentos.' });
+  }
+});
+
+// Atualizar status da aula experimental (Realizada, Desistiu, Fechou, etc)
+app.patch('/api/admin/agendamentos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, observacao, dataRealizada } = req.body;
+
+  try {
+    const dataUpdate: any = {};
+    if (status) dataUpdate.status = status;
+    if (observacao !== undefined) dataUpdate.observacao = observacao;
+    
+    // Se marcar como realizada e não tiver dataRealizada, usa a data atual
+    if (status === 'REALIZADA') {
+      dataUpdate.dataRealizada = dataRealizada ? new Date(dataRealizada) : new Date();
+    } else if (dataRealizada) {
+      dataUpdate.dataRealizada = new Date(dataRealizada);
+    }
+
+    const agendamento = await prisma.agendamentoExperimental.update({
+      where: { id },
+      data: dataUpdate
+    });
+
+    res.json({ mensagem: 'Status do agendamento atualizado!', agendamento });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao atualizar agendamento.' });
+  }
+});
+
+// Converter experimental diretamente em Aluno Matriculado
+app.post('/api/admin/agendamentos/:id/converter', async (req, res) => {
+  const { id } = req.params;
+  const { plano, valorMensalidade, cpf, email } = req.body;
+
+  try {
+    const agendamento = await prisma.agendamentoExperimental.findUnique({
+      where: { id }
+    });
+
+    if (!agendamento) {
+      return res.status(404).json({ erro: 'Agendamento não encontrado.' });
+    }
+
+    // Gera CPF temporário se não fornecido
+    const cpfFinal = cpf ? cpf.replace(/[^\d]+/g, '') : Math.floor(10000000000 + Math.random() * 90000000000).toString();
+    const senhaTemporaria = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const novoAluno = await prisma.aluno.create({
+      data: {
+        nome: agendamento.nome,
+        telefone: agendamento.telefone,
+        cpf: cpfFinal,
+        email: email || null,
+        plano: plano || '2x na semana',
+        senha: senhaTemporaria,
+        primeiroAcesso: true,
+        mensalidades: {
+          create: {
+            valor: parseFloat(valorMensalidade) || 160.00,
+            dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
+            status: 'PENDENTE'
+          }
+        }
+      }
+    });
+
+    // Atualiza status do agendamento para FECHOU_CONTRATO
+    await prisma.agendamentoExperimental.update({
+      where: { id },
+      data: { status: 'FECHOU_CONTRATO' }
+    });
+
+    res.json({
+      mensagem: `Parabéns! ${agendamento.nome} agora é um aluno matriculado!`,
+      aluno: novoAluno,
+      senhaTemporaria
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ erro: 'Erro ao converter lead em aluno.' });
+  }
+});
+
+
+// ==========================================
+// ROTAS DE PAGAMENTO E CHECKOUT
 // ==========================================
 
 // Criar novo aluno via Checkout no site
 app.post('/api/checkout', async (req, res) => {
-  const { nome, cpf, email, senha, plano, valor, metodoPagamento, cartaoToken } = req.body;
+  const { nome, cpf, email, telefone, senha, plano, valor } = req.body;
   if (!nome || !cpf || !senha) {
     return res.status(400).json({ erro: 'Nome, CPF e senha são obrigatórios.' });
   }
@@ -300,28 +727,21 @@ app.post('/api/checkout', async (req, res) => {
   const cpfLimpo = cpf.replace(/[^\d]+/g, '');
   
   try {
-    // -------------------------------------------------------------
-    // ATENÇÃO DESENVOLVEDOR: INSERIR GATEWAY DE PAGAMENTO AQUI
-    // -------------------------------------------------------------
-    // Aqui você integra a API do Stripe ou Mercado Pago
-    // Ex: const payment = await mercadoPago.payment.create({ ... })
-    // Se aprovado, continua para a criação no banco abaixo:
-    // -------------------------------------------------------------
-
     const novoAluno = await prisma.aluno.create({
       data: {
         nome,
         cpf: cpfLimpo,
         email,
-        senha, // Senha criada pelo próprio aluno
-        primeiroAcesso: false, // Não precisa trocar a senha
-        plano,
+        telefone,
+        senha,
+        primeiroAcesso: false,
+        plano: plano || '2x na semana',
         mensalidades: {
           create: {
-            valor: parseFloat(valor),
-            dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000), // Daqui 30 dias
+            valor: parseFloat(valor) || 160,
+            dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
             dataPagamento: new Date(),
-            status: 'PAGO' // Pago no ato do checkout
+            status: 'PAGO'
           }
         }
       }
@@ -343,7 +763,7 @@ app.post('/api/alunos/pagar', async (req, res) => {
     const mensalidade = await prisma.mensalidade.create({
       data: {
         alunoId,
-        valor: parseFloat(valor),
+        valor: parseFloat(valor) || 160,
         dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
         dataPagamento: new Date(),
         status: 'PAGO'
@@ -355,102 +775,24 @@ app.post('/api/alunos/pagar', async (req, res) => {
   }
 });
 
-// Criar Agendamento Experimental
-app.post('/api/agendamentos', async (req, res) => {
-  const { nome, telefone, data, horario } = req.body;
-  try {
-    const agendamento = await prisma.agendamentoExperimental.create({
-      data: { nome, telefone, data, horario, status: 'PENDENTE' }
-    });
-    res.json({ mensagem: 'Aula experimental agendada!', agendamento });
-  } catch (error) {
-    res.status(500).json({ erro: 'Erro ao agendar aula.' });
-  }
-});
-
-// Listar Agendamentos (Admin)
-app.get('/api/admin/agendamentos', async (req, res) => {
-  try {
-    const agendamentos = await prisma.agendamentoExperimental.findMany({
-      orderBy: { criadoEm: 'desc' }
-    });
-    res.json(agendamentos);
-  } catch (error) {
-    res.status(500).json({ erro: 'Erro ao buscar agendamentos.' });
-  }
-});
-
-
-// ==========================================
-// INTELIGÊNCIA ARTIFICIAL E CHATBOT
-// ==========================================
-app.post('/api/chat', async (req, res) => {
-  const { mensagem } = req.body;
-  
-  if (!process.env.GEMINI_API_KEY) {
-    const respostas = [
-      "Para um jab perfeito, mantenha a guarda alta com a mão de trás!",
-      "Lembre-se de girar o pé de apoio quando for chutar com a perna de trás.",
-      "A respiração é tudo! Solte o ar junto com o golpe."
-    ];
-    return res.json({ text: "⚠️ [Modo Offline - Insira a chave GEMINI_API_KEY no .env para ativar a IA] Dica: " + respostas[Math.floor(Math.random() * respostas.length)] });
-  }
-
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const prompt = "Você é um mestre experiente de Muay Thai do CT Borü. Responda perguntas sobre treinos de forma motivadora, curta e direta (máximo 2 parágrafos). Dê dicas técnicas precisas de artes marciais.\n\nPergunta do Aluno: " + mensagem;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-    
-    res.json({ text: response.text });
-  } catch (error: any) {
-    res.status(500).json({ erro: 'Erro ao comunicar com a IA', detalhe: error.message });
-  }
-});
-
-// ==========================================
-// INTEGRAÇÃO DE PAGAMENTO (STRIPE / MERCADO PAGO)
-// ==========================================
+// Processamento genérico de pagamentos (Mock Gateway)
 app.post('/api/pagamentos/processar', async (req, res) => {
-  const { alunoId, valor, metodoPagamento, cartaoToken } = req.body;
+  const { alunoId, valor } = req.body;
   
   try {
-    // -------------------------------------------------------------
-    // ATENÇÃO DESENVOLVEDOR: INSERIR CREDENCIAIS E SDK DO GATEWAY AQUI!
-    // -------------------------------------------------------------
-    // Exemplo de integração com Mercado Pago:
-    // import { MercadoPagoConfig, Payment } from 'mercadopago';
-    // const client = new MercadoPagoConfig({ accessToken: 'APP_USR-SEU_ACCESS_TOKEN_AQUI' });
-    // const payment = new Payment(client);
-    //
-    // const result = await payment.create({
-    //   body: {
-    //     transaction_amount: valor,
-    //     token: cartaoToken, // Token gerado no frontend
-    //     description: 'Mensalidade CT BORÜ',
-    //     payment_method_id: metodoPagamento, // 'pix', 'visa', 'master'
-    //     payer: { email: "emaildoaluno@gmail.com" }
-    //   }
-    // });
-    // -------------------------------------------------------------
+    const dataPagamento = new Date();
+    const status = 'PAGO';
 
-    let dataPagamento = new Date();
-    let status = 'PAGO';
-
-    // Mock salvando no banco após "aprovação"
     let alunoObj = null;
     if (alunoId) {
-       alunoObj = await prisma.aluno.findUnique({ where: { id: alunoId } });
+      alunoObj = await prisma.aluno.findUnique({ where: { id: alunoId } });
     }
 
     if (alunoObj) {
       const mensalidade = await prisma.mensalidade.create({
         data: {
           alunoId: alunoObj.id,
-          valor: parseFloat(valor),
+          valor: parseFloat(valor) || 160,
           dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000),
           dataPagamento,
           status

@@ -18,6 +18,7 @@ export default function Checkout() {
     nome: '',
     cpf: '',
     email: '',
+    telefone: '',
     senha: ''
   });
 
@@ -63,10 +64,13 @@ export default function Checkout() {
       <div className="max-w-4xl mx-auto py-10">
         
         {/* Header Voltar */}
-        <div className="mb-8">
+        <div className="mb-8 flex justify-between items-center">
           <Link to="/" className="text-zinc-500 hover:text-white transition flex items-center gap-2 text-sm font-semibold">
             ← Voltar para os Planos
           </Link>
+          <a href="https://wa.me/556992384491" target="_blank" className="text-zinc-400 hover:text-white text-xs transition">
+            Dúvidas? WhatsApp do CT: <strong className="text-emerald-400">+55 69 9238-4491</strong>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -92,6 +96,10 @@ export default function Checkout() {
                   <div>
                     <label className="block text-zinc-400 text-sm font-semibold mb-1">Nome Completo</label>
                     <input required type="text" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 focus:border-red-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-400 text-sm font-semibold mb-1">WhatsApp / Celular (Seu Telefone)</label>
+                    <input required type="tel" placeholder="(69) 99999-9999" value={formData.telefone} onChange={(e) => setFormData({...formData, telefone: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 focus:border-red-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-zinc-400 text-sm font-semibold mb-1">E-mail</label>

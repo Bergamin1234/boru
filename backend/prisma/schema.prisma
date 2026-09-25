@@ -15,7 +15,7 @@ model Aluno {
   cpf            String?       @unique
   senha          String?       // Senha criptografada (ou temporária)
   primeiroAcesso Boolean       @default(true) // Controla se o aluno precisa trocar a senha
-  plano          String?       // Valores: DIARIA, DUAS_AULAS_SEMANA, TRES_AULAS_SEMANA, TODOS_HORARIOS
+  plano          String?       // Valores: DIARIA, 2x na semana, 3x na semana, Todos os Horários
   prajied        String        @default("Branco") // Nível/Graduação do aluno
   criadoEm       DateTime      @default(now())
   
@@ -48,28 +48,30 @@ model EventoDeAula {
 }
 
 model AgendamentoPresenca {
-  id          String         @id @default(uuid())
-  status      String         @default("AGENDADO") // Valores: AGENDADO, PRESENTE, AUSENTE, PENETRA
-  fotoComprovanteUrl String? // Para upload da foto como gabarito (se houver)
+  id                 String        @id @default(uuid())
+  status             String        @default("AGENDADO") // Valores: AGENDADO, PRESENTE, AUSENTE, JUSTIFICADO
+  fotoComprovanteUrl String?
 
-  alunoId     String
-  aluno       Aluno          @relation(fields: [alunoId], references: [id])
+  alunoId            String
+  aluno              Aluno         @relation(fields: [alunoId], references: [id])
   
-  eventoId    String
-  evento      EventoDeAula   @relation(fields: [eventoId], references: [id])
+  eventoId           String?
+  evento             EventoDeAula? @relation(fields: [eventoId], references: [id])
   
-  criadoEm    DateTime       @default(now())
+  data               DateTime      @default(now())
+  justificativa      String?
 
-  @@unique([alunoId, eventoId])
+  criadoEm           DateTime      @default(now())
 }
 
-
 model AgendamentoExperimental {
-  id       String   @id @default(uuid())
-  nome     String
-  telefone String
-  data     String
-  horario  String
-  status   String   @default("PENDENTE")
-  criadoEm DateTime @default(now())
+  id            String    @id @default(uuid())
+  nome          String
+  telefone      String
+  data          String
+  horario       String
+  status        String    @default("PENDENTE") // PENDENTE, REALIZADA, FECHOU_CONTRATO, DESISTIU
+  dataRealizada DateTime?
+  observacao    String?
+  criadoEm      DateTime  @default(now())
 }

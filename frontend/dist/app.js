@@ -304,7 +304,7 @@ function handleBookingSubmit(event) {
     `📋 *Experiência:* ${encodeURIComponent(experience)}%0A%0A` +
     `Olá equipe BORÜ! Vi a apresentação do CT no site e gostaria de confirmar minha aula experimental gratuita.`;
 
-  const whatsappNumber = '5569999990000';
+  const whatsappNumber = '556992384491';
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${textMessage}`;
 
   showToast('Redirecionando para a recepção do CT BORÜ...', 'success');
