@@ -57,7 +57,14 @@ export default function AgendarAula() {
             Sua aula experimental foi marcada para <strong>{diaSelecionado}</strong> às <strong>{formData.horario}</strong>.
             <br/><br/>Nossa equipe confirmará com você pelo WhatsApp em breve!
           </p>
-          <button onClick={() => navigate('/')} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 font-bold rounded-xl transition">
+          <a 
+            href={`https://wa.me/556992384491?text=${encodeURIComponent(`Olá Professor Felipe, agendei minha aula experimental de Muay Thai no CT BORÜ para ${diaSelecionado} às ${formData.horario}! Nome: ${formData.nome}`)}`}
+            target="_blank"
+            className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-green-600/30"
+          >
+            <span>📲 Confirmar direto no WhatsApp (+55 69 9238-4491)</span>
+          </a>
+          <button onClick={() => navigate('/')} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 font-bold rounded-xl transition text-zinc-300">
             Voltar ao Site Inicial
           </button>
         </div>
@@ -99,7 +106,7 @@ export default function AgendarAula() {
             <div>
               <label className="block text-zinc-400 text-sm font-semibold mb-3">Escolha o Dia da Semana</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {Object.keys(horariosPorDia).filter(dia => horariosPorDia[dia].length > 0).map(dia => (
+                {Object.keys(horariosPorDia).filter(dia => (horariosPorDia[dia]?.length || 0) > 0).map(dia => (
                   <button 
                     key={dia} 
                     type="button"
@@ -117,7 +124,7 @@ export default function AgendarAula() {
               <div className="animate-in fade-in slide-in-from-top-4 duration-300">
                 <label className="block text-zinc-400 text-sm font-semibold mb-3">Horários disponíveis ({diaSelecionado})</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {horariosPorDia[diaSelecionado].map(hora => (
+                  {(horariosPorDia[diaSelecionado] || []).map(hora => (
                     <button 
                       key={hora} 
                       type="button"
