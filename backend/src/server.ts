@@ -12,6 +12,51 @@ app.use(express.json());
 // ROTAS DO ALUNO
 // ==========================================
 
+// Rota para recuperar senha (Esqueci minha senha)
+app.post('/api/alunos/recuperar-senha', async (req, res) => {
+  const { contato } = req.body; // pode ser CPF, Email ou Telefone
+
+  if (!contato) {
+    return res.status(400).json({ erro: 'Por favor, informe seu CPF, E-mail ou Telefone.' });
+  }
+
+  const contatoLimpo = contato.trim();
+  const apenasNumeros = contatoLimpo.replace(/[^\d]+/g, '');
+
+  try {
+    const filters: any[] = [{ email: contatoLimpo }];
+    if (apenasNumeros.length > 0) {
+      filters.push({ cpf: apenasNumeros });
+    }
+    if (apenasNumeros.length > 8) {
+      filters.push({ telefone: { contains: apenasNumeros } });
+    }
+
+    const aluno = await prisma.aluno.findFirst({
+      where: { OR: filters }
+    });
+
+    if (!aluno) {
+      return res.status(404).json({ erro: 'Nenhum aluno encontrado com este contato.' });
+    }
+
+    const senhaTemporaria = 'boru123';
+    
+    await prisma.aluno.update({
+      where: { id: aluno.id },
+      data: {
+        senha: senhaTemporaria,
+        primeiroAcesso: true // Obriga a trocar no próximo login
+      }
+    });
+
+    res.json({ mensagem: 'Sua senha foi redefinida para "boru123". Faça o login com essa senha e crie uma nova em seguida!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ erro: 'Erro interno ao recuperar senha.' });
+  }
+});
+
 // Login do Aluno via CPF e Senha
 app.post('/api/alunos/login', async (req, res) => {
   const { cpf, senha } = req.body;

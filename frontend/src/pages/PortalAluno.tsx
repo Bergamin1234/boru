@@ -18,6 +18,10 @@ export default function PortalAluno() {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
+  // Controle de recuperação de senha
+  const [showRecuperarSenha, setShowRecuperarSenha] = useState(false);
+  const [contatoRecuperacao, setContatoRecuperacao] = useState('');
+
   // TELA DO PORTAL (LOGADO) - Aba ativa: 'aulas' | 'frequencia' | 'financeiro'
   const [abaAtiva, setAbaAtiva] = useState('aulas');
   
@@ -67,6 +71,28 @@ export default function PortalAluno() {
       } else {
         setErroCpf('Erro de conexão com o servidor.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecuperarSenha = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contatoRecuperacao) {
+      alert('Preencha seu E-mail, CPF ou Telefone.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API_URL}/alunos/recuperar-senha`, {
+        contato: contatoRecuperacao
+      });
+      alert(response.data.mensagem);
+      setShowRecuperarSenha(false);
+      setContatoRecuperacao('');
+      setSenha('');
+    } catch (error: any) {
+      alert(error.response?.data?.erro || 'Erro ao recuperar senha.');
     } finally {
       setLoading(false);
     }
@@ -181,35 +207,73 @@ export default function PortalAluno() {
         <div className="bg-[#141416] border border-zinc-800 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black text-white tracking-widest mb-1">BORÜ</h1>
-            <p className="text-red-500 font-bold text-sm tracking-widest uppercase">Área do Aluno</p>
+            <p className="text-red-500 font-bold text-sm tracking-widest uppercase">
+              {showRecuperarSenha ? 'Recuperar Senha' : 'Área do Aluno'}
+            </p>
           </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-zinc-400 text-sm font-semibold mb-2">Seu CPF</label>
-              <input 
-                type="text" 
-                value={cpf}
-                onChange={(e) => formatarCpf(e.target.value)}
-                maxLength={14}
-                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
-                placeholder="000.000.000-00"
-              />
-            </div>
-            <div>
-              <label className="block text-zinc-400 text-sm font-semibold mb-2">Senha</label>
-              <input 
-                type="password" 
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
-                placeholder="Sua senha"
-              />
-              {erroCpf && <p className="text-red-500 text-xs mt-2 font-semibold">{erroCpf}</p>}
-            </div>
-            <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 shadow-lg shadow-red-600/30">
-              {loading ? 'Verificando...' : 'Acessar Portal'}
-            </button>
-          </form>
+          
+          {showRecuperarSenha ? (
+            <form onSubmit={handleRecuperarSenha} className="space-y-4">
+              <div>
+                <label className="block text-zinc-400 text-sm font-semibold mb-2">E-mail, CPF ou Telefone</label>
+                <input 
+                  type="text" 
+                  value={contatoRecuperacao}
+                  onChange={(e) => setContatoRecuperacao(e.target.value)}
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
+                  placeholder="Insira seu contato"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 shadow-lg shadow-red-600/30">
+                {loading ? 'Buscando...' : 'Recuperar Acesso'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowRecuperarSenha(false)} 
+                className="w-full mt-2 text-zinc-500 hover:text-white text-sm transition font-semibold"
+              >
+                Voltar para Login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-zinc-400 text-sm font-semibold mb-2">Seu CPF</label>
+                <input 
+                  type="text" 
+                  value={cpf}
+                  onChange={(e) => formatarCpf(e.target.value)}
+                  maxLength={14}
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-zinc-400 text-sm font-semibold">Senha</label>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowRecuperarSenha(true)} 
+                    className="text-xs text-red-500 hover:text-red-400 font-bold transition"
+                  >
+                    Esqueci a senha
+                  </button>
+                </div>
+                <input 
+                  type="password" 
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition"
+                  placeholder="Sua senha"
+                />
+                {erroCpf && <p className="text-red-500 text-xs mt-2 font-semibold">{erroCpf}</p>}
+              </div>
+              <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 shadow-lg shadow-red-600/30">
+                {loading ? 'Verificando...' : 'Acessar Portal'}
+              </button>
+            </form>
+          )}
+
           <Link to="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-sm transition">
             ← Voltar ao site principal
           </Link>
