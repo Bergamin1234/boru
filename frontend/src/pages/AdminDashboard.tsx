@@ -83,7 +83,11 @@ export default function AdminDashboard() {
       setShowModal(false);
       setNovoAluno({ nome: '', cpf: '', email: '', telefone: '', plano: '2x na semana' });
     } catch (error: any) {
-      alert(error.response?.data?.erro || 'Erro ao criar aluno.');
+      const msg = error.response?.data?.erro 
+        || (error.message?.includes('Network Error') ? 'Não foi possível conectar ao servidor (Backend offline). Verifique se o servidor está rodando.' : null)
+        || error.message
+        || 'Erro ao criar aluno.';
+      alert(msg);
     }
   };
 

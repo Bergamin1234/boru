@@ -156,21 +156,58 @@ app.post('/api/admin/alunos', async (req, res) => {
   }
 
   const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+  if (!cpfLimpo) {
+    return res.status(400).json({ erro: 'CPF inválido.' });
+  }
+
   const senhaTemporaria = Math.floor(100000 + Math.random() * 900000).toString();
 
+  // Mapeia valor da mensalidade de acordo com o plano caso não informado
+  let valorFinal = parseFloat(valorMensalidade);
+  if (isNaN(valorFinal)) {
+    if (plano === '2x na semana') valorFinal = 130.00;
+    else if (plano === '3x na semana') valorFinal = 160.00;
+    else if (plano === 'Todos os Horários') valorFinal = 280.00;
+    else if (plano === 'Diária') valorFinal = 40.00;
+    else valorFinal = 160.00;
+  }
+
+  // Higieniza email: se for string vazia ou espaços, salva como null para não conflitar com unique constraint do SQLite
+  const emailSanitizado = email && typeof email === 'string' && email.trim() !== '' ? email.trim().toLowerCase() : null;
+  const telefoneSanitizado = telefone && typeof telefone === 'string' ? telefone.trim() : null;
+
   try {
+    // Verifica se já existe por CPF ou Email
+    const alunoExistente = await prisma.aluno.findFirst({
+      where: {
+        OR: [
+          { cpf: cpfLimpo },
+          ...(emailSanitizado ? [{ email: emailSanitizado }] : [])
+        ]
+      }
+    });
+
+    if (alunoExistente) {
+      if (alunoExistente.cpf === cpfLimpo) {
+        return res.status(400).json({ erro: `Já existe um aluno cadastrado com este CPF (${cpfLimpo}).` });
+      }
+      if (emailSanitizado && alunoExistente.email === emailSanitizado) {
+        return res.status(400).json({ erro: `Já existe um aluno cadastrado com este E-mail (${emailSanitizado}).` });
+      }
+    }
+
     const novoAluno = await prisma.aluno.create({
       data: {
-        nome,
+        nome: nome.trim(),
         cpf: cpfLimpo,
-        email,
-        telefone,
+        email: emailSanitizado,
+        telefone: telefoneSanitizado,
         plano: plano || '2x na semana',
         senha: senhaTemporaria,
         primeiroAcesso: true,
         mensalidades: {
           create: {
-            valor: parseFloat(valorMensalidade) || 160.00,
+            valor: valorFinal,
             dataVencimento: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000), // Daqui 30 dias
             status: 'PENDENTE'
           }
@@ -180,12 +217,14 @@ app.post('/api/admin/alunos', async (req, res) => {
 
     res.json({ mensagem: 'Aluno criado com sucesso!', aluno: novoAluno, senhaTemporaria });
   } catch (error: any) {
+    console.error('Erro ao criar aluno no banco de dados:', error);
     if (error.code === 'P2002') {
-      return res.status(400).json({ erro: 'Já existe um aluno com este CPF ou E-mail.' });
+      return res.status(400).json({ erro: 'Já existe um aluno cadastrado com este CPF ou E-mail.' });
     }
-    res.status(500).json({ erro: 'Erro ao criar aluno.' });
+    res.status(500).json({ erro: error.message || 'Erro ao criar aluno no banco de dados.' });
   }
 });
+
 
 app.get('/api/admin/dashboard', async (req, res) => {
   try {
