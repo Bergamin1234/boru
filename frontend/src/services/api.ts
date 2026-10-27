@@ -1,7 +1,17 @@
 import axios from 'axios';
 
-const api = axios.create({ 
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api' 
+const defaultApiUrl =
+  typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:3001/api'
+    : 'https://boru-api-fhdn.onrender.com/api';
+
+const rawApiUrl = (import.meta.env.VITE_API_URL || defaultApiUrl).replace(
+  'boru-api-lkdn.onrender.com',
+  'boru-api-fhdn.onrender.com'
+);
+
+const api = axios.create({
+  baseURL: rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`
 });
 
 export const publicApi = {

@@ -28,7 +28,7 @@ O banco de dados em nuvem (**Supabase PostgreSQL**) e o banco local de fallback 
 
 ### 1.3. Infraestrutura Conectada (Arquitetura em Nuvem)
 - **Frontend (Hospedagem Web):** Publicado na **Vercel** (`boru-lime.vercel.app`), com roteamento SPA configurado (`vercel.json`).
-- **Backend (API Node.js + Express + Prisma):** Publicado no **Render** (`boru-api-lkdn.onrender.com`), com endpoint de healthcheck ativo (`GET /`) e CORS configurado.
+- **Backend (API Node.js + Express + Prisma):** Publicado no **Render** (`boru-api-fhdn.onrender.com`), com endpoint de healthcheck ativo (`GET /`) e CORS configurado.
 - **Banco de Dados (PostgreSQL):** Hospedado no **Supabase** (`us-west-2`), utilizando *Transaction Pooler* (porta `6543`) para execução rápida e *Session Pooler* (porta `5432`) para migrações do Prisma.
 
 ---
