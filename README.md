@@ -129,3 +129,4 @@ boru/
 ## 📜 Licença e Direitos
 
 Projeto desenvolvido com exclusividade para o **Borü Centro de Combate**, sob supervisão e coordenação técnica do Mestre **Felipe Borü**. Todos os direitos reservados.
+Desenvolvido Por equipe De Desenvolvimento da **Faculdade Unisapiens**
