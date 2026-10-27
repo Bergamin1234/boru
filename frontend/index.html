@@ -264,161 +264,261 @@
   </section>
 
   <!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
-  <section id="planos" class="py-24 bg-[#141416]/85 backdrop-blur-[2px] border-y border-zinc-800/80 relative z-10">
+  <section id="planos" class="py-14 sm:py-24 bg-[#141416]/90 backdrop-blur-[2px] border-y border-zinc-800/80 relative z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Valores Transparentes</h2>
-        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+      <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-14 space-y-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/60 border border-red-800/50 text-red-400 font-bold uppercase tracking-widest text-[11px] sm:text-xs">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-red-500"></i>
+          Valores Transparentes
+        </span>
+        <h3 class="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
           Planos de Treinamento
         </h3>
-        <p class="text-zinc-400 text-sm">
-          Sem taxa de matrícula oculta. Condições facilitadas para você focar apenas na sua evolução.
-        </p>
       </div>
 
-      <!-- Planos Mensais -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+      <!-- Planos Mensais Otimizados (Grid responsivo com cartões premium) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch">
         
         <!-- 2x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">2x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="target" class="w-12 h-12 text-zinc-600"></i>
+        <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 flex flex-col justify-between group shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-800/80 px-2.5 py-1 rounded-md border border-zinc-700/50">Plano Básico</span>
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-400 group-hover:text-red-500 group-hover:border-red-500/40 transition">
+                <i data-lucide="target" class="w-5 h-5"></i>
+              </div>
             </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">140</span>
-              <span class="text-sm text-zinc-400">,00</span>
+            
+            <h4 class="font-display text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">2x</h4>
+            <p class="text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">por semana</p>
+
+            <div class="my-4 sm:my-5 pt-4 border-t border-zinc-800/80">
+              <div class="flex items-baseline gap-1">
+                <span class="text-xs font-bold text-zinc-400">R$</span>
+                <span class="text-4xl sm:text-5xl font-black text-white tracking-tight">140</span>
+                <span class="text-xs font-semibold text-zinc-500">/mês</span>
+              </div>
             </div>
+
+            <ul class="space-y-2 mb-5 sm:mb-6 text-xs text-zinc-300">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>2 treinos semanais à escolha</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Acompanhamento do professor</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Acesso ao app do aluno</span>
+              </li>
+            </ul>
           </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=2x%20na%20semana&valor=140" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
+
+          <div class="pt-2 sm:pt-3">
+            <a href="/checkout?plano=2x%20na%20semana&valor=140" class="w-full py-3 px-4 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800/90 hover:bg-red-600/10 text-white font-bold text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <span>Assinar Plano</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 text-zinc-400 group-hover:text-red-500 transition"></i>
             </a>
           </div>
         </div>
 
         <!-- 3x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">3x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="flame" class="w-12 h-12 text-zinc-500"></i>
+        <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 flex flex-col justify-between group shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-800/80 px-2.5 py-1 rounded-md border border-zinc-700/50">Constância</span>
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-400 group-hover:text-red-500 group-hover:border-red-500/40 transition">
+                <i data-lucide="flame" class="w-5 h-5"></i>
+              </div>
             </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">160</span>
-              <span class="text-sm text-zinc-400">,00</span>
+            
+            <h4 class="font-display text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">3x</h4>
+            <p class="text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">por semana</p>
+
+            <div class="my-4 sm:my-5 pt-4 border-t border-zinc-800/80">
+              <div class="flex items-baseline gap-1">
+                <span class="text-xs font-bold text-zinc-400">R$</span>
+                <span class="text-4xl sm:text-5xl font-black text-white tracking-tight">160</span>
+                <span class="text-xs font-semibold text-zinc-500">/mês</span>
+              </div>
             </div>
+
+            <ul class="space-y-2 mb-5 sm:mb-6 text-xs text-zinc-300">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>3 treinos semanais fixos</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Evolução física acelerada</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Acesso ao app do aluno</span>
+              </li>
+            </ul>
           </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=3x%20na%20semana&valor=160" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
+
+          <div class="pt-2 sm:pt-3">
+            <a href="/checkout?plano=3x%20na%20semana&valor=160" class="w-full py-3 px-4 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800/90 hover:bg-red-600/10 text-white font-bold text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <span>Assinar Plano</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 text-zinc-400 group-hover:text-red-500 transition"></i>
             </a>
           </div>
         </div>
 
         <!-- 5x na semana -->
-        <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col justify-between card-combat">
-          <div class="space-y-4 text-center">
-            <h4 class="font-display text-3xl font-bold text-white uppercase">5x</h4>
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 block">na semana</span>
-            <div class="flex justify-center mt-4">
-              <i data-lucide="zap" class="w-12 h-12 text-zinc-400"></i>
+        <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border border-zinc-800/80 hover:border-red-500/50 transition-all duration-300 flex flex-col justify-between group shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-800/80 px-2.5 py-1 rounded-md border border-zinc-700/50">Performance</span>
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-400 group-hover:text-red-500 group-hover:border-red-500/40 transition">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </div>
             </div>
-            <div class="flex items-baseline justify-center gap-1 mt-6">
-              <span class="text-sm font-semibold text-zinc-400">R$</span>
-              <span class="text-4xl font-extrabold text-white">200</span>
-              <span class="text-sm text-zinc-400">,00</span>
+            
+            <h4 class="font-display text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">5x</h4>
+            <p class="text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">por semana</p>
+
+            <div class="my-4 sm:my-5 pt-4 border-t border-zinc-800/80">
+              <div class="flex items-baseline gap-1">
+                <span class="text-xs font-bold text-zinc-400">R$</span>
+                <span class="text-4xl sm:text-5xl font-black text-white tracking-tight">200</span>
+                <span class="text-xs font-semibold text-zinc-500">/mês</span>
+              </div>
             </div>
+
+            <ul class="space-y-2 mb-5 sm:mb-6 text-xs text-zinc-300">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Segunda a sexta-feira</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Condicionamento de atleta</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span>Acesso ao app do aluno</span>
+              </li>
+            </ul>
           </div>
-          <div class="pt-6 mt-6 border-t border-zinc-800">
-            <a href="/checkout?plano=5x%20na%20semana&valor=200" class="block text-center w-full py-3 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm transition">
-              Assinar Plano
+
+          <div class="pt-2 sm:pt-3">
+            <a href="/checkout?plano=5x%20na%20semana&valor=200" class="w-full py-3 px-4 rounded-xl border border-zinc-700 hover:border-red-500 bg-zinc-800/90 hover:bg-red-600/10 text-white font-bold text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <span>Assinar Plano</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 text-zinc-400 group-hover:text-red-500 transition"></i>
             </a>
           </div>
         </div>
 
-        <!-- Livre -->
-        <div class="p-6 rounded-2xl bg-red-700 border-2 border-red-500 flex flex-col justify-between relative shadow-2xl card-combat transform lg:-translate-y-2">
-          <div class="space-y-2 text-center">
-            <h4 class="font-display text-4xl font-bold text-white uppercase">Livre</h4>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-red-200 block">6x na semana<br>Todos os horários</span>
-            <div class="flex justify-center mt-2 pb-2">
-              <i data-lucide="award" class="w-14 h-14 text-amber-300 drop-shadow-md"></i>
-            </div>
-            <div class="flex items-baseline justify-center gap-1 mt-4">
-              <span class="text-sm font-semibold text-red-200">R$</span>
-              <span class="text-5xl font-extrabold text-white">280</span>
-              <span class="text-sm text-red-200">,00</span>
-            </div>
+        <!-- Livre (Destaque VIP) -->
+        <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-red-950/60 via-zinc-900/95 to-black border-2 border-red-500 flex flex-col justify-between relative shadow-2xl shadow-red-950/60 transform lg:-translate-y-2 group">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-600 to-amber-500 text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md flex items-center gap-1.5 whitespace-nowrap">
+            <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-300"></i>
+            Mais Completo
           </div>
-          <div class="pt-6 mt-4 border-t border-red-500">
-            <a href="/checkout?plano=Livre&valor=280" class="block text-center w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-red-950 font-black text-sm uppercase tracking-wider shadow-lg transition">
-              Garantir
+
+          <div>
+            <div class="flex items-center justify-between mb-3 sm:mb-4 mt-1 sm:mt-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-red-400 bg-red-950/80 px-2.5 py-1 rounded-md border border-red-800/60">Ilimitado</span>
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-900/40 border border-red-700/60 flex items-center justify-center text-amber-400">
+                <i data-lucide="award" class="w-5 h-5"></i>
+              </div>
+            </div>
+            
+            <h4 class="font-display text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">Livre</h4>
+            <p class="text-xs font-bold uppercase tracking-wider text-red-300 mt-0.5">todos os horários</p>
+
+            <div class="my-4 sm:my-5 pt-4 border-t border-red-900/50">
+              <div class="flex items-baseline gap-1">
+                <span class="text-xs font-bold text-red-300">R$</span>
+                <span class="text-4xl sm:text-5xl font-black text-white tracking-tight">280</span>
+                <span class="text-xs font-semibold text-red-300/80">/mês</span>
+              </div>
+            </div>
+
+            <ul class="space-y-2 mb-5 sm:mb-6 text-xs text-zinc-200">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                <span class="font-semibold text-white">Treine quantas vezes quiser</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                <span>Acesso a todos os horários</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                <span>Sábados e sparrings liberados</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-2 sm:pt-3">
+            <a href="/checkout?plano=Livre&valor=280" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:brightness-110 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-red-900/50 transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <span>Garantir Vaga</span>
+              <i data-lucide="zap" class="w-4 h-4 text-amber-200 fill-amber-200"></i>
             </a>
           </div>
         </div>
 
       </div>
 
-      <!-- Diária Banner -->
-      <div class="mt-8 rounded-2xl p-6 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
-            <i data-lucide="ticket" class="w-6 h-6 text-zinc-400"></i>
+      <!-- Diária Banner Otimizada para Mobile e Desktop -->
+      <div class="mt-6 sm:mt-8 rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-zinc-900/90 via-zinc-900/60 to-zinc-950/90 border border-zinc-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-lg">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-red-950/40 border border-red-800/40 flex items-center justify-center shrink-0">
+            <i data-lucide="ticket" class="w-6 h-6 text-red-400"></i>
           </div>
           <div>
-            <h5 class="text-lg font-bold text-white uppercase">Treino Avulso / Diária</h5>
-            <p class="text-sm text-zinc-400">Quer treinar apenas hoje? Pague somente pelo dia.</p>
+            <h5 class="text-base sm:text-lg font-black text-white uppercase tracking-tight">Treino Avulso / Diária</h5>
+            <span class="text-xs text-zinc-400 block">Pague somente pelo dia em que treinar</span>
           </div>
         </div>
-        <div class="flex items-center gap-6">
+        <div class="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-zinc-800/80">
           <div class="flex items-baseline gap-1">
-            <span class="text-sm font-semibold text-zinc-400">R$</span>
-            <span class="text-3xl font-extrabold text-white">25</span>
-            <span class="text-sm text-zinc-400">,00</span>
+            <span class="text-xs font-bold text-zinc-400">R$</span>
+            <span class="text-3xl font-black text-white tracking-tight">25</span>
+            <span class="text-xs text-zinc-500">/dia</span>
           </div>
-          <a href="/checkout?plano=Diária&valor=25" class="px-6 py-2.5 rounded-lg border border-zinc-700 hover:border-red-500 text-white font-bold text-sm transition">
-            Agendar
+          <a href="/checkout?plano=Diária&valor=25" class="px-5 py-2.5 rounded-xl border border-red-600/60 hover:bg-red-600/10 text-red-400 hover:text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition active:scale-95">
+            Agendar Treino
           </a>
         </div>
       </div>
 
       <!-- Parceiros Corporativos (Wellhub / TotalPass) -->
-      <div class="mt-16 p-8 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-center">
-        <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Parceiros Corporativos Aceitos no CT</h4>
-        <div class="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-80 hover:opacity-100 transition">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center font-black text-white text-lg">W</div>
+      <div class="mt-10 sm:mt-14 p-5 sm:p-8 rounded-2xl bg-zinc-900/40 border border-zinc-800/70 text-center">
+        <h4 class="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 sm:mb-6">Parceiros Corporativos Aceitos no CT</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 items-center justify-center max-w-3xl mx-auto">
+          <div class="flex items-center justify-center sm:justify-start gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+            <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center font-black text-white text-base shrink-0 shadow-md">W</div>
             <div class="text-left">
-              <span class="font-bold text-white text-base">Wellhub</span>
-              <span class="block text-[11px] text-zinc-400">(Antigo Gympass)</span>
+              <span class="font-bold text-white text-sm block">Wellhub</span>
+              <span class="block text-[11px] text-zinc-400">Antigo Gympass</span>
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
+          <div class="flex items-center justify-center sm:justify-start gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black text-white text-base shrink-0 shadow-md">T</div>
             <div class="text-left">
-              <span class="font-bold text-white text-base">TotalPass</span>
+              <span class="font-bold text-white text-sm block">TotalPass</span>
               <span class="block text-[11px] text-zinc-400">Check-in Liberado</span>
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-black text-zinc-900 text-lg">B</div>
+          <div class="flex items-center justify-center sm:justify-start gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+            <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-black text-zinc-950 text-base shrink-0 shadow-md">B</div>
             <div class="text-left">
-              <span class="font-bold text-white text-base">Convênios Locais</span>
+              <span class="font-bold text-white text-sm block">Convênios</span>
               <span class="block text-[11px] text-zinc-400">Empresas & OAB/RO</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </section>
 
