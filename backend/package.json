@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "prisma generate",
+    "start": "tsx src/server.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
   },
