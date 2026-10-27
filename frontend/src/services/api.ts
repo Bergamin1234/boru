@@ -45,7 +45,20 @@ export const adminApi = {
   updateAppointment: (appointmentId: string, data: unknown) =>
     api.patch(`/admin/agendamentos/${appointmentId}`, data),
   convertAppointment: (appointmentId: string, data: unknown) =>
-    api.post(`/admin/agendamentos/${appointmentId}/converter`, data)
+    api.post(`/admin/agendamentos/${appointmentId}/converter`, data),
+
+  // Módulo de Gamificação ("Trilha do Nak Muay")
+  getGamificationConfig: () => api.get('/admin/gamificacao/config'),
+  getStudentsGamificationSummary: () => api.get('/admin/gamificacao/resumo-alunos'),
+  approveSpecialGamification: (data: unknown) => api.post('/admin/gamificacao/aprovar-especial', data),
+  createGamificationRank: (data: unknown) => api.post('/admin/gamificacao/ranks', data),
+  updateGamificationRank: (id: string, data: unknown) => api.put(`/admin/gamificacao/ranks/${id}`, data),
+  deleteGamificationRank: (id: string) => api.delete(`/admin/gamificacao/ranks/${id}`),
+  createGamificationAchievement: (data: unknown) => api.post('/admin/gamificacao/conquistas', data),
+  updateGamificationAchievement: (id: string, data: unknown) => api.put(`/admin/gamificacao/conquistas/${id}`, data),
+  deleteGamificationAchievement: (id: string) => api.delete(`/admin/gamificacao/conquistas/${id}`),
+  resetGamificationDefault: () => api.post('/admin/gamificacao/reset-padrao'),
+  exportGamificationJson: () => api.get('/admin/gamificacao/export-json'),
 };
 
 export const studentApi = {
@@ -56,6 +69,8 @@ export const studentApi = {
   getCalendar: (studentId: string, params: { mes: number; ano: number }) =>
     api.get(`/admin/alunos/${studentId}/calendario`, { params }),
   getGamification: (studentId: string) => api.get(`/alunos/${studentId}/gamificacao`),
+  markGamificationNotified: (studentId: string, achievementIds?: string[]) =>
+    api.post(`/alunos/${studentId}/gamificacao/notificar`, { achievementIds }),
   checkIn: (data: unknown) => api.post('/checkin', data),
   justifyAbsence: (data: unknown) => api.post('/alunos/justificar-ausencia', data)
 };

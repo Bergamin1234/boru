@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NoticeCard from '../components/NoticeCard';
 import { publicApi, studentApi } from '../services/api';
+import { StudentGamificationTab } from '../components/StudentGamificationTab';
 
 export default function PortalAluno() {
   const [aulas, setAulas] = useState<any[]>([]);
@@ -494,6 +495,14 @@ export default function PortalAluno() {
             📅 Minha Frequência & %
           </button>
           <button 
+            onClick={() => setAbaAtiva('conquistas')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'conquistas' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+            }`}
+          >
+            🏆 Minhas Conquistas {gamificacao?.rankAtual ? `(${gamificacao.rankAtual.badge_icon_url} ${gamificacao.rankAtual.name})` : ''}
+          </button>
+          <button 
             onClick={() => setAbaAtiva('avisos')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
               abaAtiva === 'avisos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
@@ -624,6 +633,25 @@ export default function PortalAluno() {
                     ))}
                   </div>
                 </div>
+
+                {/* Atalho para a nova aba completa Trilha do Nak Muay */}
+                <div className="pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="text-xs text-zinc-300">
+                    <span className="font-black text-amber-400">
+                      {gamificacao.rankAtual?.badge_icon_url || '🥊'} Rank Atual: {gamificacao.rankAtual?.name || 'Iniciante do Tatame'}
+                    </span>
+                    <span className="text-zinc-400 ml-2">
+                      • {gamificacao.resumoConquistas?.desbloqueadas ?? 0}/{gamificacao.resumoConquistas?.total ?? 30} Conquistas Desbloqueadas • ⚡ {gamificacao.xpTotal ?? 0} XP
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAbaAtiva('conquistas')}
+                    className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 text-xs font-black transition shrink-0"
+                  >
+                    🏆 Ver Trilha do Nak Muay (30 Conquistas) →
+                  </button>
+                </div>
               </div>
             )}
 
@@ -696,6 +724,18 @@ export default function PortalAluno() {
             </div>
 
           </div>
+        )}
+
+        {/* CONTEÚDO DA ABA: MINHAS CONQUISTAS (TRILHA DO NAK MUAY) */}
+        {abaAtiva === 'conquistas' && (
+          <StudentGamificationTab
+            alunoId={alunoLogado?.id}
+            alunoNome={alunoLogado?.nome || 'Guerreiro(a)'}
+            gamificacaoData={gamificacao}
+            onRefresh={() => alunoLogado?.id && carregarGamificacao(alunoLogado.id)}
+            isCombatHub={false}
+            
+          />
         )}
 
         {/* CONTEÚDO DA ABA: MINHA FREQUÊNCIA & CALENDÁRIO */}
@@ -1229,6 +1269,16 @@ export default function PortalAluno() {
         >
           <span className="text-base">📅</span>
           <span>Presença</span>
+        </button>
+
+        <button 
+          onClick={() => setAbaAtiva('conquistas')}
+          className={`flex flex-col items-center gap-1 py-1 px-2 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'conquistas' ? 'text-amber-400' : 'text-zinc-500'
+          }`}
+        >
+          <span className="text-base">🏆</span>
+          <span>Conquistas</span>
         </button>
 
         <button 

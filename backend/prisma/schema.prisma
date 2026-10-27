@@ -47,8 +47,9 @@ model Aluno {
   prajied        String        @default("Branco") // Graduação do Muay Thai (retrocompatibilidade)
   criadoEm       DateTime      @default(now())
   
-  mensalidades   Mensalidade[]
-  presencas      AgendamentoPresenca[]
+  mensalidades        Mensalidade[]
+  presencas           AgendamentoPresenca[]
+  conquistasProgresso UserAchievementProgress[]
 }
 
 model Mensalidade {
@@ -94,6 +95,14 @@ model AgendamentoPresenca {
   justificativa      String?       // Detalhe ou atestado
   tipoJustificativa  String?       // DOENCA, ATESTADO, TRABALHO, PESSOAL, OUTRO
 
+  // Campos de Gamificação ("Trilha do Nak Muay")
+  shift                   String?  // MANHA, TARDE, NOITE
+  is_special_event        Boolean  @default(false)
+  accompanied_by_user_id  String?
+  checked_by_teacher_id   String?
+  arrived_early           Boolean  @default(false)
+  adverse_weather         Boolean  @default(false)
+
   criadoEm           DateTime      @default(now())
 }
 
@@ -136,4 +145,52 @@ model Produto {
   imagemUrl   String?
   disponivel  Boolean  @default(true)
   criadoEm    DateTime @default(now())
+}
+
+// ==========================================
+// MÓDULO DE GAMIFICAÇÃO ("TRILHA DO NAK MUAY")
+// ==========================================
+model GamificationRank {
+  id                    String   @id @default(uuid())
+  name                  String
+  required_checkins_min Int
+  required_checkins_max Int?     // Null representa 250+ (sem limite superior)
+  badge_icon_url        String   @default("🥊")
+  reward_description    String?
+  order_index           Int      @default(1)
+  is_active             Boolean  @default(true)
+  criadoEm              DateTime @default(now())
+}
+
+model GamificationAchievement {
+  id             String                    @id @default(uuid())
+  title          String
+  description    String
+  category       String                    // FREQUENCIA, STREAKS, HORARIOS, SUPERACAO, COMUNIDADE
+  badge_icon_url String                    @default("🏅")
+  trigger_type   String                    // Ex: TOTAL_CHECKINS, WEEKLY_CHECKINS, MONTHLY_CHECKINS, STREAK_WEEKS, SHIFT_CHECKINS, etc.
+  trigger_value  String                    @default("{}") // JSON flexível com parâmetros do gatilho
+  xp_points      Int                       @default(50)
+  reward_text    String?
+  is_secret      Boolean                   @default(false)
+  is_active      Boolean                   @default(true)
+  criadoEm       DateTime                  @default(now())
+
+  progressos     UserAchievementProgress[]
+}
+
+model UserAchievementProgress {
+  id               String                  @id @default(uuid())
+  user_id          String
+  aluno            Aluno                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  achievement_id   String
+  achievement      GamificationAchievement @relation(fields: [achievement_id], references: [id], onDelete: Cascade)
+  current_progress Int                     @default(0)
+  target_progress  Int                     @default(1)
+  unlocked_at      DateTime?
+  status           String                  @default("locked") // locked, in_progress, completed
+  notified         Boolean                 @default(false)
+  atualizadoEm     DateTime                @updatedAt
+
+  @@unique([user_id, achievement_id])
 }

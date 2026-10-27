@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NoticeCard from '../components/NoticeCard';
 import { adminApi, publicApi } from '../services/api';
+import { AdminGamificationTab } from '../components/AdminGamificationTab';
 
 const graduacoesPorModalidade: Record<string, string[]> = {
   'Muay Thai': [
@@ -967,6 +968,14 @@ export default function AdminDashboard() {
           >
             🎯 Leads & Aulas Exp.
           </button>
+          <button 
+            onClick={() => setAbaAtiva('gamificacao')}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'gamificacao' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+            }`}
+          >
+            🏆 Gestão de Gamificação
+          </button>
           {usuarioLogado?.cargo === 'ADMIN' && (
             <button 
               onClick={() => setAbaAtiva('professores')}
@@ -1570,6 +1579,13 @@ export default function AdminDashboard() {
                 >
                   <span>⚡ Confirmar Todos Agendados (1 Clique)</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('gamificacao')}
+                  className="px-3.5 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 text-xs font-black transition flex items-center gap-1.5 uppercase tracking-wider"
+                >
+                  <span>🏅 Check-in Especial / Trilha Nak Muay</span>
+                </button>
               </div>
             </div>
 
@@ -1733,6 +1749,18 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* CONTEÚDO DA ABA: GESTÃO DE GAMIFICAÇÃO & APROVAÇÃO RÁPIDA (TRILHA DO NAK MUAY) */}
+        {abaAtiva === 'gamificacao' && (
+          <AdminGamificationTab
+            cargoUsuario={usuarioLogado?.cargo || 'ADMIN'}
+            professorId={usuarioLogado?.id}
+            alunosLista={alunos}
+            isCombatHub={false}
+            
+            onRefreshDashboard={carregarDashboard}
+          />
         )}
 
         {/* CONTEÚDO DA ABA: MURAL DE AVISOS */}

@@ -2,12 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
+import { evaluateStudentGamification } from './gamificationService';
+import { registerGamificationRoutes } from './gamificationRoutes';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
+registerGamificationRoutes(app, prisma);
 
 // Servir arquivos estáticos do frontend (modo portátil / produção)
 app.use(express.static(path.join(__dirname, '../public')));
@@ -570,56 +573,13 @@ app.post('/api/alunos/alterar-senha', async (req, res) => {
 // Gamificação & Estímulo ao Check-in
 app.get('/api/alunos/:id/gamificacao', async (req, res) => {
   const { id } = req.params;
-
   try {
-    const aluno = await prisma.aluno.findUnique({ where: { id } });
-    if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado' });
-
-    const hoje = new Date();
-    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
-
-    // Todas as presenças confirmadas do aluno ordenadas
-    const presencas = await prisma.agendamentoPresenca.findMany({
-      where: { alunoId: id, status: 'PRESENTE' },
-      orderBy: { data: 'desc' }
-    });
-
-    // Presenças no mês atual
-    const presencasNoMes = presencas.filter(p => p.data >= inicioMes && p.data <= fimMes).length;
-
-    // Meta do plano
-    const plano = (aluno.plano || '').toLowerCase();
-    let metaMes = 8;
-    if (plano.includes('3x')) metaMes = 12;
-    else if (plano.includes('todos') || plano.includes('livre')) metaMes = 20;
-    else if (plano.includes('diaria')) metaMes = 2;
-
-    const progressoMeta = Math.min(100, Math.round((presencasNoMes / metaMes) * 100));
-
-    // Cálculo do Streak (Sequência de semanas ou dias ativos)
-    let streak = 0;
-    if (presencas.length > 0) {
-      streak = Math.min(presencas.length, 12); // Simula streak ativo baseado nas presenças acumuladas
+    const dadosGamificacao = await evaluateStudentGamification(prisma, id);
+    res.json(dadosGamificacao);
+  } catch (error: any) {
+    if (error?.message?.includes('não encontrado')) {
+      return res.status(404).json({ erro: 'Aluno não encontrado' });
     }
-
-    // Medalhas
-    const medalhas = [
-      { id: 'm1', titulo: 'Primeiro Sangue', desc: 'Realizou o 1º check-in no tatame', desbloqueada: presencas.length >= 1, icone: '🥋' },
-      { id: 'm2', titulo: 'Guerreiro Focado', desc: '5 treinos concluídos com dedicação', desbloqueada: presencas.length >= 5, icone: '🥊' },
-      { id: 'm3', titulo: 'Inabalável', desc: 'Atingiu a meta mensal de treinos', desbloqueada: presencasNoMes >= metaMes, icone: '🔥' },
-      { id: 'm4', titulo: 'Casca Grossa', desc: 'Mais de 15 presenças registradas', desbloqueada: presencas.length >= 15, icone: '🛡️' }
-    ];
-
-    res.json({
-      streak,
-      presencasNoMes,
-      metaMes,
-      progressoMeta,
-      totalPresencas: presencas.length,
-      medalhas
-    });
-  } catch (error) {
     res.status(500).json({ erro: 'Erro ao calcular gamificação.' });
   }
 });
@@ -738,14 +698,25 @@ app.post('/api/checkin', async (req, res) => {
 
     const evento = await prisma.eventoDeAula.findUnique({ where: { id: eventoId } });
 
+    const dataAula = evento ? new Date(evento.dataInicio) : new Date();
+    const horaAula = dataAula.getHours();
+    const turnoInferido = req.body.shift || (horaAula < 12 ? 'MANHA' : horaAula < 18 ? 'TARDE' : 'NOITE');
+
     const checkin = await prisma.agendamentoPresenca.create({
       data: {
         alunoId,
         eventoId,
-        data: evento ? evento.dataInicio : new Date(),
-        status: 'AGENDADO'
+        data: dataAula,
+        status: 'AGENDADO',
+        shift: turnoInferido,
+        is_special_event: Boolean(req.body.is_special_event),
+        arrived_early: Boolean(req.body.arrived_early),
+        adverse_weather: Boolean(req.body.adverse_weather),
+        accompanied_by_user_id: req.body.accompanied_by_user_id || null
       }
     });
+
+    evaluateStudentGamification(prisma, alunoId).catch(() => {});
 
     res.json({ 
       mensagem: 'Oss! Check-in registrado com sucesso! Mostre sua determinação no tatame.', 
@@ -1082,7 +1053,8 @@ app.patch('/api/admin/presencas/:id/status', async (req, res) => {
       include: { aluno: true, evento: true }
     });
 
-    res.json({ mensagem: 'Status da chamada atualizado!', presenca });
+    const gamificacao = await evaluateStudentGamification(prisma, presenca.alunoId).catch(() => null);
+    res.json({ mensagem: 'Status da chamada atualizado!', presenca, gamificacao });
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao atualizar presença.' });
   }
@@ -1102,6 +1074,14 @@ app.post('/api/admin/presencas/marcar-lote', async (req, res) => {
       data: { status }
     });
 
+    const registrosAfetados = await prisma.agendamentoPresenca.findMany({
+      where: { id: { in: presencaIds } },
+      select: { alunoId: true }
+    });
+    const alunosUnicos = Array.from(new Set(registrosAfetados.map(r => r.alunoId)));
+    for (const aId of alunosUnicos) {
+      await evaluateStudentGamification(prisma, aId).catch(() => null);
+    }
     res.json({ mensagem: `${atualizados.count} presenças atualizadas com sucesso!`, count: atualizados.count });
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao atualizar presenças em lote.' });
@@ -1430,7 +1410,8 @@ app.post('/api/admin/alunos/:id/presenca', async (req, res) => {
       });
     }
 
-    res.json({ mensagem: 'Frequência atualizada com sucesso!', registro });
+    const gamificacao = await evaluateStudentGamification(prisma, id).catch(() => null);
+    res.json({ mensagem: 'Frequência atualizada com sucesso!', registro, gamificacao });
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao registrar frequência.' });
   }
