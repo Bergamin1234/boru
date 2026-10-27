@@ -1627,9 +1627,18 @@ app.post('/api/checkout', async (req, res) => {
   }
 });
 
-// Fallback SPA
+// Healthcheck & Fallback API
+app.get('/', (req, res) => {
+  res.json({ status: 'online', service: 'Borü Centro de Combate API', version: '1.0.0' });
+});
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  const indexPath = path.join(__dirname, '../public/index.html');
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.status(200).json({ status: 'online', service: 'Borü Centro de Combate API' });
 });
 
 const PORT = process.env.PORT || 3001;
