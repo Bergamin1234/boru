@@ -760,7 +760,7 @@ export default function AdminDashboard() {
                 value={loginInput}
                 onChange={(e) => setLoginInput(e.target.value)}
                 className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition text-sm"
-                placeholder="Usuário (BrgAdmin) ou CPF do Professor"
+                placeholder="Usuário ou CPF do Professor"
                 required
               />
               <p className="text-[11px] text-zinc-500 mt-1">
