@@ -14,7 +14,7 @@
 
 Esta proposta formaliza a entrega, implantação e sustentação do ecossistema tecnológico completo desenvolvido com exclusividade para o **CT Borü Centro de Combate**.
 
-Por se tratar do **primeiro grande projeto em escala de produção real**, estruturado no âmbito acadêmico e profissional da **Faculdade Unisapiens**, os valores foram formulados com uma **abordagem humilde, acessível e de parceria de longo prazo**, focando em impulsionar a academia com tecnologia de ponta sem onerar o orçamento da empresa.
+Por se tratar do **primeiro grande projeto em escala de produção real**, estruturado no âmbito acadêmico e profissional da **Faculdade Unisapiens**, os valores foram formulados com uma **abordagem acessível, justa e de parceria de longo prazo**, focando em impulsionar a academia com tecnologia de ponta sem onerar o orçamento da empresa.
 
 ---
 
@@ -33,14 +33,14 @@ O cliente recebe uma solução completa, moderna e em funcionamento:
 
 ---
 
-## 💰 3. Proposta Financeira Acessível (Valores de Lançamento)
+## 💰 3. Proposta Financeira (Valores de Lançamento)
 
 Pensando em apoiar o crescimento da academia e estabelecer um case de sucesso de referência:
 
 ### 3.1. Taxa Única de Desenvolvimento e Implantação (Setup do Sistema)
 
-> **Valor Promocional de Primeiro Projeto:** **R\$ 1.600,00**  
-> *(Podendo ser parcelado em até 3x de R\$ 533,33 sem juros)*
+> **Valor de Venda / Implantação:** **R\$ 2.000,00**  
+> *(Condições facilitadas: à vista ou parcelado em até 4x de R\$ 500,00 sem juros)*
 
 **O que contempla este valor:**
 - Cessão de uso da plataforma completa personalizada com a identidade visual do CT Borü.
@@ -68,21 +68,21 @@ Para manter a plataforma sempre online, segura, rápida e com suporte direto aos
 
 ## 🤝 4. Divisão Teórica de Partilha da Equipe & Contrapartida Acadêmica
 
-O projeto possui dupla finalidade: **entrega profissional ao cliente real** e **avaliação acadêmica curricular (valendo 10 pontos)** na Faculdade Unisapiens.
+O projeto possui dupla finalidade: **entrega profissional ao cliente real** e **avaliação acadêmica curricular (valendo 10 PONTOS)** na Faculdade Unisapiens.
 
 ### 4.1. Alinhamento de Papéis e Contrapartida Acadêmica (Nota 10):
 - **Desenvolvimento & Arquitetura de Software:** Conduzido integralmente por **Ítalo Bergamin**, responsável por mais de 95% de todo o código-fonte, banco de dados, regras de negócio e infraestrutura de nuvem.
 - **Participação do Grupo / Colaborador (Wernnon):** Apoio pontual de refatoração, elaboração dos relatórios e slides, condução da **apresentação acadêmica em banca** e defesa do projeto para obtenção da **nota máxima (10 pontos)** para a equipe.
 
-### 4.2. Partilha Financeira do Valor de Implantação (R\$ 1.600,00)
+### 4.2. Partilha Financeira do Valor de Venda / Implantação (R\$ 2.000,00)
 
 Levando em conta que a contrapartida acadêmica (nota 10) contempla a participação do grupo na apresentação e entrega teórica, a divisão da receita financeira de engenharia foi ajustada para:
 
 | Membro da Equipe | Papel Técnico & Acadêmico | % Financeiro | Valor Correspondente | Contrapartida Acadêmica |
 | :--- | :--- | :---: | :---: | :---: |
-| **Ítalo Bergamin** | Arquiteto, Lead Developer e Responsável Técnico | **95,0%** | **R\$ 1.520,00** | Nota 10 + Concepção Técnica |
-| **Wernnon** | Apoio de Refatoração, Slides e Apresentação Oral | **5,0%** | **R\$ 80,00** | Nota 10 + Apresentação em Banca |
-| **Total** | - | **100%** | **R\$ 1.600,00** | - |
+| **Ítalo Bergamin** | Arquiteto, Lead Developer e Responsável Técnico | **95,0%** | **R\$ 1.900,00** | Nota 10 + Concepção Técnica |
+| **Wernnon** | Apoio de Refatoração, Slides e Apresentação Oral | **5,0%** | **R\$ 100,00** | Nota 10 + Apresentação em Banca |
+| **Total** | - | **100%** | **R\$ 2.000,00** | - |
 
 ### 4.3. Partilha da Mensalidade de Manutenção (R\$ 200,00/mês)
 - **100% (R\$ 200,00/mês)** destinado ao responsável técnico (**Ítalo Bergamin**), que assume a responsabilidade contínua de plantão de suporte via WhatsApp, monitoramento da infraestrutura em nuvem, gestão do banco de dados e backups.
