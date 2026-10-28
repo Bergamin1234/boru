@@ -223,6 +223,49 @@ export default function AdminDashboard() {
     }
   }, [isLoggedIn]);
 
+  // Travar o scroll da página de fundo (116 alunos) sempre que qualquer modal estiver aberto
+  useEffect(() => {
+    const algumModalAberto = Boolean(
+      alunoSelecionado ||
+      modalLancarDia ||
+      showModalProduto ||
+      showModal ||
+      alunoBaixaModal ||
+      showModalProf ||
+      showModalEditarProf ||
+      showModalAviso ||
+      modalAcaoDia ||
+      leadParaConverter
+    );
+
+    if (algumModalAberto) {
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [
+    alunoSelecionado,
+    modalLancarDia,
+    showModalProduto,
+    showModal,
+    alunoBaixaModal,
+    showModalProf,
+    showModalEditarProf,
+    showModalAviso,
+    modalAcaoDia,
+    leadParaConverter
+  ]);
+
   const carregarDashboard = async () => {
     setLoading(true);
     try {
@@ -3117,8 +3160,13 @@ export default function AdminDashboard() {
 
       {/* MODAL CALENDÁRIO & FREQUÊNCIA DETALHADA COM PORCENTAGENS */}
       {alunoSelecionado && calendarioDados && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-6 z-[99999] overflow-y-auto">
-          <div className="bg-[#141416] border border-zinc-800 rounded-2xl w-full max-w-3xl p-5 sm:p-7 shadow-2xl my-8">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAlunoSelecionado(null);
+          }}
+          className="fixed inset-0 bg-black/85 backdrop-blur-[2px] flex items-start sm:items-center justify-center p-3 sm:p-6 z-[999999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 rounded-2xl w-full max-w-3xl p-4 sm:p-6 md:p-7 shadow-2xl my-auto max-h-[92vh] overflow-y-auto boru-scrollbar">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">

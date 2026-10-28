@@ -515,7 +515,7 @@ export default function PortalAluno() {
         </header>
 
         {/* NAVEGAÇÃO DE ABAS NO DESKTOP */}
-        <div className="hidden sm:flex gap-2 border-b border-zinc-800 pb-3 overflow-x-auto scrollbar-none">
+        <div className="hidden sm:flex gap-2 border-b border-zinc-800 pb-3 overflow-x-auto boru-scrollbar">
           <button 
             onClick={() => setAbaAtiva('treinos')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
@@ -571,6 +571,72 @@ export default function PortalAluno() {
             }`}
           >
             {alunoLogado?.is_bolsista ? '🎓 Bolsa & Acesso' : isDiariaOuConvenio(alunoLogado?.plano) ? '🎫 Status do Acesso (Diária/Convênio)' : '💳 Mensalidade'}
+          </button>
+        </div>
+
+        {/* BARRA DE ATALHOS RÁPIDOS NO MOBILE (ACESSO DIRETO AO CALENDÁRIO E CONQUISTAS) */}
+        <div className="flex sm:hidden items-center gap-2 overflow-x-auto boru-scrollbar pb-1">
+          <button
+            type="button"
+            onClick={() => {
+              setAbaAtiva('frequencia');
+              setTimeout(() => {
+                document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 120);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
+              abaAtiva === 'frequencia'
+                ? 'bg-red-600 text-white shadow-red-900/40'
+                : 'bg-[#141416] text-red-400 hover:text-white border border-red-500/30'
+            }`}
+          >
+            <span>📅</span>
+            <span>Meu Calendário</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAbaAtiva('conquistas');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
+              abaAtiva === 'conquistas'
+                ? 'bg-amber-500 text-black shadow-amber-500/40'
+                : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/30'
+            }`}
+          >
+            <span>🏆</span>
+            <span>Minhas Conquistas</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAbaAtiva('treinos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
+              abaAtiva === 'treinos'
+                ? 'bg-red-600 text-white'
+                : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800'
+            }`}
+          >
+            <span>🥊</span>
+            <span>Check-in & Treinos</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAbaAtiva('contratos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
+              abaAtiva === 'contratos'
+                ? 'bg-red-600 text-white'
+                : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800'
+            }`}
+          >
+            <span>📄</span>
+            <span>Contrato</span>
           </button>
         </div>
 
@@ -843,6 +909,22 @@ export default function PortalAluno() {
           <div className="space-y-6">
             {dadosFrequencia && (
               <>
+                {/* BOTÃO DE SALTO RÁPIDO PARA O CALENDÁRIO NO MOBILE */}
+                <div className="flex sm:hidden justify-between items-center bg-[#141416] p-3 rounded-xl border border-zinc-800 shadow-md">
+                  <div>
+                    <span className="text-xs text-zinc-200 font-bold block">Frequência Mensal</span>
+                    <span className="text-[10px] text-zinc-400">Pule as estatísticas direto para os dias:</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-black flex items-center gap-1 shadow-md shadow-red-900/40"
+                  >
+                    <span>📅 Ver Calendário ↓</span>
+                  </button>
+                </div>
                 {/* DESTAQUE DE FREQUÊNCIA SEMANAL PARA ALUNOS DE DIÁRIA OU CONVÊNIO */}
                 {isDiariaOuConvenio(alunoLogado?.plano) ? (
                   <div className="space-y-4">
@@ -949,7 +1031,7 @@ export default function PortalAluno() {
                 )}
 
                 {/* CALENDÁRIO */}
-                <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 sm:p-6 space-y-4">
+                <div id="calendario-mensal-aluno" className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 sm:p-6 space-y-4 scroll-mt-24">
                   <div className="flex justify-between items-center">
                     <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                       📅 Frequência Mensal ({mesAtual}/{anoAtual})
@@ -1395,7 +1477,12 @@ export default function PortalAluno() {
         </button>
 
         <button 
-          onClick={() => setAbaAtiva('frequencia')}
+          onClick={() => {
+            setAbaAtiva('frequencia');
+            setTimeout(() => {
+              document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          }}
           className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
             abaAtiva === 'frequencia' ? 'text-red-500' : 'text-zinc-500'
           }`}

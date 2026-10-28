@@ -63,6 +63,17 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('TODAS');
   const [celebrationItem, setCelebrationItem] = useState<AchievementItem | null>(null);
   const [copiadoMsg, setCopiadoMsg] = useState(false);
+  const [buscaConquista, setBuscaConquista] = useState('');
+  const [limiteMobile, setLimiteMobile] = useState(6);
+  const [mostrarVoltarTopo, setMostrarVoltarTopo] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setMostrarVoltarTopo(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const ranks: RankItem[] = gamificacaoData?.ranks || [];
   const conquistas: AchievementItem[] = gamificacaoData?.conquistas || [];
@@ -135,6 +146,14 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
   const conquistasFiltradas = conquistas.filter((c) => {
     if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
     if (categoryFilter !== 'TODAS' && c.category !== categoryFilter) return false;
+    if (buscaConquista.trim()) {
+      const termo = buscaConquista.trim().toLowerCase();
+      const bate =
+        c.title.toLowerCase().includes(termo) ||
+        c.description.toLowerCase().includes(termo) ||
+        (CATEGORY_LABELS[c.category]?.label || '').toLowerCase().includes(termo);
+      if (!bate) return false;
+    }
     return true;
   });
 
@@ -287,7 +306,8 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* Grid / Carrossel dos Ranks: deslize horizontal no mobile para não ocupar altura excessiva */}
+        <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-6 gap-3 overflow-x-auto boru-scrollbar pb-2.5 snap-x">
           {ranks.map((r, idx) => {
             const atingido = totalPresencas >= r.required_checkins_min;
             const isCurrent =
@@ -297,7 +317,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
             return (
               <div
                 key={r.id || idx}
-                className={`rounded-xl p-3.5 border transition relative flex flex-col justify-between ${
+                className={`rounded-xl p-3.5 border transition relative flex flex-col justify-between min-w-[155px] sm:min-w-0 snap-start shrink-0 sm:shrink ${
                   isCurrent
                     ? 'bg-gradient-to-b from-amber-500/20 to-red-950/30 border-amber-500 shadow-lg shadow-amber-500/10'
                     : atingido
@@ -380,27 +400,48 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
           </div>
         </div>
 
-        {/* Filtro por Categoria */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {Object.entries(CATEGORY_LABELS).map(([key, info]) => (
-            <button
-              key={key}
-              onClick={() => setCategoryFilter(key)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition flex items-center gap-1.5 ${
-                categoryFilter === key
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                  : 'bg-[#121215] border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
-              }`}
-            >
-              <span>{info.icon}</span>
-              <span>{info.label}</span>
-            </button>
-          ))}
+        {/* Filtro por Categoria e Busca Rápida */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar pb-1 flex-1">
+            {Object.entries(CATEGORY_LABELS).map(([key, info]) => (
+              <button
+                key={key}
+                onClick={() => setCategoryFilter(key)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition flex items-center gap-1.5 ${
+                  categoryFilter === key
+                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                    : 'bg-[#121215] border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                }`}
+              >
+                <span>{info.icon}</span>
+                <span>{info.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="relative min-w-[220px]">
+            <input
+              type="text"
+              value={buscaConquista}
+              onChange={(e) => setBuscaConquista(e.target.value)}
+              placeholder="🔍 Buscar conquista..."
+              className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 transition"
+            />
+            {buscaConquista && (
+              <button
+                type="button"
+                onClick={() => setBuscaConquista('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Grid das Conquistas */}
+        {/* Grid das Conquistas (Com Limite Ágil no Mobile para evitar rolagem infinita) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {conquistasFiltradas.map((item) => {
+          {conquistasFiltradas.slice(0, limiteMobile).map((item) => {
             const isUnlocked = item.status === 'completed';
             const isInProgress = item.status === 'in_progress';
 
@@ -521,7 +562,64 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
             );
           })}
         </div>
+
+        {/* CONTROLES ÁGEIS DE ROLAGEM NO MOBILE: VER MAIS / VER TODAS / RECOLHER */}
+        {conquistasFiltradas.length > 6 && (
+          <div className="pt-4 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <span className="text-zinc-400 text-xs">
+              Exibindo <strong className="text-white">{Math.min(limiteMobile, conquistasFiltradas.length)}</strong> de{' '}
+              <strong className="text-amber-400">{conquistasFiltradas.length}</strong> conquistas
+            </span>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {limiteMobile < conquistasFiltradas.length && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setLimiteMobile((prev) => prev + 6)}
+                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold transition text-xs"
+                  >
+                    ⬇️ Ver Mais (+6)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLimiteMobile(conquistasFiltradas.length)}
+                    className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 font-black transition text-xs"
+                  >
+                    👁️ Ver Todas ({conquistasFiltradas.length})
+                  </button>
+                </>
+              )}
+
+              {limiteMobile > 6 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLimiteMobile(6);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white font-bold transition text-xs"
+                >
+                  ⬆️ Recolher Lista
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* BOTÃO FLUTUANTE VOLTAR AO TOPO (ESSENCIAL PARA TELAS MOBILE) */}
+      {mostrarVoltarTopo && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-20 right-4 z-40 px-3.5 py-2.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-black text-xs shadow-2xl shadow-red-900/60 flex items-center gap-1.5 border border-red-400/50 transition-all transform hover:scale-105 active:scale-95"
+          title="Voltar ao topo da página"
+        >
+          <span>⬆️</span>
+          <span>Topo</span>
+        </button>
+      )}
 
       {/* MODAL DE CELEBRAÇÃO ("LEVEL UP!" / CONQUISTA DESBLOQUEADA) */}
       {celebrationItem && (
