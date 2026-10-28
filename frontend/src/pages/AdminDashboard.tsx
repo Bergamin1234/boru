@@ -657,9 +657,13 @@ export default function AdminDashboard() {
   // ==========================================
   const abrirCalendarioAluno = async (aluno: any) => {
     setAlunoSelecionado(aluno);
-    setMesCalendario(new Date().getMonth() + 1);
-    setAnoCalendario(new Date().getFullYear());
-    await carregarDadosCalendario(aluno.id, new Date().getMonth() + 1, new Date().getFullYear());
+    setCalendarioDados(null);
+    setLoadingCalendario(true);
+    const mes = new Date().getMonth() + 1;
+    const ano = new Date().getFullYear();
+    setMesCalendario(mes);
+    setAnoCalendario(ano);
+    await carregarDadosCalendario(aluno.id, mes, ano);
   };
 
   const carregarDadosCalendario = async (alunoId: string, mes: number, ano: number) => {
@@ -1047,7 +1051,7 @@ export default function AdminDashboard() {
   // PAINEL LOGADO
   // ==========================================
   return (
-    <div className="min-h-screen bg-[#0B0B0C]/80 backdrop-blur-[1px] text-zinc-100 font-sans p-3 sm:p-6 pb-20 relative z-10">
+    <div className="min-h-screen bg-[#0B0B0C] text-zinc-100 font-sans p-3 sm:p-6 pb-20 relative z-10">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* BARRA SUPERIOR & PERFIL DO USUÁRIO */}
@@ -2666,8 +2670,13 @@ export default function AdminDashboard() {
 
       {/* MODAL NOVO ALUNO */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[99999]">
-          <div className="bg-[#141416] border border-zinc-800 p-6 rounded-2xl w-full max-w-md shadow-2xl">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[99999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-6 rounded-2xl w-full max-w-md shadow-2xl my-auto">
             <h3 className="text-xl font-bold text-white mb-4">Matricular Novo Aluno</h3>
             <form onSubmit={criarAluno} className="space-y-3">
               <div>
@@ -2721,8 +2730,13 @@ export default function AdminDashboard() {
 
       {/* MÓDULO 5: MODAL DE BAIXA MANUAL COM DATEPICKER (CALENDÁRIO) */}
       {alunoBaixaModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[999999]">
-          <div className="bg-[#141416] border border-emerald-500/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setAlunoBaixaModal(null);
+          }}
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[999999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-emerald-500/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4 my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
                 <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400 block">
@@ -2791,8 +2805,13 @@ export default function AdminDashboard() {
 
       {/* MODAL NOVO PROFESSOR (EXCLUSIVO ADMIN) */}
       {showModalProf && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto">
-          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-xl shadow-2xl my-6">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModalProf(false);
+          }}
+          className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-xl shadow-2xl my-auto">
             <h3 className="text-xl font-bold text-amber-400 mb-1">Cadastrar Professor / Usuário</h3>
             <p className="text-zinc-400 text-xs mb-4">Adicione um novo instrutor com permissão de lançar chamadas, gerenciar horários e graduar alunos.</p>
             
@@ -2974,8 +2993,13 @@ export default function AdminDashboard() {
 
       {/* MODAL EDITAR PROFESSOR (EXCLUSIVO ADMIN) */}
       {showModalEditarProf && professorParaEditar && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto">
-          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-xl shadow-2xl my-6">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModalEditarProf(false);
+          }}
+          className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-xl shadow-2xl my-auto">
             <h3 className="text-xl font-bold text-white mb-1">Editar Dados do Professor</h3>
             <p className="text-zinc-400 text-xs mb-4">Altere modalidade, faixa, tempo de aulas/docência e horários de {professorParaEditar.nome}.</p>
             
@@ -3192,8 +3216,16 @@ export default function AdminDashboard() {
 
       {/* MODAL NOVO / EDITAR PRODUTO NA LOJA (COM UPLOAD DE IMAGEM LOCAL DO PC OU CELULAR) */}
       {showModalProduto && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-[99999] overflow-y-auto">
-          <div className="bg-[#141416] border border-zinc-800 p-6 rounded-2xl w-full max-w-lg shadow-2xl my-8">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowModalProduto(false);
+              setProdutoEditandoId(null);
+            }
+          }}
+          className="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-[99999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-6 rounded-2xl w-full max-w-lg shadow-2xl my-auto">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="text-xl font-bold text-white">
@@ -3302,14 +3334,30 @@ export default function AdminDashboard() {
       )}
 
       {/* MODAL CALENDÁRIO & FREQUÊNCIA DETALHADA COM PORCENTAGENS */}
-      {alunoSelecionado && calendarioDados && (
+      {alunoSelecionado && (
         <div
           onClick={(e) => {
             if (e.target === e.currentTarget) setAlunoSelecionado(null);
           }}
-          className="fixed inset-0 bg-black/85 backdrop-blur-[2px] flex items-start sm:items-center justify-center p-3 sm:p-6 z-[999999] overflow-y-auto boru-scrollbar"
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 z-[999999] overflow-y-auto boru-scrollbar"
         >
-          <div className="bg-[#141416] border border-zinc-800 rounded-2xl w-full max-w-3xl p-4 sm:p-6 md:p-7 shadow-2xl my-auto max-h-[92vh] overflow-y-auto boru-scrollbar">
+          {loadingCalendario || !calendarioDados ? (
+            <div className="bg-[#141416] border border-zinc-800 rounded-2xl w-full max-w-sm p-7 shadow-2xl flex flex-col items-center justify-center gap-4 text-center my-auto">
+              <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+              <div>
+                <h4 className="text-base font-black text-white">Carregando Calendário...</h4>
+                <p className="text-xs text-zinc-400 mt-1">{alunoSelecionado.nome}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAlunoSelecionado(null)}
+                className="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <div className="bg-[#141416] border border-zinc-800 rounded-2xl w-full max-w-3xl p-4 sm:p-6 md:p-7 shadow-2xl my-auto max-h-[92vh] overflow-y-auto boru-scrollbar">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
@@ -3423,15 +3471,21 @@ export default function AdminDashboard() {
                   </button>
                 );
               })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* MODAL AÇÃO DO DIA (PRESENÇA / FALTA / DOENÇA) */}
       {modalAcaoDia && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[999999]">
-          <div className="bg-[#141416] border border-zinc-800 p-5 rounded-2xl w-full max-w-sm shadow-2xl">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setModalAcaoDia(false);
+          }}
+          className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[999999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-5 rounded-2xl w-full max-w-sm shadow-2xl my-auto">
             <h4 className="text-base font-bold text-white mb-2">Lançar Registro para {diaSelecionadoAcao}</h4>
             
             <div className="space-y-3">
