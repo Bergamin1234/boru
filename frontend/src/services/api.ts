@@ -39,6 +39,7 @@ export const adminApi = {
   createNotice: (data: unknown) => api.post('/admin/avisos', data),
   deleteNotice: (id: string) => api.delete(`/admin/avisos/${id}`),
   createProduct: (data: unknown) => api.post('/admin/produtos', data),
+  updateProduct: (id: string, data: unknown) => api.put(`/admin/produtos/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/admin/produtos/${id}`),
   createStudent: (data: unknown) => api.post('/admin/alunos', data),
   updateStudent: (studentId: string, data: unknown) => api.patch(`/admin/alunos/${studentId}`, data),
@@ -60,6 +61,13 @@ export const adminApi = {
     api.post('/admin/presencas/marcar-lote', data),
   getGeneralAttendance: (params?: { mes?: number; ano?: number }) =>
     api.get('/admin/frequencia-geral', { params }),
+  batchSaveGeneralAttendance: (data: {
+    alunoIds: string[];
+    data: string;
+    status: string;
+    justificativa?: string | null;
+    tipoJustificativa?: string | null;
+  }) => api.post('/admin/frequencia-geral/lote', data),
   updateAppointment: (appointmentId: string, data: unknown) =>
     api.patch(`/admin/agendamentos/${appointmentId}`, data),
   convertAppointment: (appointmentId: string, data: unknown) =>

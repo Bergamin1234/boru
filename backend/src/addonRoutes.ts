@@ -1434,4 +1434,71 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       res.status(500).json({ erro: 'Erro ao registrar presença expressa.' });
     }
   });
+
+  // Lançamento em Lote de Presenças no Calendário Geral por Data (Múltiplos Alunos de uma vez)
+  app.post('/api/admin/frequencia-geral/lote', async (req: Request, res: Response) => {
+    const { alunoIds, data, status, justificativa, tipoJustificativa } = req.body;
+
+    if (!Array.isArray(alunoIds) || alunoIds.length === 0 || !data || !status) {
+      return res.status(400).json({
+        erro: 'Selecione ao menos um aluno, a data e o status da presença.',
+      });
+    }
+
+    try {
+      const dataStr = String(data).includes('T') ? String(data).split('T')[0] : String(data);
+      const dataAlvo = new Date(`${dataStr}T12:00:00`);
+      const inicioDia = new Date(dataAlvo.getFullYear(), dataAlvo.getMonth(), dataAlvo.getDate(), 0, 0, 0, 0);
+      const fimDia = new Date(dataAlvo.getFullYear(), dataAlvo.getMonth(), dataAlvo.getDate(), 23, 59, 59, 999);
+
+      const hora = new Date().getHours();
+      const shiftInferido = hora < 12 ? 'MANHA' : hora < 18 ? 'TARDE' : 'NOITE';
+
+      let processados = 0;
+
+      for (const alunoId of alunoIds) {
+        const existente = await prisma.agendamentoPresenca.findFirst({
+          where: {
+            alunoId,
+            data: { gte: inicioDia, lte: fimDia },
+          },
+        });
+
+        if (existente) {
+          await prisma.agendamentoPresenca.update({
+            where: { id: existente.id },
+            data: {
+              status,
+              justificativa: justificativa || null,
+              tipoJustificativa: tipoJustificativa || null,
+              shift: existente.shift || shiftInferido,
+            },
+          });
+        } else {
+          await prisma.agendamentoPresenca.create({
+            data: {
+              alunoId,
+              data: dataAlvo,
+              status,
+              justificativa: justificativa || null,
+              tipoJustificativa: tipoJustificativa || null,
+              shift: shiftInferido,
+            },
+          });
+        }
+
+        processados++;
+        await evaluateStudentGamification(prisma, alunoId).catch(() => null);
+      }
+
+      res.json({
+        ok: true,
+        processados,
+        mensagem: `${processados} aluno(s) registrado(s) com status ${status} na data ${dataStr}!`,
+      });
+    } catch (error) {
+      console.error('Erro ao lançar frequência geral em lote:', error);
+      res.status(500).json({ erro: 'Erro ao registrar presenças em lote no calendário.' });
+    }
+  });
 }
