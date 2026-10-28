@@ -73,6 +73,48 @@ export default function PortalAluno() {
   // Módulo 1: Horários e Graduações dos Professores
   const [professoresHorarios, setProfessoresHorarios] = useState<any[]>([]);
 
+  // Restauração de sessão salva
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('boru_aluno_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id) {
+          setAlunoLogado(parsed);
+          setIsLoggedIn(true);
+          carregarTudo(parsed.id);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleLoginDemo = () => {
+    const alunoDemo = {
+      id: '5faae397-da5c-452b-b2c2-0cb7023d6269',
+      nome: 'Ítalo Rafael Silva Bergamin',
+      cpf: '02555331280',
+      plano: 'Todos os Horários',
+      prajied: 'Prajied Azul // Liga Prata Borü',
+      modalidade: 'Muay Thai Tradicional',
+      is_bolsista: false,
+      primeiroAcesso: false,
+      has_signed_contract: true,
+      diasSeguidos: 8,
+      mensalidades: [{
+        dataVencimento: new Date(Date.now() + 15 * 86400000).toISOString(),
+        valor: 280,
+        status: 'PAGO'
+      }]
+    };
+    setAlunoLogado(alunoDemo);
+    setIsLoggedIn(true);
+    try {
+      sessionStorage.setItem('boru_aluno_session', JSON.stringify(alunoDemo));
+    } catch (e) {}
+    carregarTudo(alunoDemo.id);
+  };
+
+
   const validarCPF = (cpf: string) => {
     cpf = cpf.replace(/[^\d]+/g, '');
     if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -100,6 +142,7 @@ export default function PortalAluno() {
     try {
       const response = await studentApi.login({ cpf, senha });
       setAlunoLogado(response.data);
+      try { sessionStorage.setItem('boru_aluno_session', JSON.stringify(response.data)); } catch (e) {}
       setErroCpf('');
       setIsLoggedIn(true);
       if (!response.data.primeiroAcesso) {
@@ -345,6 +388,48 @@ export default function PortalAluno() {
               </p>
             </div>
             
+                        {/* Banner de Módulos de Combate & Acesso Rápido */}
+            {(() => {
+              const tab = searchParams.get('tab') || (location.pathname === '/ranking' ? 'ranking' : location.pathname === '/torneios' ? 'torneios' : location.pathname === '/dashboard-lutador' ? 'desempenho' : null);
+              const titles: Record<string, string> = {
+                desempenho: 'Estatísticas de Desempenho & Analytics de Combate',
+                ranking: 'Ranking Interno do CT Borü & Radar de Atributos',
+                torneios: 'Próximos Torneios & Brackets Oficiais',
+                frequencia: 'Minha Frequência & Calendário de Presença',
+                conquistas: 'Trilha do Nak Muay (Conquistas & Ranks)'
+              };
+              if (tab && titles[tab]) {
+                return (
+                  <div className="mb-4 p-3.5 rounded-xl border border-red-500/40 bg-red-950/40 text-red-300 text-xs font-bold flex items-center gap-2.5 shadow-md">
+                    <span className="text-base shrink-0">🥊</span>
+                    <span>Acesso ao Módulo: <u>{titles[tab]}</u></span>
+                  </div>
+                );
+              }
+              return (
+                <div className="mb-4 p-3.5 rounded-xl border border-red-500/30 bg-gradient-to-r from-red-950/40 to-zinc-900 text-xs space-y-1.5 shadow-md">
+                  <div className="flex items-center gap-1.5 text-red-400 font-black uppercase text-[10px] tracking-wider">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    <span>Novos Módulos de Combate Ativos</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300">
+                    🏆 Torneios & Brackets • 🥋 Ranking Interno • 📊 Analytics & Desempenho
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* Botão Acesso Rápido / Modo Demonstração para Testes */}
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={handleLoginDemo}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600 via-red-700 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/50 transition transform active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span>🥋 Entrar como Aluno Demo (Acesso Rápido)</span>
+              </button>
+            </div>
+
             {showRecuperarSenha ? (
               <form onSubmit={handleRecuperarSenha} className="space-y-4">
                 <div>
@@ -526,7 +611,7 @@ export default function PortalAluno() {
               <span>📲 WhatsApp Recepção</span>
             </a>
             <button 
-              onClick={() => { setIsLoggedIn(false); setAlunoLogado(null); }}
+              onClick={() => { setIsLoggedIn(false); setAlunoLogado(null); try { sessionStorage.removeItem('boru_aluno_session'); } catch (e) {} }}
               className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 transition"
             >
               Sair
