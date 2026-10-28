@@ -18,7 +18,12 @@ export const publicApi = {
   createAppointment: (data: unknown) => api.post('/agendamentos', data),
   checkout: (data: unknown) => api.post('/checkout', data),
   getNotices: () => api.get('/avisos'),
-  getProducts: () => api.get('/produtos')
+  getProducts: () => api.get('/produtos'),
+  getTeacherSchedules: () => api.get('/professores/horarios'),
+  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string }) =>
+    api.post('/quick-checkin', data),
+  uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
+    api.post('/upload', data)
 };
 
 export const adminApi = {
@@ -37,7 +42,10 @@ export const adminApi = {
   deleteProduct: (id: string) => api.delete(`/admin/produtos/${id}`),
   createStudent: (data: unknown) => api.post('/admin/alunos', data),
   updateStudent: (studentId: string, data: unknown) => api.patch(`/admin/alunos/${studentId}`, data),
-  registerPayment: (studentId: string) => api.post(`/admin/alunos/${studentId}/pagar`),
+  toggleStudentBolsista: (studentId: string, is_bolsista: boolean) =>
+    api.patch(`/admin/alunos/${studentId}/bolsista`, { is_bolsista }),
+  registerPayment: (studentId: string, data?: { dataPagamento?: string; valor?: number | string; metodoPagamento?: string }) =>
+    api.post(`/admin/alunos/${studentId}/pagar`, data || {}),
   updateStudentGrade: (studentId: string, data: unknown) =>
     api.patch(`/admin/alunos/${studentId}/prajied`, data),
   getStudentCalendar: (studentId: string, params: { mes: number; ano: number }) =>
@@ -57,7 +65,35 @@ export const adminApi = {
   convertAppointment: (appointmentId: string, data: unknown) =>
     api.post(`/admin/agendamentos/${appointmentId}/converter`, data),
 
-  // Módulo de Gamificação ("Trilha do Nak Muay")
+  // Módulo 1: Dev Dashboard (Exclusivo AdminDev / BrgAdmin)
+  getDevDashboard: (userEmail?: string, userId?: string) =>
+    api.get('/dev/dashboard', {
+      headers: {
+        'x-admin-dev': 'true',
+        'x-user-email': userEmail || 'brgadmin@boru.com',
+        'x-user-id': userId || ''
+      }
+    }),
+  createDevLog: (data: { level?: string; service?: string; message: string; metadata?: unknown }) =>
+    api.post('/dev/logs', data, { headers: { 'x-admin-dev': 'true' } }),
+  clearDevLogs: () => api.delete('/dev/logs', { headers: { 'x-admin-dev': 'true' } }),
+
+  // Módulo 5: Gestão Financeira & Baixa Manual com DatePicker
+  getFinancialDashboard: () => api.get('/admin/financeiro'),
+  batchRegisterPayment: (data: { alunoIds: string[]; dataPagamento: string; valorCustom?: number | string }) =>
+    api.post('/admin/financeiro/baixa-lote', data),
+
+  // Módulo 6: Split-List de Chamada Diária
+  getSplitDailyRollCall: (data?: string) =>
+    api.get('/admin/chamada-diaria', { params: data ? { data } : undefined }),
+  markExpressDailyRollCall: (data: { alunoId: string; professorId?: string; data?: string; status?: string }) =>
+    api.post('/admin/chamada-diaria/marcar', data),
+
+  // Upload de Arquivo Local (Storage Real)
+  uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
+    api.post('/upload', data),
+
+  // Módulo 7: Gamificação ("Trilha do Nak Muay")
   getGamificationConfig: () => api.get('/admin/gamificacao/config'),
   getStudentsGamificationSummary: () => api.get('/admin/gamificacao/resumo-alunos'),
   approveSpecialGamification: (data: unknown) => api.post('/admin/gamificacao/aprovar-especial', data),
@@ -76,11 +112,17 @@ export const studentApi = {
   recoverPassword: (data: unknown) => api.post('/alunos/recuperar-senha', data),
   changePassword: (data: unknown) => api.post('/alunos/alterar-senha', data),
   getClasses: (params: { alunoId?: string }) => api.get('/aulas', { params }),
+  getTeacherSchedules: () => api.get('/professores/horarios'),
   getCalendar: (studentId: string, params: { mes: number; ano: number }) =>
     api.get(`/admin/alunos/${studentId}/calendario`, { params }),
   getGamification: (studentId: string) => api.get(`/alunos/${studentId}/gamificacao`),
   markGamificationNotified: (studentId: string, achievementIds?: string[]) =>
     api.post(`/alunos/${studentId}/gamificacao/notificar`, { achievementIds }),
   checkIn: (data: unknown) => api.post('/checkin', data),
-  justifyAbsence: (data: unknown) => api.post('/alunos/justificar-ausencia', data)
+  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string }) =>
+    api.post('/quick-checkin', data),
+  justifyAbsence: (data: unknown) => api.post('/alunos/justificar-ausencia', data),
+  getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
+  signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
+    api.post(`/alunos/${studentId}/assinar-contrato`, data),
 };

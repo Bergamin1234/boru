@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
+import { FileUploadInput, BadgeOrImagePreview } from './FileUploadInput';
 
 interface AdminGamificationProps {
   cargoUsuario?: string; // 'ADMIN' | 'PROFESSOR'
@@ -358,7 +359,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
             🏆 Trilha do Nak Muay — Gestão & Aprovação Rápida
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Acompanhe o Rank e Streak dos alunos, valide check-ins especiais e personalize os 6 Ranks e 30 Conquistas.
+            Acompanhe o Rank e Streak dos alunos, valide check-ins especiais e personalize os 6 Ranks e 30 Conquistas com upload de badges.
           </p>
         </div>
 
@@ -474,7 +475,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                   <option value="">Selecione um aluno...</option>
                   {resumoAlunos.map((a) => (
                     <option key={a.alunoId} value={a.alunoId}>
-                      {a.nome} — {a.rankAtual?.badge_icon_url} {a.rankAtual?.name} ({a.totalPresencas} treinos)
+                      {a.nome} — {a.rankAtual?.name} ({a.totalPresencas} treinos)
                     </option>
                   ))}
                 </select>
@@ -589,7 +590,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                   <option value="">Apenas avaliar regras automáticas do check-in</option>
                   {achievements.map((ach) => (
                     <option key={ach.id} value={ach.id}>
-                      {ach.badge_icon_url} {ach.title} (+{ach.xp_points} XP) — {ach.category}
+                      {ach.title} (+{ach.xp_points} XP) — {ach.category}
                     </option>
                   ))}
                 </select>
@@ -636,8 +637,12 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                     className="bg-[#121215] border border-zinc-800/90 hover:border-zinc-700 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-red-600/15 border border-red-500/30 flex items-center justify-center text-2xl shrink-0">
-                        {aluno.rankAtual?.badge_icon_url || '🥊'}
+                      <div className="w-11 h-11 rounded-xl bg-red-600/15 border border-red-500/30 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                        <BadgeOrImagePreview
+                          src={aluno.rankAtual?.badge_icon_url}
+                          fallbackText="🥊"
+                          className="w-full h-full text-2xl"
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -661,9 +666,12 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                             <span
                               key={uc.id}
                               title={uc.title}
-                              className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-sm"
+                              className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-sm overflow-hidden"
                             >
-                              {uc.badge_icon_url}
+                              <BadgeOrImagePreview
+                                src={uc.badge_icon_url}
+                                className="w-full h-full text-xs"
+                              />
                             </span>
                           ))}
                         </div>
@@ -687,7 +695,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
         </div>
       )}
 
-      {/* ABA 2: CRUD DE RANKS ("TRILHA DO NAK MUAY") */}
+      {/* ABA 2: CRUD DE RANKS ("TRILHA DO NAK MUAY" COM UPLOAD DE BADGE) */}
       {subTab === 'ranks' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {isAdmin && (
@@ -696,7 +704,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                 {editingRank ? `✏️ Editar Rank: ${editingRank.name}` : '➕ Novo Rank / Nível'}
               </h3>
               <p className="text-xs text-zinc-400 mb-4">
-                Defina o intervalo de check-ins necessários e a recompensa do nível.
+                Defina o intervalo de check-ins necessários, recompensa e faça upload da imagem da Badge.
               </p>
 
               <form onSubmit={handleSaveRank} className="space-y-3">
@@ -741,29 +749,27 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1">
-                      Ícone / Emoji ou URL
-                    </label>
-                    <input
-                      type="text"
-                      value={rankForm.badge_icon_url}
-                      onChange={(e) => setRankForm({ ...rankForm, badge_icon_url: e.target.value })}
-                      className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1">Ordem (1 a N)</label>
-                    <input
-                      type="number"
-                      value={rankForm.order_index}
-                      onChange={(e) =>
-                        setRankForm({ ...rankForm, order_index: Number(e.target.value) })
-                      }
-                      className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
-                    />
-                  </div>
+                {/* DIRETRIZ 3: UPLOAD REAL DE ARQUIVO LOCAL PARA BADGE DE RANK */}
+                <FileUploadInput
+                  label="Badge / Insígnia do Rank (Upload de Arquivo Local)"
+                  value={rankForm.badge_icon_url}
+                  onChange={(uploadedUrl) =>
+                    setRankForm({ ...rankForm, badge_icon_url: uploadedUrl })
+                  }
+                  folder="rank_badges"
+                  helperText="Faça upload da imagem PNG/JPG/SVG da Badge do Rank"
+                />
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 mb-1">Ordem (1 a N)</label>
+                  <input
+                    type="number"
+                    value={rankForm.order_index}
+                    onChange={(e) =>
+                      setRankForm({ ...rankForm, order_index: Number(e.target.value) })
+                    }
+                    className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
+                  />
                 </div>
 
                 <div>
@@ -808,8 +814,12 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                 className="bg-[#1A1A1E] border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0">
-                    {r.badge_icon_url}
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                    <BadgeOrImagePreview
+                      src={r.badge_icon_url}
+                      fallbackText="🥊"
+                      className="w-full h-full text-2xl"
+                    />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -847,7 +857,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
         </div>
       )}
 
-      {/* ABA 3: CRUD DE CONQUISTAS (30 CONQUISTAS) */}
+      {/* ABA 3: CRUD DE CONQUISTAS (COM UPLOAD REAL DE BADGE) */}
       {subTab === 'conquistas' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {isAdmin && (
@@ -856,32 +866,32 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                 {editingAch ? `✏️ Editar: ${editingAch.title}` : '➕ Criar Nova Conquista'}
               </h3>
               <p className="text-xs text-zinc-400 mb-4">
-                Personalize qualquer conquista ou crie novos desafios para sua academia.
+                Personalize qualquer conquista e envie o arquivo de imagem da medalha/badge.
               </p>
 
               <form onSubmit={handleSaveAch} className="space-y-3">
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="col-span-1">
-                    <label className="block text-xs font-bold text-zinc-300 mb-1">Ícone</label>
-                    <input
-                      type="text"
-                      value={achForm.badge_icon_url}
-                      onChange={(e) => setAchForm({ ...achForm, badge_icon_url: e.target.value })}
-                      className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-center text-base text-white"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <label className="block text-xs font-bold text-zinc-300 mb-1">Título</label>
-                    <input
-                      type="text"
-                      value={achForm.title}
-                      onChange={(e) => setAchForm({ ...achForm, title: e.target.value })}
-                      placeholder="Ex: Guerreiro de Sábado"
-                      className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 mb-1">Título</label>
+                  <input
+                    type="text"
+                    value={achForm.title}
+                    onChange={(e) => setAchForm({ ...achForm, title: e.target.value })}
+                    placeholder="Ex: Guerreiro de Sábado"
+                    className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"
+                    required
+                  />
                 </div>
+
+                {/* DIRETRIZ 3: UPLOAD REAL DE ARQUIVO LOCAL PARA ÍCONE DE CONQUISTA */}
+                <FileUploadInput
+                  label="Ícone / Badge da Conquista (Upload de Arquivo Local)"
+                  value={achForm.badge_icon_url}
+                  onChange={(uploadedUrl) =>
+                    setAchForm({ ...achForm, badge_icon_url: uploadedUrl })
+                  }
+                  folder="achievement_badges"
+                  helperText="Faça upload da imagem PNG/JPG/SVG do ícone da conquista"
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-zinc-300 mb-1">Descrição</label>
@@ -1038,8 +1048,12 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
                     className="bg-[#1A1A1E] border border-zinc-800 rounded-xl p-4 flex flex-col justify-between gap-3"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl shrink-0">
-                        {a.badge_icon_url}
+                      <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                        <BadgeOrImagePreview
+                          src={a.badge_icon_url}
+                          fallbackText="🏅"
+                          className="w-full h-full text-2xl"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">

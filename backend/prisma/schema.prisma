@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
@@ -27,6 +27,10 @@ model Usuario {
   horariosAula        String?  // Horários / Grade de aulas (Ex: "Seg, Qua e Sex - 19:00")
   cargaHorariaSemanal String?  // Carga horária semanal (Ex: "6h semanais")
   prajied             String?  @default("Prajied Azul Escuro e Preto") // Mantido para compatibilidade
+  fotoPerfilUrl       String?  // Upload de arquivo local/storage da Foto de Perfil do Professor (Módulo 1)
+  horarios_aula       String?  // Array/JSON ou relação de horários de aula visível no agendamento do aluno (Módulo 1)
+  prajied_faixa       String?  // Graduação/Faixa padronizada do Professor (Módulo 1)
+  is_dev              Boolean  @default(false) // Flag AdminDev / BrgAdmin (Ítalo Bergamin - Módulo 1)
   ativo               Boolean  @default(true)
   criadoEm            DateTime @default(now())
 }
@@ -35,35 +39,40 @@ model Usuario {
 // ALUNOS & MATRÍCULAS
 // ==========================================
 model Aluno {
-  id             String        @id @default(uuid())
-  nome           String
-  email          String?       @unique
-  telefone       String?
-  cpf            String?       @unique
-  senha          String?       // Senha de acesso
-  primeiroAcesso Boolean       @default(true) // Obriga a redefinir no 1º acesso
-  plano          String?       // Valores: DIARIA, 2x na semana, 3x na semana, Todos os Horários
-  modalidade     String?       @default("Muay Thai") // Muay Thai, Jiu-Jitsu, Boxe, MMA, Taekwondo
-  graduacao      String?       @default("Branco") // Faixa ou Prajied ou Nível
-  prajied        String        @default("Branco") // Graduação do Muay Thai (retrocompatibilidade)
-  criadoEm       DateTime      @default(now())
-  
+  id                         String    @id @default(uuid())
+  nome                       String
+  email                      String?   @unique
+  telefone                   String?
+  cpf                        String?   @unique
+  senha                      String?   // Senha de acesso
+  primeiroAcesso             Boolean   @default(true) // Obriga a redefinir no 1º acesso
+  plano                      String?   // Valores: DIARIA, 2x na semana, 3x na semana, Todos os Horários
+  modalidade                 String?   @default("Muay Thai") // Muay Thai, Jiu-Jitsu, Boxe, MMA, Taekwondo
+  graduacao                  String?   @default("Branco") // Faixa ou Prajied ou Nível
+  prajied                    String    @default("Branco") // Graduação do Muay Thai (retrocompatibilidade)
+  is_bolsista                Boolean   @default(false) // Flag booleana Aluno Bolsista - ignora inadimplência e faturas automáticas (Módulo 1)
+  has_signed_contract        Boolean   @default(false) // Middleware de bloqueio de contrato eletrônico (Módulo 2)
+  data_de_adesao             DateTime? // Data de adesão para fixar dia de vencimento financeiro (Módulo 2)
+  contract_signed_at         DateTime? // Timestamp da assinatura eletrônica (Módulo 2)
+  contract_signature_payload String?   // Payload JSON de auditoria (Nome, CPF, Timestamp) (Módulo 2)
+  criadoEm                   DateTime  @default(now())
+
   mensalidades        Mensalidade[]
   presencas           AgendamentoPresenca[]
   conquistasProgresso UserAchievementProgress[]
 }
 
 model Mensalidade {
-  id             String          @id @default(uuid())
+  id             String    @id @default(uuid())
   valor          Float
   dataVencimento DateTime
   dataPagamento  DateTime?
-  status         String          @default("PENDENTE") // Valores: PENDENTE, PAGO, ATRASADO
-  
+  status         String    @default("PENDENTE") // Valores: PENDENTE, PAGO, ATRASADO
+
   alunoId        String
-  aluno          Aluno           @relation(fields: [alunoId], references: [id], onDelete: Cascade)
-  
-  criadoEm       DateTime        @default(now())
+  aluno          Aluno     @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  criadoEm       DateTime  @default(now())
 }
 
 // ==========================================
@@ -74,9 +83,9 @@ model EventoDeAula {
   titulo      String
   dataInicio  DateTime
   dataFim     DateTime
-  
+
   agendamentos AgendamentoPresenca[]
-  
+
   criadoEm    DateTime              @default(now())
 }
 
@@ -88,10 +97,10 @@ model AgendamentoPresenca {
 
   alunoId            String
   aluno              Aluno         @relation(fields: [alunoId], references: [id], onDelete: Cascade)
-  
+
   eventoId           String?
   evento             EventoDeAula? @relation(fields: [eventoId], references: [id])
-  
+
   data               DateTime      @default(now())
   justificativa      String?       // Detalhe ou atestado
   tipoJustificativa  String?       // DOENCA, ATESTADO, TRABALHO, PESSOAL, OUTRO
@@ -113,10 +122,23 @@ model AgendamentoExperimental {
   telefone      String
   data          String
   horario       String
+  professorNome String?   @default("Felipe Borü")
   status        String    @default("PENDENTE") // PENDENTE, REALIZADA, FECHOU_CONTRATO, DESISTIU
   dataRealizada DateTime?
   observacao    String?
   criadoEm      DateTime  @default(now())
+}
+
+// ==========================================
+// MÓDULO 1: DEV DASHBOARD - LOGS & MONITORAMENTO
+// ==========================================
+model SystemLog {
+  id       String   @id @default(uuid())
+  level    String   @default("INFO") // INFO, WARN, ERROR, WEBHOOK
+  service  String   @default("API")
+  message  String
+  metadata String?
+  criadoEm DateTime @default(now())
 }
 
 // ==========================================

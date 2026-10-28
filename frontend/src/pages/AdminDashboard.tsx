@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import NoticeCard from '../components/NoticeCard';
 import { adminApi, publicApi } from '../services/api';
 import { AdminGamificationTab } from '../components/AdminGamificationTab';
+import { FileUploadInput } from '../components/FileUploadInput';
+import { DevDashboardTab } from '../components/DevDashboardTab';
+import { FinancialDashboardTab } from '../components/FinancialDashboardTab';
+import { SplitRollCallTab } from '../components/SplitRollCallTab';
 
 const graduacoesPorModalidade: Record<string, string[]> = {
   'Muay Thai': [
@@ -123,7 +127,13 @@ export default function AdminDashboard() {
 
   // Modal Novo Aluno
   const [showModal, setShowModal] = useState(false);
-  const [novoAluno, setNovoAluno] = useState({ nome: '', cpf: '', email: '', telefone: '', plano: '2x na semana' });
+  const [novoAluno, setNovoAluno] = useState({ nome: '', cpf: '', email: '', telefone: '', plano: '2x na semana', is_bolsista: false });
+
+  // Modal Baixa Manual com DatePicker (Módulo 5)
+  const [alunoBaixaModal, setAlunoBaixaModal] = useState<any>(null);
+  const [dataPagamentoBaixa, setDataPagamentoBaixa] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [metodoPagamentoBaixa, setMetodoPagamentoBaixa] = useState<string>('PIX / Presencial');
+  const [salvandoBaixaRapida, setSalvandoBaixaRapida] = useState(false);
 
   // Modal Novo Professor (Apenas Admin)
   const [showModalProf, setShowModalProf] = useState(false);
@@ -136,6 +146,8 @@ export default function AdminDashboard() {
     telefone: '',
     modalidade: 'Muay Thai',
     graduacao: 'Prajied Azul Escuro e Preto',
+    prajied_faixa: 'Prajied Azul Escuro e Preto',
+    fotoPerfilUrl: '',
     tempoPratica: '',
     tempoDocencia: '3 a 5 anos dando aulas',
     tempoAula: '60 min',
@@ -248,7 +260,11 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      await adminApi.createTeacher(novoProfessor);
+      await adminApi.createTeacher({
+        ...novoProfessor,
+        prajied_faixa: novoProfessor.prajied_faixa || novoProfessor.graduacao,
+        horarios_aula: novoProfessor.horariosAula ? novoProfessor.horariosAula.split(/[,|]/).map((s) => s.trim()).filter(Boolean) : []
+      });
       alert(`Professor ${novoProfessor.nome} cadastrado com sucesso!\n\nEle poderá acessar o painel informando o CPF e a senha cadastrada.`);
       setShowModalProf(false);
       setNovoProfessor({
@@ -260,6 +276,8 @@ export default function AdminDashboard() {
         telefone: '',
         modalidade: 'Muay Thai',
         graduacao: 'Prajied Azul Escuro e Preto',
+        prajied_faixa: 'Prajied Azul Escuro e Preto',
+        fotoPerfilUrl: '',
         tempoPratica: '',
         tempoDocencia: '3 a 5 anos dando aulas',
         tempoAula: '60 min',
@@ -290,6 +308,7 @@ export default function AdminDashboard() {
 
   const abrirModalEdicaoProf = (prof: any) => {
     const mod = prof.modalidade || 'Muay Thai';
+    const grad = prof.prajied_faixa || prof.graduacao || prof.prajied || (graduacoesPorModalidade[mod]?.[0] || '');
     setProfessorParaEditar({
       id: prof.id,
       nome: prof.nome,
@@ -298,11 +317,13 @@ export default function AdminDashboard() {
       telefone: prof.telefone || '',
       cargo: prof.cargo || 'PROFESSOR',
       modalidade: mod,
-      graduacao: prof.graduacao || prof.prajied || (graduacoesPorModalidade[mod]?.[0] || ''),
+      graduacao: grad,
+      prajied_faixa: grad,
+      fotoPerfilUrl: prof.fotoPerfilUrl || '',
       tempoPratica: prof.tempoPratica || '',
       tempoDocencia: prof.tempoDocencia || '',
       tempoAula: prof.tempoAula || '60 min',
-      horariosAula: prof.horariosAula || '',
+      horariosAula: prof.horariosAula || (Array.isArray(prof.horarios_aula) ? prof.horarios_aula.join(', ') : ''),
       cargaHorariaSemanal: prof.cargaHorariaSemanal || '',
       senha: ''
     });
@@ -320,10 +341,13 @@ export default function AdminDashboard() {
         cargo: professorParaEditar.cargo,
         modalidade: professorParaEditar.modalidade,
         graduacao: professorParaEditar.graduacao,
+        prajied_faixa: professorParaEditar.prajied_faixa || professorParaEditar.graduacao,
+        fotoPerfilUrl: professorParaEditar.fotoPerfilUrl || null,
         tempoPratica: professorParaEditar.tempoPratica,
         tempoDocencia: professorParaEditar.tempoDocencia,
         tempoAula: professorParaEditar.tempoAula,
         horariosAula: professorParaEditar.horariosAula,
+        horarios_aula: professorParaEditar.horariosAula ? professorParaEditar.horariosAula.split(/[,|]/).map((s: string) => s.trim()).filter(Boolean) : [],
         cargaHorariaSemanal: professorParaEditar.cargaHorariaSemanal
       };
       if (professorParaEditar.senha && professorParaEditar.senha.trim().length > 0) {
@@ -419,25 +443,71 @@ export default function AdminDashboard() {
       alert(`Aluno criado com sucesso!\n\nSenha temporária gerada: ${response.data.senhaTemporaria}\n(Envie isso para o aluno acessar o portal)`);
       carregarDashboard();
       setShowModal(false);
-      setNovoAluno({ nome: '', cpf: '', email: '', telefone: '', plano: '2x na semana' });
+      setNovoAluno({ nome: '', cpf: '', email: '', telefone: '', plano: '2x na semana', is_bolsista: false });
     } catch (error: any) {
       alert(error.response?.data?.erro || 'Erro ao criar aluno.');
     }
   };
 
+  // MÓDULO 5: Abre o Modal com DatePicker (Calendário) para Baixa Manual
   const handleRegistrarPagamento = async (aluno: any) => {
-    if (confirm(`Confirmar recebimento presencial da mensalidade de ${aluno.nome} (Dinheiro/PIX/Cartão no balcão) e renovar por +30 dias?`)) {
-      try {
-        const response = await adminApi.registerPayment(aluno.id);
-        alert(response.data.mensagem);
-        carregarDashboard();
-        if (alunoSelecionado && alunoSelecionado.id === aluno.id) {
-          abrirCalendarioAluno(alunoSelecionado);
-        }
-      } catch (error: any) {
-        alert(error.response?.data?.erro || 'Erro ao registrar pagamento.');
+    setAlunoBaixaModal(aluno);
+    setDataPagamentoBaixa(new Date().toISOString().split('T')[0]);
+    setMetodoPagamentoBaixa('PIX / Presencial');
+  };
+
+  const confirmarBaixaComCalendario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alunoBaixaModal) return;
+    setSalvandoBaixaRapida(true);
+    try {
+      const response = await adminApi.registerPayment(alunoBaixaModal.id, {
+        dataPagamento: dataPagamentoBaixa,
+        metodoPagamento: metodoPagamentoBaixa
+      });
+      alert(response.data.mensagem);
+      setAlunoBaixaModal(null);
+      carregarDashboard();
+      if (alunoSelecionado && alunoSelecionado.id === alunoBaixaModal.id) {
+        abrirCalendarioAluno(alunoSelecionado);
       }
+    } catch (error: any) {
+      alert(error.response?.data?.erro || 'Erro ao registrar pagamento.');
+    } finally {
+      setSalvandoBaixaRapida(false);
     }
+  };
+
+  // MÓDULO 1: Alternar flag is_bolsista
+  const handleToggleBolsista = async (aluno: any) => {
+    const novoStatus = !aluno.is_bolsista;
+    if (!confirm(`Deseja definir ${aluno.nome} como ${novoStatus ? 'ALUNO BOLSISTA (Isento de mensalidades)' : 'ALUNO MENSALISTA REGULAR'}?`)) return;
+    try {
+      await adminApi.toggleStudentBolsista(aluno.id, novoStatus);
+      carregarDashboard();
+    } catch (error: any) {
+      alert(error.response?.data?.erro || 'Erro ao atualizar status de bolsista.');
+    }
+  };
+
+  // MÓDULO 4: Automação de WhatsApp para Aula Experimental
+  const handleAvisarExperimentalWhatsApp = (ag: any) => {
+    const nomeAlunos = ag.nome || 'Aluno(a)';
+    const nomeProfessor = ag.professorNome || usuarioLogado?.nome || 'Felipe Borü';
+    const dataHoraFormatada = `${ag.data || 'Data a confirmar'} às ${ag.horario || 'Horário a confirmar'}`;
+
+    const textoMensagem = `${nomeAlunos}, agendada sua aula experimental de Muay Thai com o Professor ${nomeProfessor}, ${dataHoraFormatada} no BORÜ CENTRO DE COMBATE.\n📍 Rua Doutor Agenor de Carvalho, n° 1168 - Bairro Agenor de Carvalho\nAguardamos vocês! Recomendamos chegar com 10 minutos de antecedência. Bem vindos(as)! 🐺`;
+
+    let numeroLimpo = (ag.telefone || '').replace(/\D/g, '');
+    if (numeroLimpo && !numeroLimpo.startsWith('55') && (numeroLimpo.length === 10 || numeroLimpo.length === 11)) {
+      numeroLimpo = '55' + numeroLimpo;
+    }
+
+    const url = numeroLimpo
+      ? `https://wa.me/${numeroLimpo}?text=${encodeURIComponent(textoMensagem)}`
+      : `https://wa.me/?text=${encodeURIComponent(textoMensagem)}`;
+
+    window.open(url, '_blank');
   };
 
   const atualizarPrajied = async (alunoId: string, prajied: string) => {
@@ -837,9 +907,16 @@ export default function AdminDashboard() {
                   PAINEL <span className="text-red-600">BORÜ</span>
                 </h1>
                 {usuarioLogado?.cargo === 'ADMIN' ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                    👑 ADMINISTRADOR
-                  </span>
+                  <>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                      👑 ADMINISTRADOR
+                    </span>
+                    {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-red-600/30 text-red-300 border border-red-500/50 flex items-center gap-1">
+                        💻 ADMIN DEV (BrgAdmin)
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1">
                     🥋 PROFESSOR
@@ -945,6 +1022,24 @@ export default function AdminDashboard() {
             📋 Chamada Rápida ({presencas.length})
           </button>
           <button 
+            onClick={() => setAbaAtiva('chamada_diaria')}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'chamada_diaria' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40'
+            }`}
+          >
+            ✅ Chamada Diária (Split-List)
+          </button>
+          {usuarioLogado?.cargo === 'ADMIN' && (
+            <button 
+              onClick={() => setAbaAtiva('financeiro_gestao')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                abaAtiva === 'financeiro_gestao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40'
+              }`}
+            >
+              💰 Gestão Financeira & Baixa
+            </button>
+          )}
+          <button 
             onClick={() => setAbaAtiva('avisos')}
             className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
               abaAtiva === 'avisos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
@@ -986,7 +1081,32 @@ export default function AdminDashboard() {
               👑 Professores & Equipe
             </button>
           )}
+          {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+            <button 
+              onClick={() => setAbaAtiva('dev_dashboard')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-black transition whitespace-nowrap flex items-center gap-1.5 ${
+                abaAtiva === 'dev_dashboard' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-red-950/40 text-red-400 hover:text-white border border-red-500/50'
+              }`}
+            >
+              💻 Dev Dashboard
+            </button>
+          )}
         </div>
+
+        {/* MÓDULO 6: CHAMADA DIÁRIA SPLIT-LIST */}
+        {abaAtiva === 'chamada_diaria' && (
+          <SplitRollCallTab onRefreshDashboard={carregarDashboard} />
+        )}
+
+        {/* MÓDULO 5: GESTÃO FINANCEIRA & BAIXA MANUAL COM CALENDÁRIO */}
+        {abaAtiva === 'financeiro_gestao' && usuarioLogado?.cargo === 'ADMIN' && (
+          <FinancialDashboardTab onRefreshGlobal={carregarDashboard} />
+        )}
+
+        {/* MÓDULO 1: DEV DASHBOARD (EXCLUSIVO ADMINDEV / BRGADMIN) */}
+        {abaAtiva === 'dev_dashboard' && (usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+          <DevDashboardTab usuarioLogado={usuarioLogado} />
+        )}
 
         {/* CONTEÚDO DA ABA: ALUNOS */}
         {abaAtiva === 'alunos' && (
@@ -1105,8 +1225,13 @@ export default function AdminDashboard() {
                     alunosFiltrados.map(aluno => (
                       <tr key={aluno.id} className="hover:bg-zinc-800/30 transition">
                         <td className="p-3 sm:p-4 font-bold text-white">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span>{aluno.nome}</span>
+                            {aluno.is_bolsista && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-950 text-purple-300 border border-purple-500/40" title="Aluno Bolsista (Isento de mensalidades)">
+                                🎓 BOLSISTA
+                              </span>
+                            )}
                             {aluno.statusAssiduidade === 'RISCO' && !isDiariaOuConvenio(aluno.plano) && (
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-red-950 text-red-400 border border-red-500/40" title="Aluno com frequência menor que 50%">
                                 RISCO
@@ -1147,7 +1272,16 @@ export default function AdminDashboard() {
                           </select>
                         </td>
                         <td className="p-3 sm:p-4">
-                          {isDiariaOuConvenio(aluno.plano) ? (
+                          {aluno.is_bolsista ? (
+                            <>
+                              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                🎓 BOLSISTA
+                              </span>
+                              <span className="block text-[10px] text-zinc-400 mt-0.5 font-medium">
+                                Isento • Acesso Liberado
+                              </span>
+                            </>
+                          ) : isDiariaOuConvenio(aluno.plano) ? (
                             <>
                               <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
                                 ⚡ Diária / Convênio
@@ -1225,9 +1359,20 @@ export default function AdminDashboard() {
                             <button 
                               onClick={() => handleRegistrarPagamento(aluno)}
                               className="px-2.5 py-1 rounded bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white border border-emerald-500/30 text-xs font-bold transition"
-                              title="Confirmar pagamento presencial (balcão)"
+                              title="Confirmar pagamento presencial (balcão) com escolha de data no Calendário"
                             >
                               💵 Pago (+30d)
+                            </button>
+                            <button
+                              onClick={() => handleToggleBolsista(aluno)}
+                              className={`px-2 py-1 rounded border text-[11px] font-bold transition ${
+                                aluno.is_bolsista
+                                  ? 'bg-purple-600 text-white border-purple-400'
+                                  : 'bg-purple-950/30 text-purple-300 border-purple-500/30 hover:bg-purple-600 hover:text-white'
+                              }`}
+                              title="Alternar status de Aluno Bolsista (Isento de cobranças)"
+                            >
+                              🎓 {aluno.is_bolsista ? 'Bolsista ✓' : 'Bolsista'}
                             </button>
                             {aluno.statusAssiduidade === 'RISCO' && !isDiariaOuConvenio(aluno.plano) ? (
                               <button 
@@ -1912,9 +2057,13 @@ export default function AdminDashboard() {
                     <tr key={prof.id} className="hover:bg-zinc-800/30 transition">
                       <td className="p-3 sm:p-4 font-bold text-white">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-black text-xs text-amber-400">
-                            {prof.nome.charAt(0).toUpperCase()}
-                          </div>
+                          {prof.fotoPerfilUrl ? (
+                            <img src={prof.fotoPerfilUrl} alt={prof.nome} className="w-9 h-9 rounded-full object-cover border border-amber-500/60 shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-black text-xs text-amber-400">
+                              {prof.nome.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <span className="text-white font-bold">{prof.nome}</span>
                             <span className="block text-[11px] text-amber-400 font-bold">
@@ -2049,12 +2198,23 @@ export default function AdminDashboard() {
                         <td className="p-3 text-zinc-300">{ag.telefone}</td>
                         <td className="p-3 text-zinc-300">{ag.data} às {ag.horario}</td>
                         <td className="p-3 text-right">
-                          <button 
-                            onClick={() => marcarAulaRealizada(ag.id)}
-                            className="px-2.5 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition"
-                          >
-                            ✓ Fez a Aula
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            {/* MÓDULO 4: BOTÃO AVISAR NO WHATSAPP */}
+                            <button
+                              type="button"
+                              onClick={() => handleAvisarExperimentalWhatsApp(ag)}
+                              className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-xs font-bold transition flex items-center gap-1"
+                              title="Enviar confirmação de agendamento experimental via WhatsApp"
+                            >
+                              <span>📲 Avisar no WhatsApp</span>
+                            </button>
+                            <button 
+                              onClick={() => marcarAulaRealizada(ag.id)}
+                              className="px-2.5 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition"
+                            >
+                              ✓ Fez a Aula
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -2137,9 +2297,94 @@ export default function AdminDashboard() {
                   </select>
                 </div>
               </div>
+              {/* MÓDULO 1: FLAG BOLSISTA */}
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 cursor-pointer bg-purple-950/20 border border-purple-500/30 rounded-lg p-2.5">
+                  <input
+                    type="checkbox"
+                    checked={novoAluno.is_bolsista}
+                    onChange={(e) => setNovoAluno({...novoAluno, is_bolsista: e.target.checked})}
+                    className="w-4 h-4 rounded accent-purple-500"
+                  />
+                  <div>
+                    <span className="text-xs font-black text-purple-300 block">🎓 Aluno Bolsista Integral (is_bolsista)</span>
+                    <span className="text-[10px] text-zinc-400">Não gera faturas mensais automáticas e nunca perde acesso por inadimplência.</span>
+                  </div>
+                </label>
+              </div>
               <div className="flex justify-end gap-2 pt-3">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-bold">Cancelar</button>
                 <button type="submit" className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">Salvar Matrícula</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MÓDULO 5: MODAL DE BAIXA MANUAL COM DATEPICKER (CALENDÁRIO) */}
+      {alunoBaixaModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[999999]">
+          <div className="bg-[#141416] border border-emerald-500/40 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400 block">
+                  Baixa Manual de Mensalidade (+30 dias)
+                </span>
+                <h3 className="text-lg font-black text-white">{alunoBaixaModal.nome}</h3>
+              </div>
+              <button
+                onClick={() => setAlunoBaixaModal(null)}
+                className="text-zinc-500 hover:text-white font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={confirmarBaixaComCalendario} className="space-y-4">
+              <div>
+                <label className="block text-emerald-300 text-xs font-black mb-1 uppercase tracking-wider">
+                  📅 Data Real do Pagamento (Calendário Obrigatório)
+                </label>
+                <p className="text-[11px] text-zinc-400 mb-2">
+                  Selecione no calendário em qual data (passada ou presente) este pagamento ocorreu:
+                </p>
+                <input
+                  type="date"
+                  required
+                  value={dataPagamentoBaixa}
+                  onChange={(e) => setDataPagamentoBaixa(e.target.value)}
+                  className="w-full bg-[#1A1A1E] border-2 border-emerald-500/50 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold focus:outline-none focus:border-emerald-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-zinc-400 text-xs font-bold mb-1">Método de Recebimento</label>
+                <select
+                  value={metodoPagamentoBaixa}
+                  onChange={(e) => setMetodoPagamentoBaixa(e.target.value)}
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-white font-semibold"
+                >
+                  <option value="PIX / Presencial">PIX Presencial</option>
+                  <option value="Dinheiro em Espécie">Dinheiro em Espécie</option>
+                  <option value="Cartão Débito/Crédito">Cartão de Débito / Crédito</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setAlunoBaixaModal(null)}
+                  className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvandoBaixaRapida}
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-900/30"
+                >
+                  {salvandoBaixaRapida ? 'Confirmando...' : '✓ Confirmar Baixa (+30d)'}
+                </button>
               </div>
             </form>
           </div>
@@ -2157,6 +2402,17 @@ export default function AdminDashboard() {
               <div>
                 <label className="block text-zinc-400 text-xs font-semibold mb-1">Nome Completo</label>
                 <input required type="text" value={novoProfessor.nome} onChange={(e) => setNovoProfessor({...novoProfessor, nome: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white" placeholder="Ex: Felipe Borü" />
+              </div>
+
+              {/* DIRETRIZ 3 & MÓDULO 1: UPLOAD REAL DE FOTO DE PERFIL DO PROFESSOR */}
+              <div className="pt-1">
+                <FileUploadInput
+                  label="Foto de Perfil do Professor (Storage Local / Sem URL Externa)"
+                  value={novoProfessor.fotoPerfilUrl}
+                  onChange={(url) => setNovoProfessor({ ...novoProfessor, fotoPerfilUrl: url })}
+                  folder="professores"
+                  helperText="Faça upload da foto oficial do professor (PNG, JPG ou WEBP)"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2329,6 +2585,17 @@ export default function AdminDashboard() {
               <div>
                 <label className="block text-zinc-400 text-xs font-semibold mb-1">Nome Completo</label>
                 <input required type="text" value={professorParaEditar.nome} onChange={(e) => setProfessorParaEditar({...professorParaEditar, nome: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white" />
+              </div>
+
+              {/* DIRETRIZ 3 & MÓDULO 1: UPLOAD REAL DE FOTO DE PERFIL DO PROFESSOR */}
+              <div className="pt-1">
+                <FileUploadInput
+                  label="Foto de Perfil do Professor (Storage Local / Sem URL Externa)"
+                  value={professorParaEditar.fotoPerfilUrl || ''}
+                  onChange={(url) => setProfessorParaEditar({ ...professorParaEditar, fotoPerfilUrl: url })}
+                  folder="professores"
+                  helperText="Faça upload da foto oficial do professor (PNG, JPG ou WEBP)"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

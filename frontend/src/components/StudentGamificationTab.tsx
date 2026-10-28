@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { studentApi } from '../services/api';
+import { BadgeOrImagePreview } from './FileUploadInput';
 
 interface RankItem {
   id: string;
@@ -102,7 +103,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
   };
 
   const handleShareAchievement = async (item: AchievementItem) => {
-    const textoShare = `🥊🔥 LEVEL UP NA TRILHA DO NAK MUAY!\n\nAcabei de desbloquear a conquista "${item.badge_icon_url} ${item.title}" (${item.description})!\n🏅 Rank Atual: ${rankAtual?.badge_icon_url || '🥊'} ${rankAtual?.name || 'Guerreiro'}\n⚡ XP Total: ${xpTotal} XP | 🔥 Sequência: ${streak} treinos!\n\n#MuayThai #TrilhaDoNakMuay #Disciplina`;
+    const textoShare = `🥊🔥 LEVEL UP NA TRILHA DO NAK MUAY!\n\nAcabei de desbloquear a conquista "${item.title}" (${item.description})!\n🏅 Rank Atual: ${rankAtual?.name || 'Guerreiro'}\n⚡ XP Total: ${xpTotal} XP | 🔥 Sequência: ${streak} treinos!\n\n#MuayThai #TrilhaDoNakMuay #Disciplina`;
 
     if (navigator.share) {
       try {
@@ -127,7 +128,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
   };
 
   const handleShareWhatsApp = (item: AchievementItem) => {
-    const textoShare = `🥊🔥 *LEVEL UP NA TRILHA DO NAK MUAY!*\n\n Guerreiro(a) *${alunoNome}* desbloqueou a conquista: *${item.badge_icon_url} ${item.title}*!\n_"${item.description}"_\n\n🏆 *Rank Atual:* ${rankAtual?.badge_icon_url || '🥊'} ${rankAtual?.name || 'Nak Muay'}\n⚡ *XP Acumulado:* ${xpTotal} XP\n🔥 *Streak Ativo:* ${streak} treinos seguidos!`;
+    const textoShare = `🥊🔥 *LEVEL UP NA TRILHA DO NAK MUAY!*\n\n Guerreiro(a) *${alunoNome}* desbloqueou a conquista: *${item.title}*!\n_"${item.description}"_\n\n🏆 *Rank Atual:* ${rankAtual?.name || 'Nak Muay'}\n⚡ *XP Acumulado:* ${xpTotal} XP\n🔥 *Streak Ativo:* ${streak} treinos seguidos!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(textoShare)}`, '_blank');
   };
 
@@ -174,8 +175,12 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Esquerda: Insígnia do Rank Atual */}
           <div className="flex items-start sm:items-center gap-4 sm:gap-5">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center text-4xl sm:text-5xl shadow-xl shadow-red-950/40 shrink-0">
-              {rankAtual?.badge_icon_url || '🥊'}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-red-600/30 to-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center text-4xl sm:text-5xl shadow-xl shadow-red-950/40 shrink-0 overflow-hidden">
+              <BadgeOrImagePreview
+                src={rankAtual?.badge_icon_url}
+                fallbackText="🥊"
+                className="w-full h-full text-4xl sm:text-5xl"
+              />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -244,7 +249,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
               </span>
               {proximoRank ? (
                 <span className="font-black text-amber-400">
-                  {proximoRank.badge_icon_url} {proximoRank.name} ({proximoRank.required_checkins_min} check-ins)
+                  {proximoRank.name} ({proximoRank.required_checkins_min} check-ins)
                 </span>
               ) : (
                 <span className="font-black text-emerald-400">
@@ -302,7 +307,13 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
               >
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-2">
-                    <span className="text-2xl">{r.badge_icon_url}</span>
+                    <div className="w-8 h-8 flex items-center justify-center text-2xl overflow-hidden">
+                      <BadgeOrImagePreview
+                        src={r.badge_icon_url}
+                        fallbackText="🥊"
+                        className="w-full h-full text-2xl"
+                      />
+                    </div>
                     <span
                       className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
                         isCurrent
@@ -333,7 +344,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
         </div>
       </div>
 
-      {/* VITRINE DE CONQUISTAS (30 CONQUISTAS DESBLOQUEÁVEIS) */}
+      {/* VITRINE DE CONQUISTAS (DIVIDIDA EM DESBLOQUEADAS, EM ANDAMENTO, BLOQUEADAS) */}
       <div className="bg-[#1A1A1E] border border-zinc-800 rounded-2xl p-5 space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -346,7 +357,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
             </p>
           </div>
 
-          {/* Filtro por Status */}
+          {/* Filtro por Status: Desbloqueadas, Em Andamento, Bloqueadas */}
           <div className="flex flex-wrap gap-1.5 bg-[#121215] p-1.5 rounded-xl border border-zinc-800">
             {[
               { id: 'ALL', label: `Todas (${resumo.total})` },
@@ -410,7 +421,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 border ${
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 border overflow-hidden ${
                         isUnlocked
                           ? 'bg-emerald-500/20 border-emerald-500/40'
                           : isInProgress
@@ -418,7 +429,15 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
                           : 'bg-zinc-900 border-zinc-800 grayscale'
                       }`}
                     >
-                      {item.is_secret && !isUnlocked ? '❓' : item.badge_icon_url}
+                      {item.is_secret && !isUnlocked ? (
+                        '❓'
+                      ) : (
+                        <BadgeOrImagePreview
+                          src={item.badge_icon_url}
+                          fallbackText="🏅"
+                          className="w-full h-full text-2xl"
+                        />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -514,8 +533,12 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
               <span>+{celebrationItem.xp_points} XP</span>
             </div>
 
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-amber-500/30 to-red-600/30 border-2 border-amber-400 flex items-center justify-center text-5xl shadow-xl mb-4">
-              {celebrationItem.badge_icon_url}
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-amber-500/30 to-red-600/30 border-2 border-amber-400 flex items-center justify-center text-5xl shadow-xl mb-4 overflow-hidden">
+              <BadgeOrImagePreview
+                src={celebrationItem.badge_icon_url}
+                fallbackText="🏅"
+                className="w-full h-full text-5xl"
+              />
             </div>
 
             <h3 className="text-2xl font-black text-white">
@@ -538,7 +561,7 @@ export const StudentGamificationTab: React.FC<StudentGamificationProps> = ({
 
             <div className="mt-5 pt-4 border-t border-zinc-800 flex items-center justify-around text-xs text-zinc-400">
               <div>
-                <p className="font-bold text-white">{rankAtual?.badge_icon_url} {rankAtual?.name}</p>
+                <p className="font-bold text-white">{rankAtual?.name}</p>
                 <p className="text-[10px]">Rank Atual</p>
               </div>
               <div>
