@@ -52,6 +52,9 @@ function App() {
       <Routes>
         <Route path="/" element={null} />
         <Route path="/portal" element={<PortalAluno />} />
+        <Route path="/ranking" element={<PortalAluno />} />
+        <Route path="/dashboard-lutador" element={<PortalAluno />} />
+        <Route path="/torneios" element={<PortalAluno />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/agendar" element={<AgendarAula />} />

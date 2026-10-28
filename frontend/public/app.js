@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSchedule('all');
   initScheduleFilters();
   renderFAQ();
+  initSpotlightCards();
+  initTiltEffect();
   lucide.createIcons();
 });
 
@@ -49,7 +51,7 @@ function renderFacilities() {
 
   facilities.forEach(item => {
     html += `
-      <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-red-600/60 transition duration-300 card-combat space-y-4">
+      <div class="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-red-600/60 transition duration-300 card-combat spotlight-card tilt-card space-y-4">
         <div class="w-12 h-12 rounded-xl bg-red-600/10 border border-red-500/30 flex items-center justify-center text-red-500">
           <i data-lucide="${item.icon}" class="w-6 h-6"></i>
         </div>
@@ -353,3 +355,54 @@ document.addEventListener('keydown', (e) => {
     closeBookingModal();
   }
 });
+
+// ==========================================
+// SPOTLIGHT SEGUIDOR DE CURSOR NOS CARDS (BORÜ RED)
+// ==========================================
+function initSpotlightCards() {
+  document.querySelectorAll('.spotlight-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  });
+}
+
+// ==========================================
+// TILT 3D PARALLAX SUAVE NOS CARDS (GPU 60 FPS)
+// ==========================================
+function initTiltEffect() {
+  const elements = document.querySelectorAll('.tilt-card');
+
+  elements.forEach(el => {
+    let ticking = false;
+
+    el.addEventListener('mousemove', (e) => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+
+          const rotateX = ((y - centerY) / centerY) * -5;
+          const rotateY = ((x - centerX) / centerX) * 5;
+
+          el.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-3px)`;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+    });
+  });
+}

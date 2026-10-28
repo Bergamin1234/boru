@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
+import { StudentTournamentsTab } from '../components/StudentTournamentsTab';
+import { StudentPerformanceStatsTab } from '../components/StudentPerformanceStatsTab';
+import StudentCTRanking from '../components/StudentCTRanking';
 import NoticeCard from '../components/NoticeCard';
 import { publicApi, studentApi } from '../services/api';
 import { StudentGamificationTab } from '../components/StudentGamificationTab';
@@ -25,8 +28,25 @@ export default function PortalAluno() {
   const [showRecuperarSenha, setShowRecuperarSenha] = useState(false);
   const [contatoRecuperacao, setContatoRecuperacao] = useState('');
 
-  // Abas do Portal: 'treinos' | 'frequencia' | 'conquistas' | 'contratos' | 'avisos' | 'mercado' | 'financeiro'
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Abas do Portal: 'treinos' | 'frequencia' | 'conquistas' | 'contratos' | 'avisos' | 'mercado' | 'financeiro' | 'torneios' | 'ranking' | 'desempenho'
   const [abaAtiva, setAbaAtiva] = useState('treinos');
+
+  // Sincroniza aba via query param (?tab=...) ou rota direta (/ranking, /dashboard-lutador, /torneios)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['treinos', 'frequencia', 'conquistas', 'contratos', 'avisos', 'mercado', 'financeiro', 'torneios', 'ranking', 'desempenho'].includes(tabParam)) {
+      setAbaAtiva(tabParam);
+    } else if (location.pathname === '/ranking') {
+      setAbaAtiva('ranking');
+    } else if (location.pathname === '/dashboard-lutador') {
+      setAbaAtiva('desempenho');
+    } else if (location.pathname === '/torneios') {
+      setAbaAtiva('torneios');
+    }
+  }, [searchParams, location.pathname]);
   
   // Frequência & Calendário
   const [dadosFrequencia, setDadosFrequencia] = useState<any>(null);
@@ -517,7 +537,7 @@ export default function PortalAluno() {
         {/* NAVEGAÇÃO DE ABAS NO DESKTOP */}
         <div className="hidden sm:flex gap-2 border-b border-zinc-800 pb-3 overflow-x-auto boru-scrollbar">
           <button 
-            onClick={() => setAbaAtiva('treinos')}
+            id="treinos-checkin-tab-btn" onClick={() => setAbaAtiva('treinos')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
               abaAtiva === 'treinos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
             }`}
@@ -571,6 +591,30 @@ export default function PortalAluno() {
             }`}
           >
             {alunoLogado?.is_bolsista ? '🎓 Bolsa & Acesso' : isDiariaOuConvenio(alunoLogado?.plano) ? '🎫 Status do Acesso (Diária/Convênio)' : '💳 Mensalidade'}
+          </button>
+          <button 
+            onClick={() => setAbaAtiva('torneios')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'torneios' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+            }`}
+          >
+            🏆 Torneios do CT
+          </button>
+          <button 
+            onClick={() => setAbaAtiva('ranking')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'ranking' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+            }`}
+          >
+            🥋 Ranking do CT
+          </button>
+          <button 
+            onClick={() => setAbaAtiva('desempenho')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'desempenho' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+            }`}
+          >
+            📊 Desempenho & Analytics
           </button>
         </div>
 
@@ -1418,6 +1462,21 @@ export default function PortalAluno() {
           )
         )}
 
+        {/* CONTEÚDO DA ABA: TORNEIOS & BRACKETS DO CT */}
+        {abaAtiva === 'torneios' && (
+          <StudentTournamentsTab aluno={alunoLogado} />
+        )}
+
+        {/* CONTEÚDO DA ABA: RANKING INTERNO DO CT BORÜ */}
+        {abaAtiva === 'ranking' && (
+          <StudentCTRanking aluno={alunoLogado} />
+        )}
+
+        {/* CONTEÚDO DA ABA: DESEMPENHO & ANALYTICS */}
+        {abaAtiva === 'desempenho' && (
+          <StudentPerformanceStatsTab aluno={alunoLogado} />
+        )}
+
       </div>
 
       {/* MODAL JUSTIFICAR AUSÊNCIA / INFORMAR DOENÇA */}
@@ -1465,10 +1524,10 @@ export default function PortalAluno() {
       )}
 
       {/* BARRA INFERIOR FIXA PARA CELULAR (BOTTOM NAVIGATION BAR MOBILE) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#141416]/95 backdrop-blur-md border-t border-zinc-800 px-1.5 py-2 flex justify-around items-center z-[9999]">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#141416]/95 backdrop-blur-md border-t border-zinc-800 px-2 py-2 flex items-center gap-2 overflow-x-auto boru-scrollbar z-[9999]">
         <button 
           onClick={() => setAbaAtiva('treinos')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'treinos' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
@@ -1483,7 +1542,7 @@ export default function PortalAluno() {
               document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
           }}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'frequencia' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
@@ -1493,7 +1552,7 @@ export default function PortalAluno() {
 
         <button 
           onClick={() => setAbaAtiva('conquistas')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'conquistas' ? 'text-amber-400' : 'text-zinc-500'
           }`}
         >
@@ -1503,7 +1562,7 @@ export default function PortalAluno() {
 
         <button 
           onClick={() => setAbaAtiva('contratos')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'contratos' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
@@ -1513,7 +1572,7 @@ export default function PortalAluno() {
 
         <button 
           onClick={() => setAbaAtiva('avisos')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'avisos' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
@@ -1523,7 +1582,7 @@ export default function PortalAluno() {
 
         <button 
           onClick={() => setAbaAtiva('mercado')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'mercado' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
@@ -1533,12 +1592,42 @@ export default function PortalAluno() {
 
         <button 
           onClick={() => setAbaAtiva('financeiro')}
-          className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-lg text-[10px] font-bold transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
             abaAtiva === 'financeiro' ? 'text-red-500' : 'text-zinc-500'
           }`}
         >
           <span className="text-base">{alunoLogado?.is_bolsista ? '🎓' : isDiariaOuConvenio(alunoLogado?.plano) ? '🎫' : '💳'}</span>
           <span>{alunoLogado?.is_bolsista ? 'Bolsa' : isDiariaOuConvenio(alunoLogado?.plano) ? 'Acesso' : 'Plano'}</span>
+        </button>
+
+        <button 
+          onClick={() => setAbaAtiva('torneios')}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
+            abaAtiva === 'torneios' ? 'text-red-500' : 'text-zinc-500'
+          }`}
+        >
+          <span className="text-base">🏆</span>
+          <span>Torneios</span>
+        </button>
+
+        <button 
+          onClick={() => setAbaAtiva('ranking')}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
+            abaAtiva === 'ranking' ? 'text-red-500' : 'text-zinc-500'
+          }`}
+        >
+          <span className="text-base">🥋</span>
+          <span>Ranking CT</span>
+        </button>
+
+        <button 
+          onClick={() => setAbaAtiva('desempenho')}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
+            abaAtiva === 'desempenho' ? 'text-red-500' : 'text-zinc-500'
+          }`}
+        >
+          <span className="text-base">📊</span>
+          <span>Analytics</span>
         </button>
       </nav>
 
