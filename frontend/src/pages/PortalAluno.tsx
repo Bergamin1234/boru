@@ -4,7 +4,7 @@ import { StudentTournamentsTab } from '../components/StudentTournamentsTab';
 import { StudentPerformanceStatsTab } from '../components/StudentPerformanceStatsTab';
 import StudentCTRanking from '../components/StudentCTRanking';
 import NoticeCard from '../components/NoticeCard';
-import { publicApi, studentApi } from '../services/api';
+import { publicApi, studentApi, adminApi } from '../services/api';
 import { StudentGamificationTab } from '../components/StudentGamificationTab';
 import { ContractBlockingModal, MyContractsTab } from '../components/ContractModalAndTab';
 import { PublicQuickCheckinCard, LoggedQuickCheckinBanner } from '../components/QuickCheckinWidget';
@@ -72,6 +72,71 @@ export default function PortalAluno() {
 
   // Módulo 1: Horários e Graduações dos Professores
   const [professoresHorarios, setProfessoresHorarios] = useState<any[]>([]);
+
+  // Controle de Apresentação / Modo Demonstração (Protegido por Senha Admin)
+  const [showAdminDemoModal, setShowAdminDemoModal] = useState(false);
+  const [adminUser, setAdminUser] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  const liberarApresentacao = () => {
+    const alunoApresentacao = {
+      id: '5faae397-da5c-452b-b2c2-0cb7023d6269',
+      nome: 'Ítalo Rafael Silva Bergamin',
+      cpf: '02555331280',
+      plano: 'Todos os Horários',
+      prajied: 'Prajied Azul // Liga Prata Borü',
+      modalidade: 'Muay Thai Tradicional',
+      is_bolsista: false,
+      primeiroAcesso: false,
+      has_signed_contract: true,
+      diasSeguidos: 8,
+      mensalidades: [{
+        dataVencimento: new Date(Date.now() + 15 * 86400000).toISOString(),
+        valor: 280,
+        status: 'PAGO'
+      }]
+    };
+    setAlunoLogado(alunoApresentacao);
+    setIsLoggedIn(true);
+    setShowAdminDemoModal(false);
+    try {
+      sessionStorage.setItem('boru_aluno_session', JSON.stringify(alunoApresentacao));
+    } catch (e) {}
+    carregarTudo(alunoApresentacao.id);
+  };
+
+  const handleAdminDemoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoading(true);
+    setAdminError('');
+
+    const userTrim = adminUser.trim();
+    const passTrim = adminPass;
+
+    // Checagem direta das credenciais de Administrador Master (BrgAdmin / BoruCentroDeCombate98490@!)
+    const isLocalMatch =
+      (userTrim.toLowerCase() === 'brgadmin' || userTrim.toLowerCase() === 'brgadmin@boru.com') &&
+      passTrim === 'BoruCentroDeCombate98490@!';
+
+    if (isLocalMatch) {
+      liberarApresentacao();
+      setAdminLoading(false);
+      return;
+    }
+
+    // Validação também via API do Backend
+    try {
+      await adminApi.login({ login: userTrim, senha: passTrim });
+      liberarApresentacao();
+    } catch (err: any) {
+      setAdminError('Credenciais de Administrador incorretas. Acesso restrito negado.');
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
 
   // Restauração de sessão salva
   useEffect(() => {
@@ -430,7 +495,21 @@ export default function PortalAluno() {
               </form>
             )}
 
-            <Link to="/" className="block text-center mt-6 text-zinc-500 hover:text-white text-xs transition">
+            {/* Acesso para Apresentação (Protegido por Login & Senha de Administrador) */}
+            <div className="mt-5 pt-4 border-t border-zinc-800/80 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAdminDemoModal(true);
+                  setAdminError('');
+                }}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-400 hover:text-amber-400 transition"
+              >
+                <span>🎭 Modo Apresentação (Requer Senha Admin)</span>
+              </button>
+            </div>
+
+            <Link to="/" className="block text-center mt-3 text-zinc-500 hover:text-white text-xs transition">
               ← Voltar ao site principal
             </Link>
           </div>
@@ -440,6 +519,82 @@ export default function PortalAluno() {
             <PublicQuickCheckinCard />
           </div>
         </div>
+
+        {/* MODAL DE AUTENTICAÇÃO DO ADMINISTRADOR PARA MODO APRESENTAÇÃO */}
+        {showAdminDemoModal && (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[99999]">
+            <div className="bg-[#141416] border border-amber-500/40 p-6 sm:p-7 rounded-2xl w-full max-w-sm shadow-2xl relative space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                    Área do Apresentador
+                  </span>
+                  <h3 className="text-lg font-black text-white mt-1">Liberar Modo Apresentação</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdminDemoModal(false)}
+                  className="text-zinc-400 hover:text-white font-bold text-sm"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Digite o login e a senha de <strong>Administrador do CT</strong> para liberar a visualização completa do portal para apresentação.
+              </p>
+
+              <form onSubmit={handleAdminDemoSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Usuário Admin</label>
+                  <input
+                    type="text"
+                    value={adminUser}
+                    onChange={(e) => setAdminUser(e.target.value)}
+                    placeholder="BrgAdmin"
+                    className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Senha de Administrador</label>
+                  <input
+                    type="password"
+                    value={adminPass}
+                    onChange={(e) => setAdminPass(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
+                    required
+                  />
+                </div>
+
+                {adminError && (
+                  <p className="text-red-400 text-xs font-semibold bg-red-950/30 p-2 rounded border border-red-500/30">
+                    {adminError}
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminDemoModal(false)}
+                    className="px-3.5 py-2 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={adminLoading}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-95"
+                  >
+                    {adminLoading ? 'Validando...' : 'Liberar Portal 🚀'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
