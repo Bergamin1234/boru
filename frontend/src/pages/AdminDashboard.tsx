@@ -63,6 +63,19 @@ const graduacoesPorModalidade: Record<string, string[]> = {
     '5 a 10 anos de prática',
     'Mais de 10 anos / Veterano',
     'Ex-Atleta Profissional'
+  ],
+  '[DEV-SYSTEM]': [
+    'Desenvolvedor do Sistema [DEV-SYSTEM]',
+    'Arquiteto & Engenheiro de Software Full-Stack',
+    'Tech Lead & DevOps / Cloud',
+    'Administrador Técnico do Sistema',
+    'Segurança & Infraestrutura de TI'
+  ],
+  'Administração Geral': [
+    'Gestão Operacional & Financeira',
+    'Diretoria & Coordenação Geral',
+    'Supervisão & Atendimento',
+    'Financeiro & Contabilidade'
   ]
 };
 
@@ -375,8 +388,8 @@ export default function AdminDashboard() {
 
   const abrirModalEdicaoProf = (prof: any) => {
     if (!prof) return;
-    const mod = prof.modalidade || 'Muay Thai';
-    const grad = prof.prajied_faixa || prof.graduacao || prof.prajied || (graduacoesPorModalidade[mod]?.[0] || '');
+    const mod = prof.modalidade || (prof.is_dev ? '[DEV-SYSTEM]' : 'Muay Thai');
+    const grad = prof.prajied_faixa || prof.graduacao || prof.prajied || (graduacoesPorModalidade[mod]?.[0] || (prof.is_dev ? 'Desenvolvedor do Sistema [DEV-SYSTEM]' : ''));
     setProfessorParaEditar({
       id: prof.id,
       nome: prof.nome || '',
@@ -389,9 +402,9 @@ export default function AdminDashboard() {
       prajied_faixa: grad,
       fotoPerfilUrl: prof.fotoPerfilUrl || '',
       tempoPratica: prof.tempoPratica || '',
-      tempoDocencia: prof.tempoDocencia || '',
-      tempoAula: prof.tempoAula || '60 min',
-      horariosAula: prof.horariosAula || (Array.isArray(prof.horarios_aula) ? prof.horarios_aula.join(', ') : (prof.horarios_aula || '')),
+      tempoDocencia: prof.tempoDocencia || (prof.is_dev ? 'Engenharia & Arquitetura de Software' : ''),
+      tempoAula: prof.tempoAula || (prof.is_dev ? 'Disponibilidade Dev' : '60 min'),
+      horariosAula: prof.horariosAula || (Array.isArray(prof.horarios_aula) ? prof.horarios_aula.join(', ') : (prof.horarios_aula || (prof.is_dev ? 'Suporte & Atualizações Contínuas' : ''))),
       cargaHorariaSemanal: prof.cargaHorariaSemanal || '',
       senha: ''
     });
@@ -2486,28 +2499,30 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-3 sm:p-4">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase border ${
+                          prof.is_dev || prof.modalidade?.includes('DEV') ? 'bg-purple-950/40 text-purple-300 border-purple-500/50 shadow-sm shadow-purple-950/50' :
+                          prof.modalidade?.toLowerCase().includes('administra') ? 'bg-rose-950/40 text-rose-300 border-rose-800/50' :
                           prof.modalidade === 'Jiu-Jitsu' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' :
                           prof.modalidade === 'Boxe' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
                           prof.modalidade === 'MMA' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
                           prof.modalidade === 'Taekwondo' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' :
                           'bg-red-500/10 text-red-400 border-red-500/30'
                         }`}>
-                          {prof.modalidade || 'Muay Thai'}
+                          {prof.is_dev || prof.modalidade?.includes('DEV') ? '💻 [DEV-SYSTEM]' : (prof.modalidade || 'Muay Thai')}
                         </span>
                       </td>
                       <td className="p-3 sm:p-4 text-zinc-200">
                         <div className="font-semibold text-xs text-white">
-                          {prof.graduacao || prof.prajied || 'Sem faixa'}
+                          {prof.graduacao || prof.prajied || (prof.is_dev ? 'Desenvolvedor do Sistema [DEV-SYSTEM]' : 'Sem faixa')}
                         </div>
                         {prof.tempoPratica && (
                           <div className="text-[11px] text-zinc-400 mt-0.5">
-                            🥋 Treino: {prof.tempoPratica}
+                            {prof.is_dev ? `💻 ${prof.tempoPratica}` : `🥋 Treino: ${prof.tempoPratica}`}
                           </div>
                         )}
                       </td>
                       <td className="p-3 sm:p-4">
                         <div className="text-xs font-bold text-amber-300">
-                          {prof.tempoDocencia || 'Tempo de docência não informado'}
+                          {prof.tempoDocencia || (prof.is_dev ? 'Engenharia & Arquitetura de Software' : 'Tempo de docência não informado')}
                         </div>
                         {prof.cargaHorariaSemanal && (
                           <div className="text-[11px] text-zinc-400 mt-0.5">
@@ -2517,7 +2532,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-3 sm:p-4">
                         <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-700/80">
-                          <span>⏱️ {prof.tempoAula || '60 min'}</span>
+                          <span>⏱️ {prof.is_dev ? 'Disponibilidade Dev' : (prof.tempoAula || '60 min')}</span>
                         </div>
                         {prof.horariosAula && (
                           <div className="text-[11px] text-zinc-400 mt-1 max-w-[200px] leading-tight line-clamp-2" title={prof.horariosAula}>
@@ -2526,11 +2541,19 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td className="p-3 sm:p-4">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                          prof.cargo === 'ADMIN' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        }`}>
-                          {prof.cargo}
-                        </span>
+                        {prof.is_dev || prof.email === 'brgadmin@boru.com' ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-1 w-fit shadow-sm">
+                            💻 DEV-SYSTEM
+                          </span>
+                        ) : prof.cargo === 'ADMIN' ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            ADMIN
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            PROFESSOR
+                          </span>
+                        )}
                       </td>
                       <td className="p-3 sm:p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5 flex-wrap">
@@ -2925,6 +2948,8 @@ export default function AdminDashboard() {
                     <option value="Boxe">🥊 Boxe</option>
                     <option value="MMA">🤼 MMA</option>
                     <option value="Taekwondo">🥋 Taekwondo</option>
+                    <option value="[DEV-SYSTEM]">💻 [DEV-SYSTEM] - Desenvolvimento de Software</option>
+                    <option value="Administração Geral">🏢 Administração Geral</option>
                   </select>
                 </div>
 
@@ -2945,7 +2970,11 @@ export default function AdminDashboard() {
               {/* GRADUAÇÃO DINÂMICA OU TEMPO DE PRÁTICA */}
               <div>
                 <label className="block text-zinc-300 text-xs font-semibold mb-1">
-                  {novoProfessor.modalidade === 'Boxe' || novoProfessor.modalidade === 'MMA'
+                  {novoProfessor.modalidade === '[DEV-SYSTEM]'
+                    ? 'Função & Nível Técnico / Atuação ([DEV-SYSTEM])'
+                    : novoProfessor.modalidade === 'Administração Geral'
+                    ? 'Função Administrativa & Gestão'
+                    : novoProfessor.modalidade === 'Boxe' || novoProfessor.modalidade === 'MMA'
                     ? `Tempo de Prática / Experiência (${novoProfessor.modalidade})`
                     : `Graduação de Faixa / Prajied (${novoProfessor.modalidade})`}
                 </label>
@@ -3113,6 +3142,8 @@ export default function AdminDashboard() {
                     <option value="Boxe">🥊 Boxe</option>
                     <option value="MMA">🤼 MMA</option>
                     <option value="Taekwondo">🥋 Taekwondo</option>
+                    <option value="[DEV-SYSTEM]">💻 [DEV-SYSTEM] - Desenvolvimento de Software</option>
+                    <option value="Administração Geral">🏢 Administração Geral</option>
                   </select>
                 </div>
 
@@ -3132,7 +3163,11 @@ export default function AdminDashboard() {
 
               <div>
                 <label className="block text-zinc-300 text-xs font-semibold mb-1">
-                  {professorParaEditar.modalidade === 'Boxe' || professorParaEditar.modalidade === 'MMA'
+                  {professorParaEditar.modalidade === '[DEV-SYSTEM]'
+                    ? 'Função & Nível Técnico / Atuação ([DEV-SYSTEM])'
+                    : professorParaEditar.modalidade === 'Administração Geral'
+                    ? 'Função Administrativa & Gestão'
+                    : professorParaEditar.modalidade === 'Boxe' || professorParaEditar.modalidade === 'MMA'
                     ? `Tempo de Prática / Experiência (${professorParaEditar.modalidade})`
                     : `Graduação de Faixa / Prajied (${professorParaEditar.modalidade})`}
                 </label>
@@ -3151,13 +3186,13 @@ export default function AdminDashboard() {
                   ))}
                 </select>
 
-                {(professorParaEditar.modalidade === 'Boxe' || professorParaEditar.modalidade === 'MMA') && (
+                {(professorParaEditar.modalidade === 'Boxe' || professorParaEditar.modalidade === 'MMA' || professorParaEditar.modalidade === '[DEV-SYSTEM]' || professorParaEditar.modalidade === 'Administração Geral') && (
                   <div className="mt-2">
                     <input 
                       type="text" 
-                      value={professorParaEditar.tempoPratica || ''} 
-                      onChange={(e) => setProfessorParaEditar({...professorParaEditar, tempoPratica: e.target.value, graduacao: e.target.value})} 
-                      placeholder="Ou digite o cartel / tempo personalizado"
+                      value={professorParaEditar.graduacao || ''} 
+                      onChange={(e) => setProfessorParaEditar({...professorParaEditar, graduacao: e.target.value, prajied_faixa: e.target.value})} 
+                      placeholder="Ou digite o título / cargo personalizado (Ex: Desenvolvedor do Sistema [DEV-SYSTEM])"
                       className="w-full bg-[#1A1A1E] border border-zinc-700/80 rounded-lg p-2 text-xs text-zinc-300 placeholder-zinc-500"
                     />
                   </div>

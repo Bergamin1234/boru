@@ -8,25 +8,58 @@ import { evaluateStudentGamification } from './gamificationService';
 export async function ensureRbacSeeded(prisma: PrismaClient) {
   try {
     // 1. Garantir AdminDev (Ítalo Bergamin - BrgAdmin)
-    await prisma.usuario.upsert({
-      where: { email: 'brgadmin@boru.com' },
-      update: {
-        is_dev: true,
-        cargo: 'ADMIN',
-        ativo: true,
-      },
-      create: {
-        nome: 'Ítalo Bergamin (BrgAdmin)',
-        email: 'brgadmin@boru.com',
-        senha: 'BoruCentroDeCombate98490@!',
-        cargo: 'ADMIN',
-        is_dev: true,
-        telefone: '(69) 99238-4491',
-        prajied: 'Prajied Preto',
-        prajied_faixa: 'Prajied Preto',
-        ativo: true,
-      },
+    const italoExistente = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { email: 'brgadmin@boru.com' },
+          { email: 'italobergamin321@gmail.com' },
+          { cpf: '02555331280' }
+        ]
+      }
     });
+
+    if (italoExistente) {
+      await prisma.usuario.update({
+        where: { id: italoExistente.id },
+        data: {
+          is_dev: true,
+          cargo: 'ADMIN',
+          modalidade: '[DEV-SYSTEM]',
+          graduacao: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          prajied: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          prajied_faixa: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          tempoDocencia: 'Engenharia & Arquitetura de Software',
+          tempoPratica: 'Desenvolvimento Full-Stack',
+          tempoAula: 'Disponibilidade Dev',
+          horariosAula: 'Suporte & Atualizações Contínuas',
+          horarios_aula: 'Suporte & Atualizações Contínuas',
+          cargaHorariaSemanal: 'Manutenção e Evolução do Sistema'
+        }
+      });
+    } else {
+      await prisma.usuario.create({
+        data: {
+          nome: 'Ítalo Bergamin (BrgAdmin)',
+          email: 'italobergamin321@gmail.com',
+          cpf: '02555331280',
+          senha: 'BoruCentroDeCombate98490@!',
+          cargo: 'ADMIN',
+          is_dev: true,
+          modalidade: '[DEV-SYSTEM]',
+          graduacao: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          prajied: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          prajied_faixa: 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+          tempoDocencia: 'Engenharia & Arquitetura de Software',
+          tempoPratica: 'Desenvolvimento Full-Stack',
+          tempoAula: 'Disponibilidade Dev',
+          horariosAula: 'Suporte & Atualizações Contínuas',
+          horarios_aula: 'Suporte & Atualizações Contínuas',
+          cargaHorariaSemanal: 'Manutenção e Evolução do Sistema',
+          telefone: '(69) 99238-4491',
+          ativo: true,
+        }
+      });
+    }
 
     // 2. Garantir Admin Geral: Amanda Alencar Moreira (CPF: 00542041278, Senha provisória: @Felipe.01)
     const amandaExistente = await prisma.usuario.findFirst({
