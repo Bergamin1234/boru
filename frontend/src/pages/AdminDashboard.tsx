@@ -1083,14 +1083,6 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            {usuarioLogado?.cargo === 'ADMIN' && (
-              <button 
-                onClick={() => setShowModalProf(true)}
-                className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-900/30"
-              >
-                <span>➕ Criar Novo Professor</span>
-              </button>
-            )}
             <button 
               onClick={() => setShowModal(true)}
               className="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
@@ -1106,40 +1098,60 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* CARDS DE MÉTRICAS */}
+        {/* CARDS DE MÉTRICAS (INTERATIVOS COM ATALHO DIRETO) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-3 sm:p-4">
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Total de Alunos</p>
+          <div 
+            onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('TODOS'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-zinc-700 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Ver todos os alunos matriculados"
+          >
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition">Total de Alunos</p>
             <p className="text-2xl sm:text-3xl font-black text-white">{metricas.totalAlunos}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5">Matriculados ativos</span>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-zinc-400 transition">Matriculados ativos →</span>
           </div>
-          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-3 sm:p-4">
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Em Dia</p>
+          <div 
+            onClick={() => { if (usuarioLogado?.cargo === 'ADMIN') setAbaAtiva('financeiro_gestao'); else setAbaAtiva('alunos'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-green-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Ver assinaturas e mensalidades em dia"
+          >
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-green-400 transition">Em Dia</p>
             <p className="text-2xl sm:text-3xl font-black text-green-500">{metricas.assinaturasAtivas}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5">Mensalidade vigente</span>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-green-400/70 transition">Mensalidade vigente →</span>
           </div>
-          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-3 sm:p-4">
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Atrasados / Pendentes</p>
+          <div 
+            onClick={() => { if (usuarioLogado?.cargo === 'ADMIN') setAbaAtiva('financeiro_gestao'); else setAbaAtiva('alunos'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-red-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Ver inadimplências e pendências"
+          >
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-red-400 transition">Atrasados / Pendentes</p>
             <p className="text-2xl sm:text-3xl font-black text-red-500">{metricas.inadimplentes}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5">Vencidas ou sem plano</span>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-red-400/70 transition">Vencidas ou sem plano →</span>
           </div>
-          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-3 sm:p-4">
+          <div 
+            onClick={() => setAbaAtiva('chamada_diaria')}
+            className="bg-[#141416] border border-zinc-800 hover:border-cyan-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Abrir Chamada & Frequência de hoje"
+          >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Assiduidade Geral</p>
+              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-cyan-400 transition">Assiduidade Geral</p>
               <span className="text-xs">📊</span>
             </div>
             <p className="text-2xl sm:text-3xl font-black text-cyan-400">{metricas.taxaPresencaMedia ?? 100}%</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5">Taxa de presença no mês</span>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-cyan-400/70 transition">Chamada & Frequência →</span>
           </div>
-          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1">
+          <div 
+            onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('RISCO'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-amber-600/50 rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1 cursor-pointer transition group"
+            title="Filtrar alunos em risco de evasão"
+          >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1">Alunos em Risco</p>
+              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-amber-400 transition">Alunos em Risco</p>
               <span className="text-xs">⚠️</span>
             </div>
             <p className={`text-2xl sm:text-3xl font-black ${(metricas.alunosEmRisco || 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               {metricas.alunosEmRisco || 0}
             </p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5">Frequência menor que 50%</span>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition">Frequência &lt; 50% (Filtrar) →</span>
           </div>
         </div>
 
@@ -1167,33 +1179,14 @@ export default function AdminDashboard() {
               👥 Alunos ({alunos.length})
             </button>
             <button 
-              onClick={() => {
-                setAbaAtiva('calendario_geral');
-                if (!frequenciaGeral) {
-                  carregarFrequenciaGeral(mesFrequenciaGeral, anoFrequenciaGeral);
-                }
-              }}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'calendario_geral' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-              }`}
-            >
-              📅 Calendário & Frequência Geral
-            </button>
-            <button 
-              onClick={() => setAbaAtiva('presencas')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'presencas' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-              }`}
-            >
-              📋 Chamada Rápida ({presencas.length})
-            </button>
-            <button 
               onClick={() => setAbaAtiva('chamada_diaria')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'chamada_diaria' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40'
+                ['chamada_diaria', 'calendario_geral', 'presencas'].includes(abaAtiva)
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
+                  : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40'
               }`}
             >
-              ✅ Chamada Diária (Split-List)
+              ✅ Chamada & Frequência
             </button>
             {usuarioLogado?.cargo === 'ADMIN' && (
               <button 
@@ -1268,6 +1261,61 @@ export default function AdminDashboard() {
             ›
           </button>
         </div>
+
+        {/* SUB-BARRA UNIFICADA DE CHAMADA & FREQUÊNCIA (ELIMINA REDUNDÂNCIAS) */}
+        {['chamada_diaria', 'calendario_geral', 'presencas'].includes(abaAtiva) && (
+          <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+              <span className="text-xs font-black text-zinc-300 hidden sm:inline mr-1">Visão:</span>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('chamada_diaria')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'chamada_diaria'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/30'
+                    : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>✅ Chamada de Hoje (Split-List)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAbaAtiva('calendario_geral');
+                  if (!frequenciaGeral) {
+                    carregarFrequenciaGeral(mesFrequenciaGeral, anoFrequenciaGeral);
+                  }
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'calendario_geral'
+                    ? 'bg-red-600 text-white shadow-md shadow-red-900/30'
+                    : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>📅 Calendário Geral Mensal</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('presencas')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'presencas'
+                    ? 'bg-red-600 text-white shadow-md shadow-red-900/30'
+                    : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>📋 Histórico de Check-ins ({presencas.length})</span>
+              </button>
+            </div>
+
+            <span className="text-[11px] text-zinc-500 font-medium hidden md:inline">
+              {abaAtiva === 'chamada_diaria' && 'Lista rápida: quem já treinou hoje e quem falta'}
+              {abaAtiva === 'calendario_geral' && 'Frequência da academia dia a dia com roster completo'}
+              {abaAtiva === 'presencas' && 'Tabela detalhada com filtros e ações em lote'}
+            </span>
+          </div>
+        )}
 
         {/* MÓDULO 6: CHAMADA DIÁRIA SPLIT-LIST */}
         {abaAtiva === 'chamada_diaria' && (
