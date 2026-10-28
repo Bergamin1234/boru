@@ -311,35 +311,77 @@ app.patch('/api/admin/professores/:id', async (req, res) => {
     horarios_aula,
     cargaHorariaSemanal,
     fotoPerfilUrl,
-    ativo
+    ativo,
+    is_dev
   } = req.body;
 
   try {
+    const userExistente = await prisma.usuario.findUnique({ where: { id } });
+    if (!userExistente) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
     const dataUpdate: any = {};
     if (nome) dataUpdate.nome = nome.trim();
-    if (email) dataUpdate.email = email.trim().toLowerCase();
-    if (cpf !== undefined) dataUpdate.cpf = cpf ? cpf.replace(/\D/g, '') : null;
-    if (telefone !== undefined) dataUpdate.telefone = telefone;
+    
+    if (email) {
+      const emailLimpo = email.trim().toLowerCase();
+      const existingEmail = await prisma.usuario.findFirst({
+        where: { email: emailLimpo, id: { not: id } }
+      });
+      if (existingEmail) {
+        return res.status(400).json({ erro: 'Este e-mail já está sendo utilizado por outro usuário.' });
+      }
+      dataUpdate.email = emailLimpo;
+    }
+
+    if (cpf !== undefined) {
+      const cpfLimpo = cpf ? String(cpf).replace(/\D/g, '') : null;
+      if (cpfLimpo) {
+        const existingCpf = await prisma.usuario.findFirst({
+          where: { cpf: cpfLimpo, id: { not: id } }
+        });
+        if (existingCpf) {
+          return res.status(400).json({ erro: `O CPF ${cpf} já está em uso por outro usuário (${existingCpf.nome}).` });
+        }
+      }
+      dataUpdate.cpf = cpfLimpo;
+    }
+
+    if (telefone !== undefined) dataUpdate.telefone = telefone ? String(telefone).trim() : null;
     if (cargo) dataUpdate.cargo = cargo;
-    if (senha && senha.trim()) dataUpdate.senha = senha.trim();
+    if (senha && String(senha).trim()) dataUpdate.senha = String(senha).trim();
     if (modalidade) dataUpdate.modalidade = modalidade;
+    
     const faixaFinal = prajied_faixa || graduacao || prajied;
     if (faixaFinal) {
       dataUpdate.graduacao = faixaFinal;
       dataUpdate.prajied = faixaFinal;
       dataUpdate.prajied_faixa = faixaFinal;
     }
-    if (tempoPratica !== undefined) dataUpdate.tempoPratica = tempoPratica;
-    if (tempoDocencia !== undefined) dataUpdate.tempoDocencia = tempoDocencia;
-    if (tempoAula !== undefined) dataUpdate.tempoAula = tempoAula;
+
+    if (tempoPratica !== undefined) dataUpdate.tempoPratica = tempoPratica ? String(tempoPratica) : null;
+    if (tempoDocencia !== undefined) dataUpdate.tempoDocencia = tempoDocencia ? String(tempoDocencia) : null;
+    if (tempoAula !== undefined) dataUpdate.tempoAula = tempoAula ? String(tempoAula) : '60 min';
+    
     if (horariosAula !== undefined || horarios_aula !== undefined) {
-      const h = horarios_aula !== undefined ? horarios_aula : horariosAula;
-      dataUpdate.horariosAula = h;
-      dataUpdate.horarios_aula = h;
+      const hRaw = horarios_aula !== undefined ? horarios_aula : horariosAula;
+      let hVal: string | null = null;
+      if (Array.isArray(hRaw)) {
+        hVal = hRaw.filter(Boolean).map((s: any) => String(s).trim()).join(', ');
+      } else if (typeof hRaw === 'string') {
+        hVal = hRaw.trim();
+      } else if (hRaw) {
+        hVal = String(hRaw);
+      }
+      dataUpdate.horariosAula = hVal || null;
+      dataUpdate.horarios_aula = hVal || null;
     }
-    if (cargaHorariaSemanal !== undefined) dataUpdate.cargaHorariaSemanal = cargaHorariaSemanal;
-    if (fotoPerfilUrl !== undefined) dataUpdate.fotoPerfilUrl = fotoPerfilUrl;
-    if (ativo !== undefined) dataUpdate.ativo = ativo;
+
+    if (cargaHorariaSemanal !== undefined) dataUpdate.cargaHorariaSemanal = cargaHorariaSemanal ? String(cargaHorariaSemanal) : null;
+    if (fotoPerfilUrl !== undefined) dataUpdate.fotoPerfilUrl = fotoPerfilUrl || null;
+    if (ativo !== undefined) dataUpdate.ativo = Boolean(ativo);
+    if (is_dev !== undefined) dataUpdate.is_dev = Boolean(is_dev);
 
     const atualizado = await prisma.usuario.update({
       where: { id },
@@ -347,8 +389,9 @@ app.patch('/api/admin/professores/:id', async (req, res) => {
     });
 
     res.json({ mensagem: 'Dados do professor atualizados com sucesso!', professor: atualizado });
-  } catch (error) {
-    res.status(500).json({ erro: 'Erro ao atualizar professor.' });
+  } catch (error: any) {
+    console.error('Erro ao atualizar professor:', error);
+    res.status(500).json({ erro: error?.message || 'Erro ao atualizar dados do professor.' });
   }
 });
 

@@ -374,12 +374,13 @@ export default function AdminDashboard() {
   };
 
   const abrirModalEdicaoProf = (prof: any) => {
+    if (!prof) return;
     const mod = prof.modalidade || 'Muay Thai';
     const grad = prof.prajied_faixa || prof.graduacao || prof.prajied || (graduacoesPorModalidade[mod]?.[0] || '');
     setProfessorParaEditar({
       id: prof.id,
-      nome: prof.nome,
-      email: prof.email,
+      nome: prof.nome || '',
+      email: prof.email || '',
       cpf: prof.cpf || '',
       telefone: prof.telefone || '',
       cargo: prof.cargo || 'PROFESSOR',
@@ -390,7 +391,7 @@ export default function AdminDashboard() {
       tempoPratica: prof.tempoPratica || '',
       tempoDocencia: prof.tempoDocencia || '',
       tempoAula: prof.tempoAula || '60 min',
-      horariosAula: prof.horariosAula || (Array.isArray(prof.horarios_aula) ? prof.horarios_aula.join(', ') : ''),
+      horariosAula: prof.horariosAula || (Array.isArray(prof.horarios_aula) ? prof.horarios_aula.join(', ') : (prof.horarios_aula || '')),
       cargaHorariaSemanal: prof.cargaHorariaSemanal || '',
       senha: ''
     });
@@ -401,27 +402,42 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!professorParaEditar) return;
     try {
+      const horariosTexto = professorParaEditar.horariosAula ? String(professorParaEditar.horariosAula).trim() : '';
       const payload: any = {
-        nome: professorParaEditar.nome,
-        cpf: professorParaEditar.cpf,
-        telefone: professorParaEditar.telefone,
+        nome: professorParaEditar.nome ? String(professorParaEditar.nome).trim() : '',
+        email: professorParaEditar.email ? String(professorParaEditar.email).trim().toLowerCase() : undefined,
+        cpf: professorParaEditar.cpf ? String(professorParaEditar.cpf).trim() : '',
+        telefone: professorParaEditar.telefone ? String(professorParaEditar.telefone).trim() : '',
         cargo: professorParaEditar.cargo,
         modalidade: professorParaEditar.modalidade,
         graduacao: professorParaEditar.graduacao,
         prajied_faixa: professorParaEditar.prajied_faixa || professorParaEditar.graduacao,
         fotoPerfilUrl: professorParaEditar.fotoPerfilUrl || null,
-        tempoPratica: professorParaEditar.tempoPratica,
-        tempoDocencia: professorParaEditar.tempoDocencia,
-        tempoAula: professorParaEditar.tempoAula,
-        horariosAula: professorParaEditar.horariosAula,
-        horarios_aula: professorParaEditar.horariosAula ? professorParaEditar.horariosAula.split(/[,|]/).map((s: string) => s.trim()).filter(Boolean) : [],
-        cargaHorariaSemanal: professorParaEditar.cargaHorariaSemanal
+        tempoPratica: professorParaEditar.tempoPratica || '',
+        tempoDocencia: professorParaEditar.tempoDocencia || '',
+        tempoAula: professorParaEditar.tempoAula || '60 min',
+        horariosAula: horariosTexto,
+        horarios_aula: horariosTexto,
+        cargaHorariaSemanal: professorParaEditar.cargaHorariaSemanal || ''
       };
       if (professorParaEditar.senha && professorParaEditar.senha.trim().length > 0) {
         payload.senha = professorParaEditar.senha.trim();
       }
-      await adminApi.updateTeacher(professorParaEditar.id, payload);
-      alert('Dados do professor atualizados com sucesso!');
+      const response = await adminApi.updateTeacher(professorParaEditar.id, payload);
+      alert('Dados atualizados com sucesso!');
+
+      // Sincroniza usuário logado caso ele tenha editado seu próprio perfil
+      if (response.data?.professor && (
+        professorParaEditar.id === usuarioLogado?.id ||
+        professorParaEditar.email === usuarioLogado?.email ||
+        (usuarioLogado?.cpf && professorParaEditar.cpf && usuarioLogado.cpf.replace(/\D/g, '') === professorParaEditar.cpf.replace(/\D/g, ''))
+      )) {
+        setUsuarioLogado((prev: any) => ({
+          ...prev,
+          ...response.data.professor
+        }));
+      }
+
       setShowModalEditarProf(false);
       setProfessorParaEditar(null);
       carregarDashboard();
@@ -1057,7 +1073,15 @@ export default function AdminDashboard() {
         {/* BARRA SUPERIOR & PERFIL DO USUÁRIO */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
           <div className="flex items-center gap-3">
-            <img src="/logo-boru.jpg" alt="BORÜ" className="w-12 h-12 rounded-full border-2 border-red-600 shadow-md object-cover flex-shrink-0" />
+            {usuarioLogado?.fotoPerfilUrl ? (
+              <img 
+                src={usuarioLogado.fotoPerfilUrl} 
+                alt={usuarioLogado.nome} 
+                className="w-12 h-12 rounded-full border-2 border-amber-500 shadow-md object-cover flex-shrink-0" 
+              />
+            ) : (
+              <img src="/logo-boru.jpg" alt="BORÜ" className="w-12 h-12 rounded-full border-2 border-red-600 shadow-md object-cover flex-shrink-0" />
+            )}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black tracking-wider text-white">
@@ -1080,13 +1104,29 @@ export default function AdminDashboard() {
                   </span>
                 )}
               </div>
-              <p className="text-zinc-400 text-xs sm:text-sm mt-1">
-                Olá, <strong className="text-white">{usuarioLogado?.nome}</strong> ({usuarioLogado?.prajied || 'Prajied Oficial'})
-              </p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <p className="text-zinc-400 text-xs sm:text-sm">
+                  Olá, <strong className="text-white">{usuarioLogado?.nome}</strong> ({usuarioLogado?.prajied || 'Prajied Oficial'})
+                </p>
+                <button
+                  onClick={() => abrirModalEdicaoProf(usuarioLogado)}
+                  className="px-2 py-0.5 rounded bg-zinc-800/80 hover:bg-zinc-700 text-[11px] text-amber-400 hover:text-amber-300 font-semibold border border-amber-500/30 flex items-center gap-1 transition"
+                  title="Editar minhas informações de perfil, foto e dados"
+                >
+                  <span>✏️</span> Editar meus dados
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <button 
+              onClick={() => abrirModalEdicaoProf(usuarioLogado)}
+              className="px-3 py-2 rounded-lg bg-zinc-800/90 hover:bg-zinc-700 text-xs font-bold text-amber-400 hover:text-amber-300 transition border border-amber-500/30 flex items-center gap-1.5 shadow-sm"
+              title="Editar minhas informações de perfil, foto e dados"
+            >
+              <span>👤</span> Meu Perfil
+            </button>
             <button 
               onClick={() => setShowModal(true)}
               className="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
@@ -2991,7 +3031,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* MODAL EDITAR PROFESSOR (EXCLUSIVO ADMIN) */}
+      {/* MODAL EDITAR PROFESSOR (EXCLUSIVO ADMIN & MEU PERFIL) */}
       {showModalEditarProf && professorParaEditar && (
         <div 
           onClick={(e) => {
@@ -3000,8 +3040,14 @@ export default function AdminDashboard() {
           className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto boru-scrollbar"
         >
           <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-xl shadow-2xl my-auto">
-            <h3 className="text-xl font-bold text-white mb-1">Editar Dados do Professor</h3>
-            <p className="text-zinc-400 text-xs mb-4">Altere modalidade, faixa, tempo de aulas/docência e horários de {professorParaEditar.nome}.</p>
+            <h3 className="text-xl font-bold text-white mb-1">
+              {professorParaEditar.id === usuarioLogado?.id ? '👤 Editar Meus Dados de Perfil' : 'Editar Dados do Professor'}
+            </h3>
+            <p className="text-zinc-400 text-xs mb-4">
+              {professorParaEditar.id === usuarioLogado?.id 
+                ? 'Atualize seu nome, foto de perfil oficial, CPF, telefone, e-mail e dados de graduação.' 
+                : `Altere modalidade, faixa, tempo de aulas/docência e horários de ${professorParaEditar.nome}.`}
+            </p>
             
             <form onSubmit={salvarEdicaoProfessor} className="space-y-3">
               <div>
@@ -3012,31 +3058,37 @@ export default function AdminDashboard() {
               {/* DIRETRIZ 3 & MÓDULO 1: UPLOAD REAL DE FOTO DE PERFIL DO PROFESSOR */}
               <div className="pt-1">
                 <FileUploadInput
-                  label="Foto de Perfil do Professor (Storage Local / Sem URL Externa)"
+                  label="Foto de Perfil (Storage Local / Sem URL Externa)"
                   value={professorParaEditar.fotoPerfilUrl || ''}
                   onChange={(url) => setProfessorParaEditar({ ...professorParaEditar, fotoPerfilUrl: url })}
                   folder="professores"
-                  helperText="Faça upload da foto oficial do professor (PNG, JPG ou WEBP)"
+                  helperText="Faça upload da foto oficial (PNG, JPG ou WEBP)"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-amber-400 text-xs font-bold mb-1">CPF (Login do Professor - Obrigatório)</label>
+                  <label className="block text-amber-400 text-xs font-bold mb-1">CPF (Login Principal - Obrigatório)</label>
                   <input required type="text" value={professorParaEditar.cpf || ''} onChange={(e) => setProfessorParaEditar({...professorParaEditar, cpf: e.target.value})} className="w-full bg-[#1A1A1E] border border-amber-500/50 rounded-lg p-2.5 text-sm text-white font-mono" placeholder="000.000.000-00" />
                 </div>
                 <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">WhatsApp / Telefone</label>
-                  <input type="text" value={professorParaEditar.telefone} onChange={(e) => setProfessorParaEditar({...professorParaEditar, telefone: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white" />
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">E-mail (Login Alternativo)</label>
+                  <input type="email" value={professorParaEditar.email || ''} onChange={(e) => setProfessorParaEditar({...professorParaEditar, email: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white" placeholder="email@boru.com" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-zinc-400 text-xs font-semibold mb-1">Cargo</label>
-                <select value={professorParaEditar.cargo} onChange={(e) => setProfessorParaEditar({...professorParaEditar, cargo: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white">
-                  <option value="PROFESSOR">Professor / Instrutor</option>
-                  <option value="ADMIN">Administrador Geral</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">WhatsApp / Telefone</label>
+                  <input type="text" value={professorParaEditar.telefone || ''} onChange={(e) => setProfessorParaEditar({...professorParaEditar, telefone: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white" placeholder="(69) 99999-9999" />
+                </div>
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Cargo</label>
+                  <select value={professorParaEditar.cargo} onChange={(e) => setProfessorParaEditar({...professorParaEditar, cargo: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white">
+                    <option value="PROFESSOR">Professor / Instrutor</option>
+                    <option value="ADMIN">Administrador Geral</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-zinc-800">
