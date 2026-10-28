@@ -93,6 +93,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
   // Modal Universal de Lançamento Financeiro (Entrada, Venda do Mercado, Assinatura ou Gasto)
   const [modalTransacao, setModalTransacao] = useState(false);
+  const [buscaAlunoTransacao, setBuscaAlunoTransacao] = useState('');
   const [editandoTransacaoId, setEditandoTransacaoId] = useState<string | null>(null);
   const [salvandoTransacao, setSalvandoTransacao] = useState(false);
   const [formTransacao, setFormTransacao] = useState({
@@ -421,9 +422,13 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
     if (filtroMetodoCaixa !== 'TODOS' && t.metodoPagamento !== filtroMetodoCaixa) return false;
     const termo = buscaCaixa.trim().toLowerCase();
     if (!termo) return true;
+    const nomeAlunoVinculado = t.alunoId
+      ? (registros.find((r) => r.alunoId === t.alunoId)?.nome || '').toLowerCase()
+      : '';
     return (
       (t.descricao && t.descricao.toLowerCase().includes(termo)) ||
       (t.alunoNome && t.alunoNome.toLowerCase().includes(termo)) ||
+      (nomeAlunoVinculado && nomeAlunoVinculado.includes(termo)) ||
       (t.produtoNome && t.produtoNome.toLowerCase().includes(termo)) ||
       (t.registradoPor && t.registradoPor.toLowerCase().includes(termo)) ||
       (t.observacao && t.observacao.toLowerCase().includes(termo))
@@ -1943,37 +1948,132 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
               {/* Vínculo opcional com Aluno (para Assinaturas, Mercado, Diárias ou Exames) */}
               {formTransacao.tipo === 'ENTRADA' && (
-                <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-3 space-y-2">
-                  <label className="block text-zinc-300 text-[11px] font-bold">
-                    👤 Vincular a um Aluno Matriculado (Opcional para Loja/Diária)
-                  </label>
-                  <select
-                    value={formTransacao.alunoId}
-                    onChange={(e) => {
-                      const aId = e.target.value;
-                      const al = registros.find((r) => r.alunoId === aId);
-                      setFormTransacao({
-                        ...formTransacao,
-                        alunoId: aId,
-                        descricao:
-                          al && formTransacao.categoria === 'MENSALIDADE'
-                            ? `Mensalidade (${al.plano}) — ${al.nome}`
-                            : formTransacao.descricao,
-                        valor:
-                          al && formTransacao.categoria === 'MENSALIDADE' && al.valor
-                            ? String(al.valor)
-                            : formTransacao.valor,
-                      });
-                    }}
-                    className="w-full bg-[#141416] border border-zinc-700 rounded-lg p-2 text-xs text-white"
-                  >
-                    <option value="">-- Sem vínculo / Cliente Balcão --</option>
-                    {registros.map((r) => (
-                      <option key={r.alunoId} value={r.alunoId}>
-                        {r.nome} ({r.plano} — {formatarMoeda(r.valor)})
-                      </option>
-                    ))}
-                  </select>
+                <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-zinc-300 text-[11px] font-bold">
+                      👤 Vincular a um Aluno Matriculado (Opcional para Loja/Diária)
+                    </label>
+                    {formTransacao.alunoId && (
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        ✓ Vinculado
+                      </span>
+                    )}
+                  </div>
+
+                  {(() => {
+                    const alunoVinculado = registros.find((r) => r.alunoId === formTransacao.alunoId);
+                    const alunosFiltrados = registros.filter((r) => {
+                      if (!buscaAlunoTransacao.trim()) return true;
+                      const termo = buscaAlunoTransacao.trim().toLowerCase();
+                      return (
+                        r.nome.toLowerCase().includes(termo) ||
+                        (r.cpf && r.cpf.includes(termo)) ||
+                        (r.plano && r.plano.toLowerCase().includes(termo))
+                      );
+                    });
+
+                    if (alunoVinculado) {
+                      return (
+                        <div className="bg-[#141416] border border-emerald-500/50 rounded-xl p-3 flex items-center justify-between gap-3 shadow-md">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-black text-xs shrink-0">
+                              ✓
+                            </div>
+                            <div className="truncate">
+                              <span className="text-xs font-bold text-white block truncate">{alunoVinculado.nome}</span>
+                              <span className="text-[10px] text-zinc-400 block truncate">
+                                {alunoVinculado.plano} • Mensalidade: {formatarMoeda(alunoVinculado.valor)} {alunoVinculado.is_bolsista ? '• (Bolsista)' : ''}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormTransacao({ ...formTransacao, alunoId: '' });
+                              setBuscaAlunoTransacao('');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-red-950/70 hover:bg-red-900 text-red-300 text-[11px] font-bold border border-red-700/50 transition shrink-0"
+                          >
+                            ✕ Trocar
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={buscaAlunoTransacao}
+                            onChange={(e) => setBuscaAlunoTransacao(e.target.value)}
+                            placeholder="🔍 Digite para pesquisar aluno por nome ou CPF..."
+                            className="w-full bg-[#141416] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-2 text-xs text-white placeholder-zinc-500 outline-none"
+                          />
+                          {buscaAlunoTransacao && (
+                            <button
+                              type="button"
+                              onClick={() => setBuscaAlunoTransacao('')}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="max-h-48 overflow-y-auto boru-scrollbar rounded-lg border border-zinc-800 bg-[#141416] divide-y divide-zinc-800/60 shadow-inner">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormTransacao({ ...formTransacao, alunoId: '' });
+                              setBuscaAlunoTransacao('');
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800/40 flex items-center justify-between transition"
+                          >
+                            <span className="italic">-- Sem vínculo / Cliente Balcão --</span>
+                            <span className="text-[10px] text-zinc-500 font-bold">Avulso</span>
+                          </button>
+                          {alunosFiltrados.slice(0, 35).map((r) => (
+                            <button
+                              key={r.alunoId}
+                              type="button"
+                              onClick={() => {
+                                setFormTransacao({
+                                  ...formTransacao,
+                                  alunoId: r.alunoId,
+                                  descricao:
+                                    formTransacao.categoria === 'MENSALIDADE'
+                                      ? `Mensalidade (${r.plano}) — ${r.nome}`
+                                      : formTransacao.descricao,
+                                  valor:
+                                    formTransacao.categoria === 'MENSALIDADE' && r.valor
+                                      ? String(r.valor)
+                                      : formTransacao.valor,
+                                });
+                                setBuscaAlunoTransacao('');
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-red-950/30 hover:border-l-2 hover:border-red-500 flex items-center justify-between transition group"
+                            >
+                              <div className="truncate pr-2">
+                                <span className="font-bold text-white group-hover:text-red-300 block truncate">{r.nome}</span>
+                                <span className="text-[10px] text-zinc-400 block truncate">
+                                  {r.plano} • {formatarMoeda(r.valor)} {r.is_bolsista ? '• Bolsista' : ''}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-bold text-zinc-400 group-hover:text-red-400 whitespace-nowrap shrink-0">
+                                Vincular →
+                              </span>
+                            </button>
+                          ))}
+                          {alunosFiltrados.length === 0 && (
+                            <div className="p-3 text-center text-xs text-zinc-500">
+                              Nenhum aluno encontrado com "{buscaAlunoTransacao}".
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {!editandoTransacaoId &&
                     formTransacao.alunoId &&

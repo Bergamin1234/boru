@@ -71,6 +71,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
   const [flagEvento, setFlagEvento] = useState(false);
   const [parceiroId, setParceiroId] = useState('');
   const [buscaAlunoRank, setBuscaAlunoRank] = useState('');
+  const [buscaAlunoEspecial, setBuscaAlunoEspecial] = useState('');
 
   // Modal / Form de Rank (Admin CRUD)
   const [editingRank, setEditingRank] = useState<any | null>(null);
@@ -462,23 +463,50 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
             </div>
 
             <form onSubmit={handleAprovarEspecial} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-300">
                   1. Selecionar Aluno(a)
                 </label>
-                <select
-                  value={selectedAlunoId}
-                  onChange={(e) => setSelectedAlunoId(e.target.value)}
-                  className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-red-500 outline-none"
-                  required
-                >
-                  <option value="">Selecione um aluno...</option>
-                  {resumoAlunos.map((a) => (
-                    <option key={a.alunoId} value={a.alunoId}>
-                      {a.nome} — {a.rankAtual?.name} ({a.totalPresencas} treinos)
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={buscaAlunoEspecial}
+                    onChange={(e) => setBuscaAlunoEspecial(e.target.value)}
+                    placeholder="🔍 Digite para filtrar aluno por nome..."
+                    className="w-full bg-[#121215] border border-zinc-800 focus:border-red-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 outline-none"
+                  />
+                  {buscaAlunoEspecial && (
+                    <button
+                      type="button"
+                      onClick={() => setBuscaAlunoEspecial('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {(() => {
+                  const filtrados = resumoAlunos.filter((a) => {
+                    if (!buscaAlunoEspecial.trim()) return true;
+                    const t = buscaAlunoEspecial.trim().toLowerCase();
+                    return a.nome.toLowerCase().includes(t);
+                  });
+                  return (
+                    <select
+                      value={selectedAlunoId}
+                      onChange={(e) => setSelectedAlunoId(e.target.value)}
+                      className="w-full bg-[#121215] border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-red-500 outline-none"
+                      required
+                    >
+                      <option value="">Selecione um aluno ({filtrados.length} encontrados)...</option>
+                      {filtrados.map((a) => (
+                        <option key={a.alunoId} value={a.alunoId}>
+                          {a.nome} — {a.rankAtual?.name} ({a.totalPresencas} treinos)
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
               </div>
 
               <div className="bg-[#121215] border border-zinc-800/90 rounded-xl p-3.5 space-y-3">

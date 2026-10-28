@@ -109,6 +109,7 @@ export default function AdminDashboard() {
 
   // Filtros e lote em Chamada & Presenças
   const [filtroChamada, setFiltroChamada] = useState<'TODOS' | 'PRESENTE' | 'FALTA' | 'DOENCA' | 'AGENDADO'>('TODOS');
+  const [buscaPresenca, setBuscaPresenca] = useState('');
   const [selecionadosLote, setSelecionadosLote] = useState<string[]>([]);
   const [loteLoading, setLoteLoading] = useState(false);
 
@@ -118,11 +119,13 @@ export default function AdminDashboard() {
   const [mesFrequenciaGeral, setMesFrequenciaGeral] = useState(new Date().getMonth() + 1);
   const [anoFrequenciaGeral, setAnoFrequenciaGeral] = useState(new Date().getFullYear());
   const [diaSelecionadoGeral, setDiaSelecionadoGeral] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [buscaAlunoDiaGeral, setBuscaAlunoDiaGeral] = useState('');
 
   // Modal Lançar Aluno no Dia do Calendário Geral (Individual & Em Lote via Tabela)
   const [modalLancarDia, setModalLancarDia] = useState(false);
   const [modoLancarDia, setModoLancarDia] = useState<'LOTE' | 'INDIVIDUAL'>('LOTE');
   const [alunoLancarDia, setAlunoLancarDia] = useState('');
+  const [buscaAlunoLancarIndividual, setBuscaAlunoLancarIndividual] = useState('');
   const [statusLancarDia, setStatusLancarDia] = useState('PRESENTE');
   const [justificativaLancarDia, setJustificativaLancarDia] = useState('');
   const [buscaLancarDia, setBuscaLancarDia] = useState('');
@@ -130,6 +133,9 @@ export default function AdminDashboard() {
   const [apenasNaoLancadosDia, setApenasNaoLancadosDia] = useState(false);
   const [alunosSelecionadosDia, setAlunosSelecionadosDia] = useState<string[]>([]);
   const [salvandoLoteDia, setSalvandoLoteDia] = useState(false);
+
+  // Busca em Aulas Experimentais / Agendamentos
+  const [buscaAgendamento, setBuscaAgendamento] = useState('');
 
   // Ref para rolagem suave da barra de abas com identidade visual Borü
   const tabsScrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -1024,8 +1030,17 @@ export default function AdminDashboard() {
   });
 
   const presencasFiltradas = presencas.filter(p => {
-    if (filtroChamada === 'TODOS') return true;
-    return p.status === filtroChamada;
+    if (filtroChamada !== 'TODOS' && p.status !== filtroChamada) return false;
+    if (buscaPresenca.trim()) {
+      const termo = buscaPresenca.trim().toLowerCase();
+      const nome = (p.aluno?.nome || '').toLowerCase();
+      const plano = (p.aluno?.plano || '').toLowerCase();
+      const titulo = (p.evento?.titulo || '').toLowerCase();
+      if (!nome.includes(termo) && !plano.includes(termo) && !titulo.includes(termo)) {
+        return false;
+      }
+    }
+    return true;
   });
 
   // ==========================================
@@ -1823,8 +1838,36 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto max-h-[420px] space-y-2 pr-1">
-                      {frequenciaGeral.mapaDias[diaSelecionadoGeral].alunos.map((item: any) => (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={buscaAlunoDiaGeral}
+                        onChange={(e) => setBuscaAlunoDiaGeral(e.target.value)}
+                        placeholder="🔍 Filtrar aluno neste dia por nome..."
+                        className="w-full bg-[#1A1A1E] border border-zinc-800 focus:border-red-500 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
+                      />
+                      {buscaAlunoDiaGeral && (
+                        <button
+                          type="button"
+                          onClick={() => setBuscaAlunoDiaGeral('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto max-h-[420px] space-y-2 pr-1 boru-scrollbar">
+                      {frequenciaGeral.mapaDias[diaSelecionadoGeral].alunos
+                        .filter((item: any) => {
+                          if (!buscaAlunoDiaGeral.trim()) return true;
+                          const t = buscaAlunoDiaGeral.trim().toLowerCase();
+                          return (
+                            (item.nome && item.nome.toLowerCase().includes(t)) ||
+                            (item.plano && item.plano.toLowerCase().includes(t))
+                          );
+                        })
+                        .map((item: any) => (
                         <div 
                           key={item.id}
                           className="bg-[#1A1A1E] border border-zinc-800 hover:border-zinc-700 rounded-lg p-3 transition"
@@ -1960,7 +2003,26 @@ export default function AdminDashboard() {
             </div>
 
             {/* FILTROS DE STATUS E AÇÕES EM LOTE SELECIONADOS */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-1 border-t border-zinc-800/80">
+            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 pt-1 border-t border-zinc-800/80">
+              <div className="relative flex-1 max-w-sm">
+                <input
+                  type="text"
+                  value={buscaPresenca}
+                  onChange={(e) => setBuscaPresenca(e.target.value)}
+                  placeholder="🔍 Buscar aluno por nome na chamada..."
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
+                />
+                {buscaPresenca && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaPresenca('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
                 {['TODOS', 'AGENDADO', 'PRESENTE', 'DOENCA', 'FALTA'].map(st => (
                   <button
@@ -2416,23 +2478,44 @@ export default function AdminDashboard() {
         {/* CONTEÚDO DA ABA: LEADS & AGENDAMENTOS EXPERIMENTAIS */}
         {abaAtiva === 'agendamentos' && (
           <div className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden shadow-xl p-4 sm:p-6 space-y-4">
-            <div className="flex gap-2 border-b border-zinc-800 pb-3">
-              <button 
-                onClick={() => setSubAbaExperimental('pendentes')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  subAbaExperimental === 'pendentes' ? 'bg-red-600 text-white' : 'bg-[#1A1A1E] text-zinc-400'
-                }`}
-              >
-                Aulas Agendadas ({agendamentos.pendentes?.length || 0})
-              </button>
-              <button 
-                onClick={() => setSubAbaExperimental('posAula')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  subAbaExperimental === 'posAula' ? 'bg-red-600 text-white' : 'bg-[#1A1A1E] text-zinc-400'
-                }`}
-              >
-                Pós-Aula / Fechar Contrato ({agendamentos.posAula?.length || 0})
-              </button>
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-zinc-800 pb-3">
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setSubAbaExperimental('pendentes')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                    subAbaExperimental === 'pendentes' ? 'bg-red-600 text-white' : 'bg-[#1A1A1E] text-zinc-400'
+                  }`}
+                >
+                  Aulas Agendadas ({agendamentos.pendentes?.length || 0})
+                </button>
+                <button 
+                  onClick={() => setSubAbaExperimental('posAula')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                    subAbaExperimental === 'posAula' ? 'bg-red-600 text-white' : 'bg-[#1A1A1E] text-zinc-400'
+                  }`}
+                >
+                  Pós-Aula / Fechar Contrato ({agendamentos.posAula?.length || 0})
+                </button>
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  value={buscaAgendamento}
+                  onChange={(e) => setBuscaAgendamento(e.target.value)}
+                  placeholder="🔍 Buscar por nome ou telefone..."
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
+                />
+                {buscaAgendamento && (
+                  <button
+                    type="button"
+                    onClick={() => setBuscaAgendamento('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
 
             {subAbaExperimental === 'pendentes' ? (
@@ -2447,7 +2530,13 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/60">
-                    {agendamentos.pendentes?.map((ag: any) => (
+                    {agendamentos.pendentes
+                      ?.filter((ag: any) => {
+                        if (!buscaAgendamento.trim()) return true;
+                        const t = buscaAgendamento.trim().toLowerCase();
+                        return (ag.nome && ag.nome.toLowerCase().includes(t)) || (ag.telefone && ag.telefone.includes(t));
+                      })
+                      .map((ag: any) => (
                       <tr key={ag.id} className="hover:bg-zinc-800/30">
                         <td className="p-3 font-bold text-white">{ag.nome}</td>
                         <td className="p-3 text-zinc-300">{ag.telefone}</td>
@@ -2488,7 +2577,13 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/60">
-                    {agendamentos.posAula?.map((ag: any) => (
+                    {agendamentos.posAula
+                      ?.filter((ag: any) => {
+                        if (!buscaAgendamento.trim()) return true;
+                        const t = buscaAgendamento.trim().toLowerCase();
+                        return (ag.nome && ag.nome.toLowerCase().includes(t)) || (ag.telefone && ag.telefone.includes(t));
+                      })
+                      .map((ag: any) => (
                       <tr key={ag.id} className="hover:bg-zinc-800/30">
                         <td className="p-3 font-bold text-white">
                           {ag.nome}
@@ -3750,21 +3845,48 @@ export default function AdminDashboard() {
               ) : (
                 /* MODO 2: LANÇAMENTO INDIVIDUAL CLÁSSICO */
                 <form onSubmit={handleLancarPresencaDiaGeral} className="space-y-4">
-                  <div>
-                    <label className="block text-zinc-400 text-xs font-semibold mb-1">Selecione o Aluno</label>
-                    <select
-                      required
-                      value={alunoLancarDia}
-                      onChange={(e) => setAlunoLancarDia(e.target.value)}
-                      className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-xs text-white font-medium"
-                    >
-                      <option value="">-- Escolha um aluno --</option>
-                      {alunos.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.nome} ({a.plano || 'Geral'}) - {a.prajied || 'Branco'}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="space-y-1.5">
+                    <label className="block text-zinc-400 text-xs font-semibold">Selecione o Aluno</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={buscaAlunoLancarIndividual}
+                        onChange={(e) => setBuscaAlunoLancarIndividual(e.target.value)}
+                        placeholder="🔍 Digite para pesquisar aluno por nome..."
+                        className="w-full bg-[#141416] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-2 text-xs text-white placeholder-zinc-500 outline-none"
+                      />
+                      {buscaAlunoLancarIndividual && (
+                        <button
+                          type="button"
+                          onClick={() => setBuscaAlunoLancarIndividual('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    {(() => {
+                      const filtrados = alunos.filter((a) => {
+                        if (!buscaAlunoLancarIndividual.trim()) return true;
+                        const t = buscaAlunoLancarIndividual.trim().toLowerCase();
+                        return a.nome.toLowerCase().includes(t) || (a.cpf && a.cpf.includes(t));
+                      });
+                      return (
+                        <select
+                          required
+                          value={alunoLancarDia}
+                          onChange={(e) => setAlunoLancarDia(e.target.value)}
+                          className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-xs text-white font-medium"
+                        >
+                          <option value="">-- Escolha um aluno ({filtrados.length} encontrados) --</option>
+                          {filtrados.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.nome} ({a.plano || 'Geral'}) - Prajied {a.prajied || 'Branco'}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </div>
 
                   <div>
