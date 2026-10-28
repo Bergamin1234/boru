@@ -40,7 +40,7 @@ export async function ensureRbacSeeded(prisma: PrismaClient) {
       await prisma.usuario.create({
         data: {
           nome: 'Ítalo Bergamin (BrgAdmin)',
-          email: 'italobergamin321@gmail.com',
+          email: 'brgadmin@boru.com',
           cpf: '02555331280',
           senha: 'BoruCentroDeCombate98490@!',
           cargo: 'ADMIN',

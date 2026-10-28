@@ -95,12 +95,21 @@ app.post('/api/auth/login', async (req, res) => {
         id: adminDb.id,
         nome: adminDb.nome,
         email: adminDb.email,
+        cpf: adminDb.cpf,
         cargo: 'ADMIN',
         is_dev: true,
         role_level: 'ADMIN_DEV',
         telefone: adminDb.telefone,
-        prajied: adminDb.prajied || 'Prajied Preto',
-        prajied_faixa: adminDb.prajied_faixa || adminDb.prajied || 'Prajied Preto',
+        modalidade: adminDb.modalidade || '[DEV-SYSTEM]',
+        graduacao: adminDb.graduacao || adminDb.prajied_faixa || adminDb.prajied || 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+        tempoPratica: adminDb.tempoPratica,
+        tempoDocencia: adminDb.tempoDocencia || 'Engenharia & Arquitetura de Software',
+        tempoAula: adminDb.tempoAula || 'Disponibilidade Dev',
+        horariosAula: adminDb.horariosAula || adminDb.horarios_aula || 'Suporte & Atualizações Contínuas',
+        horarios_aula: adminDb.horarios_aula || adminDb.horariosAula || 'Suporte & Atualizações Contínuas',
+        cargaHorariaSemanal: adminDb.cargaHorariaSemanal || 'Manutenção e Evolução do Sistema',
+        prajied: adminDb.prajied || 'Desenvolvedor do Sistema [DEV-SYSTEM]',
+        prajied_faixa: adminDb.prajied_faixa || adminDb.prajied || 'Desenvolvedor do Sistema [DEV-SYSTEM]',
         fotoPerfilUrl: adminDb.fotoPerfilUrl || null
       }
     });
