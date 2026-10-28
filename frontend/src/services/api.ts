@@ -78,10 +78,22 @@ export const adminApi = {
     api.post('/dev/logs', data, { headers: { 'x-admin-dev': 'true' } }),
   clearDevLogs: () => api.delete('/dev/logs', { headers: { 'x-admin-dev': 'true' } }),
 
-  // Módulo 5: Gestão Financeira & Baixa Manual com DatePicker
-  getFinancialDashboard: () => api.get('/admin/financeiro'),
-  batchRegisterPayment: (data: { alunoIds: string[]; dataPagamento: string; valorCustom?: number | string }) =>
-    api.post('/admin/financeiro/baixa-lote', data),
+  // Módulo 5 (Super ERP Financeiro): Assinaturas, Mercado, Gastos, Lucro, Gráficos e Tabelas
+  getFinancialDashboard: (params?: { mes?: number; ano?: number }) =>
+    api.get('/admin/financeiro', { params }),
+  batchRegisterPayment: (data: {
+    alunoIds: string[];
+    dataPagamento: string;
+    valorCustom?: number | string;
+    metodoPagamento?: string;
+    registradoPor?: string;
+  }) => api.post('/admin/financeiro/baixa-lote', data),
+  createFinancialTransaction: (data: unknown) =>
+    api.post('/admin/financeiro/transacoes', data),
+  updateFinancialTransaction: (id: string, data: unknown) =>
+    api.patch(`/admin/financeiro/transacoes/${id}`, data),
+  deleteFinancialTransaction: (id: string) =>
+    api.delete(`/admin/financeiro/transacoes/${id}`),
 
   // Módulo 6: Split-List de Chamada Diária
   getSplitDailyRollCall: (data?: string) =>

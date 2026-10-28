@@ -640,32 +640,107 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
   });
 
   // =========================================================
-  // MÓDULO 5: GESTÃO FINANCEIRA, GRID & BAIXA COM DATEPICKER
+  // MÓDULO 5 (SUPER ERP FINANCEIRO): ASSINATURAS, MERCADO, GASTOS, LUCRO, GRÁFICOS E TABELAS
   // =========================================================
-  app.get('/api/admin/financeiro', async (_req: Request, res: Response) => {
+  app.get('/api/admin/financeiro', async (req: Request, res: Response) => {
     try {
       const agora = new Date();
-      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1, 0, 0, 0, 0);
-      const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59, 999);
+      const mesFiltro = req.query.mes ? Number(req.query.mes) : agora.getMonth() + 1;
+      const anoFiltro = req.query.ano ? Number(req.query.ano) : agora.getFullYear();
 
-      const alunos = await prisma.aluno.findMany({
-        include: {
-          mensalidades: {
-            orderBy: { dataVencimento: 'desc' },
+      const inicioMes = new Date(anoFiltro, mesFiltro - 1, 1, 0, 0, 0, 0);
+      const fimMes = new Date(anoFiltro, mesFiltro, 0, 23, 59, 59, 999);
+      const inicioAno = new Date(anoFiltro, 0, 1, 0, 0, 0, 0);
+      const fimAno = new Date(anoFiltro, 11, 31, 23, 59, 59, 999);
+
+      // 1. Sincronização inicial automática: se ainda não houver transações de mensalidades no Livro-Caixa,
+      // importa as mensalidades PAGAS existentes para que o histórico e gráficos fiquem 100% completos.
+      const totalTransacoesExistentes = await prisma.transacaoFinanceira.count();
+      if (totalTransacoesExistentes === 0) {
+        const mensalidadesPagas = await prisma.mensalidade.findMany({
+          where: { status: 'PAGO' },
+          include: { aluno: true },
+        });
+        for (const m of mensalidadesPagas) {
+          if (!m.aluno) continue;
+          await prisma.transacaoFinanceira.create({
+            data: {
+              tipo: 'ENTRADA',
+              categoria: 'MENSALIDADE',
+              descricao: `Mensalidade (${m.aluno.plano || 'Plano Regular'}) — ${m.aluno.nome}`,
+              valor: m.valor || 160,
+              data: m.dataPagamento || m.criadoEm || agora,
+              metodoPagamento: 'PIX',
+              status: 'CONFIRMADO',
+              alunoId: m.aluno.id,
+              alunoNome: m.aluno.nome,
+              registradoPor: 'Sistema / Sincronização Inicial',
+              observacao: `Vencimento ref.: ${new Date(m.dataVencimento).toLocaleDateString('pt-BR')}`,
+            },
+          }).catch(() => {});
+        }
+      }
+
+      const [alunos, transacoes, produtos] = await Promise.all([
+        prisma.aluno.findMany({
+          include: {
+            mensalidades: {
+              orderBy: { dataVencimento: 'desc' },
+            },
           },
-        },
-        orderBy: { nome: 'asc' },
-      });
+          orderBy: { nome: 'asc' },
+        }),
+        prisma.transacaoFinanceira.findMany({
+          orderBy: { data: 'desc' },
+        }),
+        prisma.produto.findMany({
+          orderBy: { nome: 'asc' },
+        }),
+      ]);
 
-      let receitaRecebidaMes = 0;
+      let receitaMensalidadesStatusMes = 0;
       let receitaPrevistaMes = 0;
       let totalInadimplenteValor = 0;
       let countPagos = 0;
       let countPendentes = 0;
       let countAtrasados = 0;
       let countBolsistas = 0;
+      let countConvenioDiaria = 0;
+
+      // Mapas para Analytics de Alunos Matriculados
+      const mapaPlanos: Record<
+        string,
+        {
+          plano: string;
+          totalAlunos: number;
+          pagos: number;
+          pendentes: number;
+          atrasados: number;
+          receitaPotencial: number;
+          receitaRealizada: number;
+        }
+      > = {};
+
+      const mapaPrajieds: Record<string, number> = {};
 
       const registrosFinanceiros = alunos.map((aluno) => {
+        const planoNome = aluno.is_bolsista ? 'Bolsista Integral' : aluno.plano || '2x na semana';
+        const prajiedNome = aluno.prajied || 'Branco';
+        mapaPrajieds[prajiedNome] = (mapaPrajieds[prajiedNome] || 0) + 1;
+
+        if (!mapaPlanos[planoNome]) {
+          mapaPlanos[planoNome] = {
+            plano: planoNome,
+            totalAlunos: 0,
+            pagos: 0,
+            pendentes: 0,
+            atrasados: 0,
+            receitaPotencial: 0,
+            receitaRealizada: 0,
+          };
+        }
+        mapaPlanos[planoNome].totalAlunos += 1;
+
         const planoLower = (aluno.plano || '').toLowerCase();
         const isDiariaOuConvenio =
           planoLower.includes('diária') ||
@@ -687,6 +762,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         // Regra de Negócio Módulo 1: Ignorar alunos com is_bolsista == true na inadimplência
         if (aluno.is_bolsista) {
           countBolsistas++;
+          mapaPlanos[planoNome].pagos += 1;
           return {
             alunoId: aluno.id,
             mensalidadeId: ultimaMensalidade?.id || null,
@@ -694,6 +770,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             cpf: aluno.cpf,
             telefone: aluno.telefone,
             plano: aluno.plano || 'Bolsista',
+            prajied: prajiedNome,
             is_bolsista: true,
             isDiariaOuConvenio,
             has_signed_contract: aluno.has_signed_contract,
@@ -704,12 +781,15 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             dataVencimento: ultimaMensalidade?.dataVencimento || null,
             dataPagamento: ultimaMensalidade?.dataPagamento || null,
             diasAtraso: 0,
-            historicoPagamentos: aluno.mensalidades.slice(0, 5),
+            historicoPagamentos: aluno.mensalidades.slice(0, 8),
           };
         }
 
         if (isDiariaOuConvenio) {
           countPagos++;
+          countConvenioDiaria++;
+          mapaPlanos[planoNome].pagos += 1;
+          mapaPlanos[planoNome].receitaPotencial += valorPadrao;
           return {
             alunoId: aluno.id,
             mensalidadeId: ultimaMensalidade?.id || null,
@@ -717,6 +797,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             cpf: aluno.cpf,
             telefone: aluno.telefone,
             plano: aluno.plano || 'Convênio / Diária',
+            prajied: prajiedNome,
             is_bolsista: false,
             isDiariaOuConvenio: true,
             has_signed_contract: aluno.has_signed_contract,
@@ -727,7 +808,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             dataVencimento: ultimaMensalidade?.dataVencimento || null,
             dataPagamento: ultimaMensalidade?.dataPagamento || null,
             diasAtraso: 0,
-            historicoPagamentos: aluno.mensalidades.slice(0, 5),
+            historicoPagamentos: aluno.mensalidades.slice(0, 8),
           };
         }
 
@@ -743,8 +824,9 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         }
 
         receitaPrevistaMes += valorPadrao;
+        mapaPlanos[planoNome].receitaPotencial += valorPadrao;
 
-        // Contabilizar pagamentos realizados no mês atual
+        // Contabilizar pagamentos realizados no mês filtrado
         const pagosNoMes = aluno.mensalidades.filter(
           (m) =>
             m.status === 'PAGO' &&
@@ -754,18 +836,24 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         );
 
         if (pagosNoMes.length > 0) {
-          receitaRecebidaMes += pagosNoMes.reduce((acc, cur) => acc + cur.valor, 0);
+          const somaAlunoMes = pagosNoMes.reduce((acc, cur) => acc + cur.valor, 0);
+          receitaMensalidadesStatusMes += somaAlunoMes;
+          mapaPlanos[planoNome].receitaRealizada += somaAlunoMes;
         } else if (statusFinanceiro === 'PAGO') {
-          receitaRecebidaMes += valorPadrao;
+          receitaMensalidadesStatusMes += valorPadrao;
+          mapaPlanos[planoNome].receitaRealizada += valorPadrao;
         }
 
         if (statusFinanceiro === 'PAGO') {
           countPagos++;
+          mapaPlanos[planoNome].pagos += 1;
         } else if (statusFinanceiro === 'ATRASADO') {
           countAtrasados++;
           totalInadimplenteValor += valorPadrao;
+          mapaPlanos[planoNome].atrasados += 1;
         } else {
           countPendentes++;
+          mapaPlanos[planoNome].pendentes += 1;
         }
 
         return {
@@ -775,6 +863,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           cpf: aluno.cpf,
           telefone: aluno.telefone,
           plano: aluno.plano || '2x na semana',
+          prajied: prajiedNome,
           is_bolsista: false,
           isDiariaOuConvenio: false,
           has_signed_contract: aluno.has_signed_contract,
@@ -786,33 +875,181 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           dataPagamento: ultimaMensalidade?.dataPagamento || null,
           diasVencimento,
           diasAtraso: diasVencimento < 0 ? Math.abs(diasVencimento) : 0,
-          historicoPagamentos: aluno.mensalidades.slice(0, 5),
+          historicoPagamentos: aluno.mensalidades.slice(0, 8),
         };
       });
 
+      // 2. Cálculo do Livro-Caixa (TransacaoFinanceira) no mês selecionado e no ano
+      const transacoesConfirmadas = transacoes.filter((t) => t.status !== 'CANCELADO');
+      const transacoesMes = transacoesConfirmadas.filter((t) => {
+        const d = new Date(t.data);
+        return d >= inicioMes && d <= fimMes;
+      });
+      const transacoesAno = transacoesConfirmadas.filter((t) => {
+        const d = new Date(t.data);
+        return d >= inicioAno && d <= fimAno;
+      });
+
+      let entradasLivroMes = 0;
+      let receitaMensalidadesLivroMes = 0;
+      let receitaMercadoMes = 0;
+      let receitaDiariasConveniosMes = 0;
+      let receitaEventosExamesMes = 0;
+      let gastosTotaisMes = 0;
+
+      const receitasPorCategoria: Record<string, number> = {};
+      const gastosPorCategoria: Record<string, number> = {};
+      const receitasPorMetodo: Record<string, number> = {};
+
+      for (const t of transacoesMes) {
+        if (t.tipo === 'ENTRADA') {
+          entradasLivroMes += t.valor;
+          receitasPorCategoria[t.categoria] = (receitasPorCategoria[t.categoria] || 0) + t.valor;
+          receitasPorMetodo[t.metodoPagamento || 'PIX'] =
+            (receitasPorMetodo[t.metodoPagamento || 'PIX'] || 0) + t.valor;
+
+          if (t.categoria === 'MENSALIDADE') receitaMensalidadesLivroMes += t.valor;
+          else if (t.categoria === 'MERCADO_LOJA') receitaMercadoMes += t.valor;
+          else if (t.categoria === 'DIARIA_AVULSA' || t.categoria === 'WELLHUB_TOTALPASS')
+            receitaDiariasConveniosMes += t.valor;
+          else receitaEventosExamesMes += t.valor;
+        } else if (t.tipo === 'SAIDA') {
+          gastosTotaisMes += t.valor;
+          gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.valor;
+        }
+      }
+
+      // Usa o maior entre o consolidado das faturas pagas no mês e os lançamentos de mensalidade no livro
+      const receitaMensalidadesFinalMes = Math.max(receitaMensalidadesStatusMes, receitaMensalidadesLivroMes);
+      const receitaOutrasTotalMes = receitaMercadoMes + receitaDiariasConveniosMes + receitaEventosExamesMes;
+      const receitaBrutaTotalMes = receitaMensalidadesFinalMes + receitaOutrasTotalMes;
+      const lucroLiquidoMes = receitaBrutaTotalMes - gastosTotaisMes;
+      const margemLucroMes =
+        receitaBrutaTotalMes > 0 ? Math.round((lucroLiquidoMes / receitaBrutaTotalMes) * 1000) / 10 : 0;
+
+      // Acumulado no Ano
+      let receitaAcumuladaAno = 0;
+      let gastosAcumuladosAno = 0;
+      for (const t of transacoesAno) {
+        if (t.tipo === 'ENTRADA') receitaAcumuladaAno += t.valor;
+        else if (t.tipo === 'SAIDA') gastosAcumuladosAno += t.valor;
+      }
+      if (receitaAcumuladaAno < receitaBrutaTotalMes) {
+        receitaAcumuladaAno = receitaBrutaTotalMes;
+      }
+      const lucroAcumuladoAno = receitaAcumuladaAno - gastosAcumuladosAno;
+
+      // 3. Construção da Série Histórica de 6 Meses para Gráficos de Evolução (Receitas x Gastos x Lucro)
+      const nomesMesesCurto = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const fluxoPorMes: Array<{
+        mesAno: string;
+        mesLabel: string;
+        entradas: number;
+        mensalidades: number;
+        mercado: number;
+        outros: number;
+        gastos: number;
+        lucro: number;
+      }> = [];
+
+      for (let i = 5; i >= 0; i--) {
+        const refData = new Date(anoFiltro, mesFiltro - 1 - i, 1);
+        const mIdx = refData.getMonth();
+        const yIdx = refData.getFullYear();
+        const iniM = new Date(yIdx, mIdx, 1, 0, 0, 0, 0);
+        const fimM = new Date(yIdx, mIdx + 1, 0, 23, 59, 59, 999);
+
+        let entM = 0;
+        let mensM = 0;
+        let mercM = 0;
+        let outM = 0;
+        let gastM = 0;
+
+        for (const t of transacoesConfirmadas) {
+          const dt = new Date(t.data);
+          if (dt >= iniM && dt <= fimM) {
+            if (t.tipo === 'ENTRADA') {
+              entM += t.valor;
+              if (t.categoria === 'MENSALIDADE') mensM += t.valor;
+              else if (t.categoria === 'MERCADO_LOJA') mercM += t.valor;
+              else outM += t.valor;
+            } else if (t.tipo === 'SAIDA') {
+              gastM += t.valor;
+            }
+          }
+        }
+
+        // Se for o mês atual da consulta, garante consistência com as assinaturas ativas
+        if (i === 0 && mensM < receitaMensalidadesFinalMes) {
+          const diff = receitaMensalidadesFinalMes - mensM;
+          mensM = receitaMensalidadesFinalMes;
+          entM += diff;
+        }
+
+        fluxoPorMes.push({
+          mesAno: `${String(mIdx + 1).padStart(2, '0')}/${yIdx}`,
+          mesLabel: `${nomesMesesCurto[mIdx]}/${String(yIdx).slice(-2)}`,
+          entradas: Math.round(entM * 100) / 100,
+          mensalidades: Math.round(mensM * 100) / 100,
+          mercado: Math.round(mercM * 100) / 100,
+          outros: Math.round(outM * 100) / 100,
+          gastos: Math.round(gastM * 100) / 100,
+          lucro: Math.round((entM - gastM) * 100) / 100,
+        });
+      }
+
       res.json({
         resumo: {
-          receitaRecebidaMes,
+          mesReferencia: mesFiltro,
+          anoReferencia: anoFiltro,
+          receitaRecebidaMes: receitaBrutaTotalMes,
+          receitaMensalidadesMes: receitaMensalidadesFinalMes,
+          receitaMercadoMes,
+          receitaDiariasConveniosMes,
+          receitaEventosExamesMes,
           receitaPrevistaMes,
+          gastosTotaisMes,
+          lucroLiquidoMes,
+          margemLucroMes,
+          receitaAcumuladaAno,
+          gastosAcumuladosAno,
+          lucroAcumuladoAno,
           totalInadimplenteValor,
-          saldoPendenteMes: Math.max(0, receitaPrevistaMes - receitaRecebidaMes),
+          saldoPendenteMes: Math.max(0, receitaPrevistaMes - receitaMensalidadesFinalMes),
           countPagos,
           countPendentes,
           countAtrasados,
           countBolsistas,
+          countConvenioDiaria,
           totalAlunos: alunos.length,
         },
+        graficos: {
+          fluxoPorMes,
+          receitasPorCategoria: {
+            ...receitasPorCategoria,
+            MENSALIDADE: receitaMensalidadesFinalMes,
+          },
+          gastosPorCategoria,
+          receitasPorMetodo,
+          alunosPorPlano: Object.values(mapaPlanos),
+          alunosPorPrajied: Object.entries(mapaPrajieds).map(([prajied, quantidade]) => ({
+            prajied,
+            quantidade,
+          })),
+        },
         registros: registrosFinanceiros,
+        transacoes,
+        produtos,
       });
     } catch (error) {
-      console.error('Erro no dashboard financeiro:', error);
+      console.error('Erro no dashboard financeiro completo:', error);
       res.status(500).json({ erro: 'Erro ao carregar dados financeiros.' });
     }
   });
 
-  // Baixa Manual em Lote com DatePicker (Módulo 5)
+  // Baixa Manual em Lote com DatePicker (Módulo 5) + Registro Automático no Livro-Caixa
   app.post('/api/admin/financeiro/baixa-lote', async (req: Request, res: Response) => {
-    const { alunoIds, dataPagamento, valorCustom } = req.body;
+    const { alunoIds, dataPagamento, valorCustom, metodoPagamento, registradoPor } = req.body;
 
     if (!Array.isArray(alunoIds) || alunoIds.length === 0) {
       return res.status(400).json({ erro: 'Selecione ao menos um aluno para dar baixa.' });
@@ -856,6 +1093,23 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             status: 'PAGO',
           },
         });
+
+        await prisma.transacaoFinanceira.create({
+          data: {
+            tipo: 'ENTRADA',
+            categoria: 'MENSALIDADE',
+            descricao: `Mensalidade (${aluno.plano || 'Plano Regular'}) — ${aluno.nome}`,
+            valor: valorFinal,
+            data: dataPagEscolhida,
+            metodoPagamento: metodoPagamento || 'PIX',
+            status: 'CONFIRMADO',
+            alunoId: aluno.id,
+            alunoNome: aluno.nome,
+            registradoPor: registradoPor || 'Administração (Lote)',
+            observacao: `Baixa em lote • Próximo vencimento: ${novoVencimento.toLocaleDateString('pt-BR')}`,
+          },
+        });
+
         processados++;
       }
 
@@ -872,6 +1126,181 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
     } catch (error) {
       console.error('Erro na baixa em lote:', error);
       res.status(500).json({ erro: 'Erro ao processar baixa manual em lote.' });
+    }
+  });
+
+  // Criar Qualquer Transação Financeira (Venda do Mercado, Assinatura Manual, Diária, Evento ou Gasto/Despesa)
+  app.post('/api/admin/financeiro/transacoes', async (req: Request, res: Response) => {
+    const {
+      tipo,
+      categoria,
+      descricao,
+      valor,
+      data,
+      metodoPagamento,
+      status,
+      alunoId,
+      alunoNome,
+      produtoId,
+      produtoNome,
+      quantidade,
+      registradoPor,
+      observacao,
+      renovarAssinaturaAluno,
+      atualizarEstoqueProduto,
+    } = req.body;
+
+    if (!descricao || valor === undefined || valor === '' || isNaN(Number(valor))) {
+      return res.status(400).json({ erro: 'Descrição e valor válido são obrigatórios.' });
+    }
+
+    try {
+      const dataTransacao = data
+        ? new Date(String(data).includes('T') ? data : `${data}T12:00:00`)
+        : new Date();
+      const valorNumerico = Math.abs(Number(valor));
+      const qtdNumerica = quantidade ? Math.max(1, Number(quantidade)) : 1;
+
+      let nomeAlunoFinal = alunoNome || null;
+      let nomeProdutoFinal = produtoNome || null;
+
+      // Se vinculou um aluno e marcou para renovar assinatura (+30d) junto com o lançamento
+      if (alunoId) {
+        const alunoObj = await prisma.aluno.findUnique({
+          where: { id: String(alunoId) },
+          include: { mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 } },
+        });
+        if (alunoObj) {
+          nomeAlunoFinal = alunoObj.nome;
+          if (renovarAssinaturaAluno && (categoria === 'MENSALIDADE' || tipo === 'ENTRADA')) {
+            const ultima = alunoObj.mensalidades[0];
+            const baseVenc =
+              ultima && new Date(ultima.dataVencimento) > dataTransacao
+                ? new Date(ultima.dataVencimento)
+                : dataTransacao;
+            const novoVenc = calcularProximoVencimentoPorAdesao(baseVenc, alunoObj.data_de_adesao);
+
+            await prisma.mensalidade.create({
+              data: {
+                alunoId: alunoObj.id,
+                valor: valorNumerico,
+                dataPagamento: dataTransacao,
+                dataVencimento: novoVenc,
+                status: 'PAGO',
+              },
+            });
+          }
+        }
+      }
+
+      // Se for uma venda do Mercado/Loja vinculada a um Produto do catálogo, atualiza o estoque
+      if (produtoId) {
+        const prodObj = await prisma.produto.findUnique({ where: { id: String(produtoId) } });
+        if (prodObj) {
+          nomeProdutoFinal = prodObj.nome;
+          if (atualizarEstoqueProduto !== false && tipo === 'ENTRADA') {
+            const novoEstoque = Math.max(0, (prodObj.estoque || 0) - qtdNumerica);
+            await prisma.produto.update({
+              where: { id: prodObj.id },
+              data: { estoque: novoEstoque },
+            });
+          } else if (atualizarEstoqueProduto !== false && tipo === 'SAIDA' && categoria === 'ESTOQUE_MERCADO') {
+            // Se for compra de reposição de estoque, soma no estoque!
+            const novoEstoque = (prodObj.estoque || 0) + qtdNumerica;
+            await prisma.produto.update({
+              where: { id: prodObj.id },
+              data: { estoque: novoEstoque },
+            });
+          }
+        }
+      }
+
+      const novaTransacao = await prisma.transacaoFinanceira.create({
+        data: {
+          tipo: tipo === 'SAIDA' ? 'SAIDA' : 'ENTRADA',
+          categoria: categoria || (tipo === 'SAIDA' ? 'ALUGUEL_CONTAS' : 'MENSALIDADE'),
+          descricao: String(descricao).trim(),
+          valor: valorNumerico,
+          data: dataTransacao,
+          metodoPagamento: metodoPagamento || 'PIX',
+          status: status || 'CONFIRMADO',
+          alunoId: alunoId || null,
+          alunoNome: nomeAlunoFinal,
+          produtoId: produtoId || null,
+          produtoNome: nomeProdutoFinal,
+          quantidade: qtdNumerica,
+          registradoPor: registradoPor || 'Administração',
+          observacao: observacao ? String(observacao).trim() : null,
+        },
+      });
+
+      await logSystemEvent(
+        'INFO',
+        'FINANCEIRO_TRANSACAO',
+        `[${novaTransacao.tipo}] ${novaTransacao.categoria}: ${novaTransacao.descricao} — R$ ${novaTransacao.valor.toFixed(2)} (por ${novaTransacao.registradoPor})`
+      );
+
+      res.status(201).json({
+        mensagem: `${novaTransacao.tipo === 'SAIDA' ? 'Gasto/Despesa' : 'Receita/Pagamento'} registrado com sucesso!`,
+        transacao: novaTransacao,
+      });
+    } catch (error: any) {
+      console.error('Erro ao registrar transação financeira:', error);
+      res.status(500).json({ erro: error.message || 'Erro ao salvar lançamento financeiro.' });
+    }
+  });
+
+  // Editar Transação Financeira Existente
+  app.patch('/api/admin/financeiro/transacoes/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const {
+      tipo,
+      categoria,
+      descricao,
+      valor,
+      data,
+      metodoPagamento,
+      status,
+      observacao,
+      registradoPor,
+    } = req.body;
+
+    try {
+      const dadosUpdate: any = {};
+      if (tipo !== undefined) dadosUpdate.tipo = tipo;
+      if (categoria !== undefined) dadosUpdate.categoria = categoria;
+      if (descricao !== undefined) dadosUpdate.descricao = String(descricao).trim();
+      if (valor !== undefined && !isNaN(Number(valor))) dadosUpdate.valor = Math.abs(Number(valor));
+      if (data !== undefined) {
+        dadosUpdate.data = new Date(String(data).includes('T') ? data : `${data}T12:00:00`);
+      }
+      if (metodoPagamento !== undefined) dadosUpdate.metodoPagamento = metodoPagamento;
+      if (status !== undefined) dadosUpdate.status = status;
+      if (observacao !== undefined) dadosUpdate.observacao = observacao ? String(observacao).trim() : null;
+      if (registradoPor !== undefined) dadosUpdate.registradoPor = registradoPor;
+
+      const atualizada = await prisma.transacaoFinanceira.update({
+        where: { id },
+        data: dadosUpdate,
+      });
+
+      res.json({
+        mensagem: 'Lançamento financeiro atualizado com sucesso!',
+        transacao: atualizada,
+      });
+    } catch (error: any) {
+      res.status(500).json({ erro: error.message || 'Erro ao atualizar lançamento financeiro.' });
+    }
+  });
+
+  // Excluir Transação Financeira
+  app.delete('/api/admin/financeiro/transacoes/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+      await prisma.transacaoFinanceira.delete({ where: { id } });
+      res.json({ mensagem: 'Lançamento financeiro removido com sucesso!' });
+    } catch (error: any) {
+      res.status(500).json({ erro: error.message || 'Erro ao excluir lançamento financeiro.' });
     }
   });
 

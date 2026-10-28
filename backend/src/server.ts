@@ -1048,7 +1048,7 @@ app.patch('/api/admin/alunos/:id', async (req, res) => {
 // Registrar pagamento manual com DatePicker (Módulo 5)
 app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
   const { id } = req.params;
-  const { dataPagamento, valor } = req.body || {};
+  const { dataPagamento, valor, metodoPagamento, registradoPor, observacao } = req.body || {};
 
   try {
     const aluno = await prisma.aluno.findUnique({
@@ -1090,6 +1090,23 @@ app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
         status: 'PAGO'
       }
     });
+
+    // Registra automaticamente no Livro-Caixa Geral (TransacaoFinanceira)
+    await prisma.transacaoFinanceira.create({
+      data: {
+        tipo: 'ENTRADA',
+        categoria: 'MENSALIDADE',
+        descricao: `Mensalidade (${aluno.plano || 'Plano Regular'}) — ${aluno.nome}`,
+        valor: valorFinal,
+        data: dataPagamentoEscolhida,
+        metodoPagamento: metodoPagamento || 'PIX',
+        status: 'CONFIRMADO',
+        alunoId: aluno.id,
+        alunoNome: aluno.nome,
+        registradoPor: registradoPor || 'Administração',
+        observacao: observacao || `Renovado até ${novoVencimento.toLocaleDateString('pt-BR')}`
+      }
+    }).catch(() => {});
 
     res.json({
       mensagem: `Pagamento registrado com sucesso na data ${dataPagamentoEscolhida.toLocaleDateString('pt-BR')}! Próximo vencimento: ${novoVencimento.toLocaleDateString('pt-BR')}.`,

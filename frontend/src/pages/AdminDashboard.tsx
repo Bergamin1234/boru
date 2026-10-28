@@ -1100,7 +1100,10 @@ export default function AdminDashboard() {
 
         {/* MÓDULO 5: GESTÃO FINANCEIRA & BAIXA MANUAL COM CALENDÁRIO */}
         {abaAtiva === 'financeiro_gestao' && usuarioLogado?.cargo === 'ADMIN' && (
-          <FinancialDashboardTab onRefreshGlobal={carregarDashboard} />
+          <FinancialDashboardTab
+            onRefreshGlobal={carregarDashboard}
+            usuarioLogadoNome={usuarioLogado?.nome || 'Administração'}
+          />
         )}
 
         {/* MÓDULO 1: DEV DASHBOARD (EXCLUSIVO ADMINDEV / BRGADMIN) */}
@@ -1950,12 +1953,22 @@ export default function AdminDashboard() {
                 </div>
                 <p className="text-xs text-zinc-400">Controle de estoque dos itens físicos vendidos presencialmente na recepção.</p>
               </div>
-              <button 
-                onClick={() => setShowModalProduto(true)}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
-              >
-                <span>➕ Adicionar Produto</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {usuarioLogado?.cargo === 'ADMIN' && (
+                  <button
+                    onClick={() => setAbaAtiva('financeiro_gestao')}
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30"
+                  >
+                    <span>🛍️ Registrar Venda no Caixa (PDV)</span>
+                  </button>
+                )}
+                <button 
+                  onClick={() => setShowModalProduto(true)}
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
+                >
+                  <span>➕ Adicionar Produto</span>
+                </button>
+              </div>
             </div>
 
             {/* Categorias */}

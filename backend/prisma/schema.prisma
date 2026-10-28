@@ -217,3 +217,26 @@ model UserAchievementProgress {
 
   @@unique([user_id, achievement_id])
 }
+
+// ==========================================
+// MÓDULO ERP FINANCEIRO COMPLETO (ENTRADAS, MERCADO, ASSINATURAS E GASTOS)
+// ==========================================
+model TransacaoFinanceira {
+  id              String   @id @default(uuid())
+  tipo            String   @default("ENTRADA") // "ENTRADA" | "SAIDA"
+  categoria       String   @default("MENSALIDADE") // MENSALIDADE, MERCADO_LOJA, DIARIA_AVULSA, WELLHUB_TOTALPASS, EXAME_GRADUACAO, EVENTO_SEMINARIO, OUTROS_ENTRADA | ALUGUEL_CONTAS, EQUIPAMENTOS_MANUTENCAO, ESTOQUE_MERCADO, PAGAMENTO_PROFESSORES, MARKETING_SISTEMA, IMPOSTOS_TAXAS, OUTROS_GASTOS
+  descricao       String
+  valor           Float
+  data            DateTime @default(now())
+  metodoPagamento String   @default("PIX") // PIX, DINHEIRO, CARTAO_CREDITO, CARTAO_DEBITO, BOLETO_TRANSFERENCIA, CONVENIO
+  status          String   @default("CONFIRMADO") // CONFIRMADO, PENDENTE, CANCELADO
+  alunoId         String?
+  alunoNome       String?
+  produtoId       String?
+  produtoNome     String?
+  quantidade      Int?     @default(1)
+  registradoPor   String?  @default("Administração")
+  observacao      String?
+  criadoEm        DateTime @default(now())
+}
+
