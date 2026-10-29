@@ -945,7 +945,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
       include: {
         mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 },
         presencas: {
-          where: { data: { gte: inicioMes, lte: fimMes } }
+          orderBy: { data: 'desc' }
         }
       },
       orderBy: { nome: 'asc' }
@@ -954,6 +954,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
     let somaPorcentagens = 0;
     let totalMensalistas = 0;
     let alunosEmRiscoCount = 0;
+    let alunosAtivosCount = 0;
+    let alunosInativosCount = 0;
 
     const alunosFormatados = alunos.map(aluno => {
       const ultimaMensalidade = aluno.mensalidades[0];
@@ -975,11 +977,38 @@ app.get('/api/admin/dashboard', async (req, res) => {
       const planoLower = (aluno.plano || '').toLowerCase();
       const isDiariaOuConvenio = planoLower.includes('diária') || planoLower.includes('diaria') || planoLower.includes('wellhub') || planoLower.includes('totalpass') || planoLower.includes('gympass');
 
-      // Frequência no mês
-      const presencasMes = aluno.presencas.filter(p => p.status === 'PRESENTE').length;
-      const doencaMes = aluno.presencas.filter(p => p.status === 'DOENCA' || p.tipoJustificativa === 'DOENCA').length;
-      const faltasMes = aluno.presencas.filter(p => p.status === 'FALTA' || p.status === 'AUSENTE').length;
+      // Frequência filtrada para o mês vigente
+      const presencasDoMes = aluno.presencas.filter(p => p.data >= inicioMes && p.data <= fimMes);
+      const presencasMes = presencasDoMes.filter(p => p.status === 'PRESENTE').length;
+      const doencaMes = presencasDoMes.filter(p => p.status === 'DOENCA' || p.tipoJustificativa === 'DOENCA').length;
+      const faltasMes = presencasDoMes.filter(p => p.status === 'FALTA' || p.status === 'AUSENTE').length;
       const treinosSemana = aluno.presencas.filter(p => p.data >= inicioSemana && p.data <= fimSemana && ['PRESENTE', 'DOENCA', 'JUSTIFICADO'].includes(p.status)).length;
+
+      // Último treino registrado para cálculo de inatividade (ausente há 2 a 3 semanas ou mais sem treinar)
+      const ultimoTreinoPresenca = aluno.presencas.find(p => p.status === 'PRESENTE');
+      let diasSemTreinar = 0;
+      let dataUltimoTreino: string | null = null;
+
+      if (ultimoTreinoPresenca) {
+        dataUltimoTreino = ultimoTreinoPresenca.data.toISOString().split('T')[0];
+        const diffTime = agora.getTime() - new Date(ultimoTreinoPresenca.data).getTime();
+        diasSemTreinar = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      } else {
+        const refDate = aluno.data_de_adesao ? new Date(aluno.data_de_adesao) : new Date(aluno.criadoEm);
+        const diffTime = agora.getTime() - refDate.getTime();
+        diasSemTreinar = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      }
+
+      // Regra de Inatividade: Alunos ausentes há 2 a 3 semanas (14 a 21+ dias) sem vir treinar
+      const isInativo = diasSemTreinar >= 14;
+      const statusAtividade: 'ATIVO' | 'INATIVO' = isInativo ? 'INATIVO' : 'ATIVO';
+      const semanasSemTreinar = Math.floor(diasSemTreinar / 7);
+
+      if (isInativo) {
+        alunosInativosCount++;
+      } else {
+        alunosAtivosCount++;
+      }
 
       let aulasEsperadas = 8;
       if (planoLower.includes('3x')) aulasEsperadas = 12;
@@ -993,7 +1022,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
         statusAssiduidade = treinosSemana > 0 ? 'ATIVO_SEMANA' : 'SEM_TREINO_SEMANA';
       } else {
         totalMensalistas++;
-        const base = Math.max(aulasEsperadas, aluno.presencas.length || 1);
+        const base = Math.max(aulasEsperadas, presencasDoMes.length || 1);
         porcentagemPresenca = Math.min(100, Math.round(((presencasMes + doencaMes) / base) * 100));
         somaPorcentagens += porcentagemPresenca;
 
@@ -1029,7 +1058,11 @@ app.get('/api/admin/dashboard', async (req, res) => {
         treinosSemana,
         aulasEsperadas,
         porcentagemPresenca,
-        statusAssiduidade
+        statusAssiduidade,
+        statusAtividade,
+        diasSemTreinar,
+        semanasSemTreinar,
+        dataUltimoTreino
       };
     });
 
@@ -1048,6 +1081,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
         inadimplentes: inadimplentesCount,
         taxaPresencaMedia,
         alunosEmRisco: alunosEmRiscoCount,
+        alunosAtivos: alunosAtivosCount,
+        alunosInativos: alunosInativosCount,
         presencasHoje
       },
       alunos: alunosFormatados

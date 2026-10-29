@@ -118,7 +118,7 @@ export default function AdminDashboard() {
 
   // Filtros e busca de Alunos
   const [buscaAluno, setBuscaAluno] = useState('');
-  const [filtroAssiduidade, setFiltroAssiduidade] = useState<'TODOS' | 'ALTA' | 'REGULAR' | 'RISCO' | 'DIARIA'>('TODOS');
+  const [filtroAssiduidade, setFiltroAssiduidade] = useState<'TODOS' | 'ATIVO' | 'INATIVO' | 'ALTA' | 'REGULAR' | 'RISCO' | 'DIARIA'>('TODOS');
 
   // Filtros e lote em Chamada & Presenças
   const [filtroChamada, setFiltroChamada] = useState<'TODOS' | 'PRESENTE' | 'FALTA' | 'DOENCA' | 'AGENDADO'>('TODOS');
@@ -949,6 +949,17 @@ export default function AdminDashboard() {
     window.open(formatarWhatsUrl(aluno.telefone, msg), '_blank');
   };
 
+  const handleChamarDeVolta = (aluno: any) => {
+    if (!aluno.telefone) {
+      alert(`O aluno ${aluno.nome} não possui telefone cadastrado.`);
+      return;
+    }
+    const dias = aluno.diasSemTreinar ?? 18;
+    const semanas = Math.max(2, Math.floor(dias / 7));
+    const msg = `Fala ${aluno.nome}! Aqui é o Mestre Felipe Borü do CT BORÜ Muay Thai. 🥊🐺\n\nNotamos que você está há cerca de ${semanas} semanas (${dias} dias) sem vir aos treinos no tatame. Tá tudo bem por aí?\n\nSeu lugar no treino continua reservado e a equipe tá sentindo falta da sua energia nos treinos! Quando você volta para afiar os golpes e manter o ritmo no Muay Thai?\n\nSe precisar de qualquer apoio ou ajuste nos seus horários, conta com a gente. Te esperamos no próximo treino! Oss! 🥋🔥`;
+    window.open(formatarWhatsUrl(aluno.telefone, msg), '_blank');
+  };
+
   // ==========================================
   // LEADS & AULAS EXPERIMENTAIS
   // ==========================================
@@ -1055,6 +1066,8 @@ export default function AdminDashboard() {
     if (!bateTexto) return false;
 
     if (filtroAssiduidade === 'TODOS') return true;
+    if (filtroAssiduidade === 'ATIVO') return (a.statusAtividade === 'ATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar < 14));
+    if (filtroAssiduidade === 'INATIVO') return (a.statusAtividade === 'INATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar >= 14));
     if (filtroAssiduidade === 'DIARIA') return isDiariaOuConvenio(a.plano);
     if (filtroAssiduidade === 'ALTA') return a.statusAssiduidade === 'ALTA';
     if (filtroAssiduidade === 'REGULAR') return a.statusAssiduidade === 'REGULAR';
@@ -1156,7 +1169,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* CARDS DE MÉTRICAS (INTERATIVOS COM ATALHO DIRETO) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <div 
             onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('TODOS'); }}
             className="bg-[#141416] border border-zinc-800 hover:border-zinc-700 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
@@ -1166,6 +1179,39 @@ export default function AdminDashboard() {
             <p className="text-2xl sm:text-3xl font-black text-white">{metricas.totalAlunos}</p>
             <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-zinc-400 transition">Matriculados ativos →</span>
           </div>
+
+          {/* CARD ALUNOS ATIVOS */}
+          <div 
+            onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('ATIVO'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-emerald-500/60 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Ver alunos ativos nos treinos"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-emerald-400 transition">Alunos Ativos</p>
+              <span className="text-xs">🟢</span>
+            </div>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-400">
+              {metricas.alunosAtivos || alunos.filter(a => a.statusAtividade === 'ATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar < 14)).length}
+            </p>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-emerald-400/70 transition">Treinando regularmente →</span>
+          </div>
+
+          {/* CARD ALUNOS INATIVOS (2 A 3 SEMANAS SEM TREINAR) */}
+          <div 
+            onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('INATIVO'); }}
+            className="bg-[#141416] border border-zinc-800 hover:border-amber-500/60 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            title="Filtrar alunos inativos há 2 a 3 semanas sem treinar"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-amber-400 transition">Inativos (2-3 sem)</p>
+              <span className="text-xs">⚠️</span>
+            </div>
+            <p className="text-2xl sm:text-3xl font-black text-amber-400">
+              {metricas.alunosInativos || alunos.filter(a => a.statusAtividade === 'INATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar >= 14)).length}
+            </p>
+            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition">Chamar de volta 📲 →</span>
+          </div>
+
           <div 
             onClick={() => { if (usuarioLogado?.cargo === 'ADMIN') setAbaAtiva('financeiro_gestao'); else setAbaAtiva('alunos'); }}
             className="bg-[#141416] border border-zinc-800 hover:border-green-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
@@ -1420,18 +1466,49 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* FILTROS DE ASSIDUIDADE E CATEGORIA */}
+            {/* FILTROS DE ASSIDUIDADE E CATEGORIA (ATIVOS / INATIVOS) */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
               <button
                 onClick={() => setFiltroAssiduidade('TODOS')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap ${
                   filtroAssiduidade === 'TODOS'
-                    ? 'bg-zinc-700 text-white'
+                    ? 'bg-zinc-700 text-white shadow-md'
                     : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
                 }`}
               >
                 Todos ({alunos.length})
               </button>
+
+              {/* FILTRO: ALUNOS ATIVOS */}
+              <button
+                onClick={() => setFiltroAssiduidade('ATIVO')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                  filtroAssiduidade === 'ATIVO'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400'
+                    : 'bg-[#1A1A1E] text-emerald-400 hover:text-white border border-emerald-900/40'
+                }`}
+              >
+                <span>🟢 Ativos (Em Treino)</span>
+                <span className="text-[10px] bg-black/40 px-1.5 py-0.2 rounded-full font-black">
+                  {alunos.filter(a => a.statusAtividade === 'ATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar < 14)).length}
+                </span>
+              </button>
+
+              {/* FILTRO: ALUNOS INATIVOS (2 A 3 SEMANAS SEM TREINAR) */}
+              <button
+                onClick={() => setFiltroAssiduidade('INATIVO')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                  filtroAssiduidade === 'INATIVO'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-900/40 ring-1 ring-amber-400'
+                    : 'bg-[#1A1A1E] text-amber-400 hover:text-white border border-amber-900/40'
+                }`}
+              >
+                <span>⚠️ Inativos (2 a 3 sem. s/ treinar)</span>
+                <span className="text-[10px] bg-black/40 px-1.5 py-0.2 rounded-full font-black text-amber-200">
+                  {alunos.filter(a => a.statusAtividade === 'INATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar >= 14)).length}
+                </span>
+              </button>
+
               <button
                 onClick={() => setFiltroAssiduidade('ALTA')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
@@ -1440,7 +1517,7 @@ export default function AdminDashboard() {
                     : 'bg-[#1A1A1E] text-green-400 hover:text-white border border-green-900/40'
                 }`}
               >
-                <span>🟢 Alta Presença (≥ 75%)</span>
+                <span>⭐ Alta Presença (≥ 75%)</span>
                 <span className="text-[10px] bg-black/40 px-1.5 py-0.2 rounded-full">
                   {alunos.filter(a => a.statusAssiduidade === 'ALTA').length}
                 </span>
@@ -1511,6 +1588,32 @@ export default function AdminDashboard() {
                         <td className="p-3 sm:p-4 font-bold text-white">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span>{aluno.nome}</span>
+
+                            {/* INDICAÇÃO DE ATIVO / INATIVO (2 A 3 SEMANAS SEM TREINAR) */}
+                            {(aluno.statusAtividade === 'INATIVO' || (aluno.diasSemTreinar !== undefined && aluno.diasSemTreinar >= 14)) ? (
+                              <span 
+                                className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-sm"
+                                title={`Aluno inativo há ${aluno.diasSemTreinar ?? 18} dias sem vir treinar (~${Math.floor((aluno.diasSemTreinar ?? 18) / 7)} semanas)`}
+                              >
+                                <span>⚠️ INATIVO</span>
+                                <span className="text-[9px] text-amber-200/90 font-normal">
+                                  ({aluno.diasSemTreinar ?? 18}d s/ vir)
+                                </span>
+                              </span>
+                            ) : (
+                              <span 
+                                className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-1"
+                                title={aluno.diasSemTreinar !== undefined ? `Último treino há ${aluno.diasSemTreinar} dias` : 'Aluno ativo nos treinos'}
+                              >
+                                <span>🟢 ATIVO</span>
+                                {aluno.diasSemTreinar !== undefined && aluno.diasSemTreinar <= 1 && (
+                                  <span className="text-[8px] text-emerald-300 font-normal">
+                                    ({aluno.diasSemTreinar === 0 ? 'hoje' : 'ontem'})
+                                  </span>
+                                )}
+                              </span>
+                            )}
+
                             {aluno.is_bolsista && (
                               <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-950 text-purple-300 border border-purple-500/40" title="Aluno Bolsista (Isento de mensalidades)">
                                 🎓 BOLSISTA
@@ -1524,6 +1627,11 @@ export default function AdminDashboard() {
                           </div>
                           <div className="text-[11px] text-zinc-500 font-normal mt-0.5">
                             {aluno.telefone || 'Sem telefone'} {aluno.cpf ? `• CPF: ${aluno.cpf}` : ''}
+                            {aluno.diasSemTreinar !== undefined && (
+                              <span className="text-zinc-400 ml-1.5">
+                                • {aluno.diasSemTreinar === 0 ? 'Treinou hoje' : aluno.diasSemTreinar === 1 ? 'Treinou ontem' : `Último treino: há ${aluno.diasSemTreinar} dias`}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="p-3 sm:p-4 text-zinc-300 font-medium">
@@ -1658,7 +1766,16 @@ export default function AdminDashboard() {
                             >
                               🎓 {aluno.is_bolsista ? 'Bolsista ✓' : 'Bolsista'}
                             </button>
-                            {aluno.statusAssiduidade === 'RISCO' && !isDiariaOuConvenio(aluno.plano) ? (
+                            {/* SE FOR INATIVO (2 A 3 SEMANAS SEM TREINAR): BOTÃO AUTOMÁTICO DE CHAMAR DE VOLTA */}
+                            {(aluno.statusAtividade === 'INATIVO' || (aluno.diasSemTreinar !== undefined && aluno.diasSemTreinar >= 14)) ? (
+                              <button 
+                                onClick={() => handleChamarDeVolta(aluno)}
+                                className="px-2.5 py-1 rounded bg-amber-500/25 text-amber-300 hover:bg-amber-500 hover:text-black border border-amber-500/50 text-xs font-black transition flex items-center gap-1 shadow-sm shadow-amber-500/20 active:scale-95"
+                                title="Enviar mensagem automática no WhatsApp chamando de volta para o tatame"
+                              >
+                                <span>🥊 Chamar de Volta</span>
+                              </button>
+                            ) : aluno.statusAssiduidade === 'RISCO' && !isDiariaOuConvenio(aluno.plano) ? (
                               <button 
                                 onClick={() => handleMensagemAssiduidade(aluno)}
                                 className="px-2.5 py-1 rounded bg-red-600/20 text-red-300 hover:bg-red-600 hover:text-white border border-red-500/40 text-xs font-bold transition flex items-center gap-1"
