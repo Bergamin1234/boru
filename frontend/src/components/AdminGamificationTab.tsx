@@ -1,3 +1,11 @@
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from 'recharts';
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
 import { FileUploadInput, BadgeOrImagePreview } from './FileUploadInput';
@@ -54,7 +62,7 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
 }) => {
   const isAdmin = cargoUsuario === 'ADMIN';
 
-  const [subTab, setSubTab] = useState<'aprovacao' | 'ranks' | 'conquistas'>('aprovacao');
+  const [subTab, setSubTab] = useState<'aprovacao' | 'ranks' | 'conquistas' | 'avaliacao'>('aprovacao');
   const [ranks, setRanks] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
   const [resumoAlunos, setResumoAlunos] = useState<any[]>([]);
@@ -72,6 +80,67 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
   const [parceiroId, setParceiroId] = useState('');
   const [buscaAlunoRank, setBuscaAlunoRank] = useState('');
   const [buscaAlunoEspecial, setBuscaAlunoEspecial] = useState('');
+  // Estado Avaliação de Desempenho e Radar de Combate
+  const [alunoAvaliacaoId, setAlunoAvaliacaoId] = useState('');
+  const [evalForca, setEvalForca] = useState(88);
+  const [evalTecnica, setEvalTecnica] = useState(94);
+  const [evalResistencia, setEvalResistencia] = useState(82);
+  const [evalFlexibilidade, setEvalFlexibilidade] = useState(76);
+  const [evalDisciplina, setEvalDisciplina] = useState(98);
+  const [evalMmr, setEvalMmr] = useState(2840);
+  const [evalPrecisao, setEvalPrecisao] = useState(78.4);
+  const [evalParecer, setEvalParecer] = useState('Excelente foco nos sparrings e ótimo controle de distância.');
+  const [salvandoAvaliacao, setSalvandoAvaliacao] = useState(false);
+  const [avaliacaoFeedback, setAvaliacaoFeedback] = useState<string | null>(null);
+  const [buscaAlunoAvaliacao, setBuscaAlunoAvaliacao] = useState('');
+
+  // Ao selecionar um aluno para avaliação, busca a nota atual dele no backend
+  useEffect(() => {
+    if (!alunoAvaliacaoId) return;
+    adminApi.getStudentEvaluation(alunoAvaliacaoId)
+      .then((res: any) => {
+        if (res.data) {
+          setEvalForca(res.data.forca ?? 85);
+          setEvalTecnica(res.data.tecnica ?? 90);
+          setEvalResistencia(res.data.resistencia ?? 82);
+          setEvalFlexibilidade(res.data.flexibilidade ?? 76);
+          setEvalDisciplina(res.data.disciplina ?? 95);
+          setEvalMmr(res.data.mmr ?? 2840);
+          setEvalPrecisao(res.data.precisaoGolpes ?? 78.4);
+          setEvalParecer(res.data.parecerMestre ?? '');
+        }
+      })
+      .catch((e: any) => console.error('Erro ao buscar avaliação do aluno:', e));
+  }, [alunoAvaliacaoId]);
+
+  const handleSalvarAvaliacao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alunoAvaliacaoId) {
+      alert('Selecione um aluno para avaliar.');
+      return;
+    }
+    setSalvandoAvaliacao(true);
+    try {
+      await adminApi.saveStudentEvaluation(alunoAvaliacaoId, {
+        forca: evalForca,
+        tecnica: evalTecnica,
+        resistencia: evalResistencia,
+        flexibilidade: evalFlexibilidade,
+        disciplina: evalDisciplina,
+        mmr: evalMmr,
+        precisaoGolpes: evalPrecisao,
+        parecerMestre: evalParecer,
+        avaliadoPor: cargoUsuario === 'ADMIN' ? 'Mestre / Coordenação Técnica' : 'Professor Responsável'
+      });
+      setAvaliacaoFeedback('Avaliação salva com sucesso! Os novos atributos já estão visíveis no Portal do Aluno.');
+      setTimeout(() => setAvaliacaoFeedback(null), 5000);
+    } catch (e) {
+      alert('Erro ao salvar avaliação de desempenho do aluno.');
+    } finally {
+      setSalvandoAvaliacao(false);
+    }
+  };
+
 
   // Modal / Form de Rank (Admin CRUD)
   const [editingRank, setEditingRank] = useState<any | null>(null);
@@ -442,6 +511,23 @@ export const AdminGamificationTab: React.FC<AdminGamificationProps> = ({
         >
           <span>🏅</span>
           <span>Configurar Conquistas ({achievements.length})</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSubTab('avaliacao');
+            if (!alunoAvaliacaoId && resumoAlunos.length > 0) {
+              setAlunoAvaliacaoId(resumoAlunos[0].alunoId);
+            }
+          }}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 ${
+            subTab === 'avaliacao'
+              ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 font-black'
+              : 'bg-[#1A1A1E] text-amber-400 hover:text-white border border-amber-500/40'
+          }`}
+        >
+          <span>🎯</span>
+          <span>Avaliar Desempenho (Radar do Aluno)</span>
         </button>
       </div>
 

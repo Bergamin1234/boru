@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { studentApi } from '../services/api';
 import {
   BarChart,
   Bar,
@@ -100,6 +101,19 @@ const mmrEvolutionData = [
 
 export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
   const [filterPeriod, setFilterPeriod] = useState<'30dias' | 'trimestre' | 'ano'>('30dias');
+  const [evalData, setEvalData] = useState<any>(null);
+
+  useEffect(() => {
+    if (aluno?.id) {
+      studentApi.getEvaluation(aluno.id)
+        .then((res: any) => {
+          if (res?.data) {
+            setEvalData(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [aluno?.id]);
 
   return (
     <div className="space-y-6">
@@ -128,12 +142,34 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
 
           <div className="px-4 py-2.5 rounded-xl border border-zinc-800 bg-[#1A1A1E] text-center">
             <span className="block text-base font-mono font-black text-red-500">
-              2,840
+              {evalData?.mmr ? evalData.mmr.toLocaleString('pt-BR') : '2,840'}
             </span>
             <span className="text-[10px] text-zinc-400 uppercase font-bold">MMR Atual</span>
           </div>
         </div>
       </div>
+
+      {/* PARECER TÉCNICO DO PROFESSOR (SE HOUVER) */}
+      {evalData?.parecerMestre && (
+        <div className="p-4 sm:p-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 shadow-md flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-xl shrink-0 border border-yellow-500/30">
+            🥋
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                Parecer Técnico do Professor ({evalData.avaliadoPor || 'Mestre Felipe Borü'})
+              </h4>
+              <span className="text-[10px] font-mono text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800">
+                {evalData.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'Avaliação Recente'}
+              </span>
+            </div>
+            <p className="text-xs text-yellow-100/90 italic leading-relaxed">
+              "{evalData.parecerMestre}"
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* GRADE DE CARDS KPI (4 MÉTRICAS PRINCIPAIS) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -153,7 +189,7 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
             <span className="font-bold uppercase tracking-wider text-[10px]">Classificação MMR</span>
             <span className="text-red-400 font-bold">Top CT Borü</span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-red-500">2,840 MMR</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-red-500">{evalData?.mmr ? `${evalData.mmr.toLocaleString('pt-BR')} MMR` : '2,840 MMR'}</p>
           <p className="text-[11px] text-zinc-400 font-medium">Divisão Ouro // Nak Muay de Ferro</p>
         </div>
 
@@ -163,7 +199,7 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
             <span className="font-bold uppercase tracking-wider text-[10px]">Precisão de Golpes</span>
             <span className="text-cyan-400 font-bold">Excelente</span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-cyan-400">78.4%</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-cyan-400">{evalData?.precisaoGolpes ? `${evalData.precisaoGolpes}%` : '78.4%'}</p>
           <p className="text-[11px] text-zinc-400 font-medium">Golpes contundentes conectados</p>
         </div>
 

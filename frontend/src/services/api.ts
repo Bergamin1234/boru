@@ -125,6 +125,8 @@ export const adminApi = {
   deleteGamificationAchievement: (id: string) => api.delete(`/admin/gamificacao/conquistas/${id}`),
   resetGamificationDefault: () => api.post('/admin/gamificacao/reset-padrao'),
   exportGamificationJson: () => api.get('/admin/gamificacao/export-json'),
+  getStudentEvaluation: (studentId: string) => api.get(`/admin/alunos/${studentId}/avaliacao`),
+  saveStudentEvaluation: (studentId: string, data: any) => api.post(`/admin/alunos/${studentId}/avaliacao`, data),
 };
 
 export const studentApi = {
@@ -145,4 +147,5 @@ export const studentApi = {
   getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
   signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
     api.post(`/alunos/${studentId}/assinar-contrato`, data),
+  getEvaluation: (studentId: string) => api.get(`/alunos/${studentId}/avaliacao`),
 };

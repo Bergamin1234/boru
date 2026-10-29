@@ -73,7 +73,7 @@ function renderInstructorsPortfolio() {
 
   instructors.forEach(coach => {
     html += `
-      <div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-6 md:p-8 flex flex-col md:flex-row gap-6 card-combat group">
+      <div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-6 md:p-8 flex flex-col md:flex-row gap-6 card-combat group shadow-xl shrink-0 w-[300px] sm:w-[420px] md:w-[480px] lg:w-[520px] spotlight-card tilt-card">
         
         <div class="w-full md:w-48 flex-shrink-0">
           <div class="relative h-60 md:h-full rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
@@ -405,4 +405,69 @@ function initTiltEffect() {
       el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
     });
   });
+}
+
+// ==========================================
+// CARROSSEL HORIZONTAL DINÂMICO DE PROFESSORES (AUTO-PLAY 5S + HOVER PAUSE)
+// ==========================================
+function initInstructorsCarousel() {
+  const container = document.getElementById('instructors-portfolio-grid');
+  const prevBtn = document.getElementById('prof-carousel-prev');
+  const nextBtn = document.getElementById('prof-carousel-next');
+
+  if (!container) return;
+
+  let autoplayTimer = null;
+  const slideStep = () => {
+    const card = container.querySelector('.shrink-0');
+    return card ? card.offsetWidth + 24 : 480;
+  };
+
+  const scrollNext = () => {
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    if (container.scrollLeft >= maxScroll - 10) {
+      container.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: slideStep(), behavior: 'smooth' });
+    }
+  };
+
+  const scrollPrev = () => {
+    if (container.scrollLeft <= 10) {
+      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: -slideStep(), behavior: 'smooth' });
+    }
+  };
+
+  if (nextBtn) nextBtn.addEventListener('click', () => { scrollNext(); restartAutoplay(); });
+  if (prevBtn) prevBtn.addEventListener('click', () => { scrollPrev(); restartAutoplay(); });
+
+  const startAutoplay = () => {
+    stopAutoplay();
+    autoplayTimer = setInterval(scrollNext, 5000);
+  };
+
+  const stopAutoplay = () => {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  };
+
+  const restartAutoplay = () => {
+    stopAutoplay();
+    startAutoplay();
+  };
+
+  container.addEventListener('mouseenter', stopAutoplay);
+  container.addEventListener('mouseleave', startAutoplay);
+
+  startAutoplay();
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  setTimeout(() => {
+    if (typeof initInstructorsCarousel === 'function') initInstructorsCarousel();
+  }, 100);
 }

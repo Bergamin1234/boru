@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { studentApi } from '../services/api';
 import {
   Radar,
   RadarChart,
@@ -153,6 +154,27 @@ const mockCTLeaderboard: FighterRank[] = [
 
 export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
   const [filterPeriod, setFilterPeriod] = useState<'semanal' | 'mensal' | 'temporada'>('temporada');
+  const [atributos, setAtributos] = useState<CombatAttribute[]>(mockAttributes);
+  const [evalData, setEvalData] = useState<any>(null);
+
+  useEffect(() => {
+    if (aluno?.id) {
+      studentApi.getEvaluation(aluno.id)
+        .then((res: any) => {
+          if (res?.data) {
+            setEvalData(res.data);
+            setAtributos([
+              { attribute: 'FORÇA', value: res.data.forca ?? 88, fullMark: 100 },
+              { attribute: 'TÉCNICA', value: res.data.tecnica ?? 94, fullMark: 100 },
+              { attribute: 'RESISTÊNCIA', value: res.data.resistencia ?? 82, fullMark: 100 },
+              { attribute: 'FLEXIBILIDADE', value: res.data.flexibilidade ?? 76, fullMark: 100 },
+              { attribute: 'DISCIPLINA', value: res.data.disciplina ?? 98, fullMark: 100 },
+            ]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [aluno?.id]);
 
   // Identifica o usuário logado e o colega de treino imediatamente acima no CT
   const rawUser = mockCTLeaderboard.find((u) => u.isCurrentUser) || mockCTLeaderboard[mockCTLeaderboard.length - 1];
@@ -267,14 +289,15 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               <h4 className="text-xs font-mono font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
                 <span>⚡</span> ATRIBUTOS MARCIAIS (TATAME CT BORÜ)
               </h4>
-              <span className="text-[10px] font-mono font-bold text-red-400 uppercase">
-                RADAR
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                {evalData?.avaliadoPor ? `Avaliado por: ${evalData.avaliadoPor}` : 'Avaliado pelo Mestre'}
               </span>
             </div>
 
             <div className="w-full h-64 -my-2">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={mockAttributes}>
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={atributos}>
                   <PolarGrid stroke="#27272A" />
                   <PolarAngleAxis
                     dataKey="attribute"
@@ -300,7 +323,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
             </div>
 
             <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-zinc-800/70 text-center">
-              {mockAttributes.map((attr) => (
+              {atributos.map((attr) => (
                 <div key={attr.attribute} className="p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
                   <span className="block text-[8px] font-mono font-bold text-zinc-400 truncate">
                     {attr.attribute.slice(0, 4)}
@@ -313,8 +336,20 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
             </div>
 
             <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
-              Última avaliação de tatame: há 2 dias • Mestre Felipe Borü
+              Última avaliação de tatame: {evalData?.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'há 2 dias'} • {evalData?.avaliadoPor || 'Mestre Felipe Borü'}
             </p>
+
+            {evalData?.parecerMestre && (
+              <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-200/90 italic flex items-start gap-2.5">
+                <span className="text-base not-italic">🥋</span>
+                <div>
+                  <span className="font-bold font-mono text-[10px] uppercase text-yellow-400 block not-italic">
+                    Parecer do Professor:
+                  </span>
+                  <span>"{evalData.parecerMestre}"</span>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 
