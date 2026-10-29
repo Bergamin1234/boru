@@ -594,54 +594,61 @@
        Baseado no conceito 3D Devices Showcase (DesignsCode)
        Mostra os 3 celulares: Portal do Aluno, Site Oficial e Portal do Professor
        ======================================================== -->
-  <section id="app-celular-3d" class="py-20 sm:py-32 bg-[#0B0B0C] relative z-10 overflow-hidden border-t border-zinc-800/80">
+  <!-- ========================================================
+       SEÇÃO: VITRINE 3D INTERATIVA - FUTURO APP PARA CELULAR
+       Conceito: 3 Celulares Abertos Lado a Lado (Sem Sobreposição)
+       1. Portal do Aluno (Esquerda)
+       2. Site Oficial do CT (Centro / Destaque)
+       3. Portal do Professor (Direita)
+       ======================================================== -->
+  <section id="app-celular-3d" class="py-16 sm:py-28 bg-[#0B0B0C] relative z-10 overflow-hidden border-t border-zinc-800/80">
     <!-- Efeitos de iluminação de fundo (Glow Vermelho / Âmbar do CT Borü) -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-red-600/15 rounded-full blur-[140px] pointer-events-none"></div>
-    <div class="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-red-800/15 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[500px] bg-red-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-red-900/15 rounded-full blur-[130px] pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       
       <!-- CABEÇALHO DA SEÇÃO DE IMPACTO -->
-      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-16 space-y-4">
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-950/70 border border-red-500/40 text-red-400 font-mono font-bold uppercase tracking-widest text-xs shadow-lg shadow-red-950/50">
           <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-          <span>NOVIDADE OFICIAL // ECOSSISTEMA MOBILE CT BORÜ</span>
+          <span>PROJETO EM DESENVOLVIMENTO // PLANO MOBILE CT BORÜ</span>
         </div>
 
-        <h2 class="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-none">
-          Aplicativo para Celular <br class="hidden sm:inline" />
+        <h2 class="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight leading-tight">
+          NOVIDADE! Aplicativo para Celular <br class="hidden sm:inline" />
           <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400">
             Em Breve!
           </span>
         </h2>
 
-        <p class="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-2xl mx-auto">
-          Estamos desenvolvendo o aplicativo oficial do <strong>CT BORÜ</strong> para levar toda a força do nosso tatame direto para o seu bolso. Check-in com 1 toque, ranking dos guerreiros, acompanhamento técnico e gestão completa de aulas para alunos e professores.
+        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+          Este é o plano de expansão do <strong>CT BORÜ</strong>: unificar todo o nosso sistema e site em um aplicativo móvel próprio. Veja abaixo como funcionará a experiência integrada nos 3 ambientes.
         </p>
 
-        <!-- SELETOR INTERATIVO DE FOCO DOS CELULARES -->
-        <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
+        <!-- BOTÕES NAVEGADORES PARA SCROLL / FOCO RÁPIDO -->
+        <div class="pt-3 flex flex-wrap items-center justify-center gap-2.5">
           <button 
             type="button" 
-            onclick="setPhoneFocus('aluno')" 
-            id="btn-focus-aluno"
+            onclick="scrollToPhone('aluno')" 
+            id="tab-btn-aluno"
             class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
           >
             📱 1. Portal do Aluno
           </button>
           <button 
             type="button" 
-            onclick="setPhoneFocus('site')" 
-            id="btn-focus-site"
-            class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 scale-105"
+            onclick="scrollToPhone('site')" 
+            id="tab-btn-site"
+            class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 font-black"
           >
             ⚡ 2. Site Oficial (Centro)
           </button>
           <button 
             type="button" 
-            onclick="setPhoneFocus('professor')" 
-            id="btn-focus-professor"
+            onclick="scrollToPhone('professor')" 
+            id="tab-btn-professor"
             class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
           >
             🥋 3. Portal do Professor
@@ -650,30 +657,38 @@
       </div>
 
       <!-- ========================================================
-           VITRINE 3D INTERATIVA (3 CELULARES COM PARALLAX E HOVER)
+           VITRINE DOS 3 CELULARES (LADO A LADO, TOTALMENTE VISÍVEIS)
+           No desktop: grid flex aberto com perspectiva 3D real
+           No mobile: carrossel horizontal suave sem empilhamento
            ======================================================== -->
       <div 
-        id="showcase-3d-scene" 
-        class="showcase-3d-perspective relative py-6 sm:py-12 flex items-center justify-center min-h-[580px] sm:min-h-[720px] select-none"
+        id="phones-carousel-container" 
+        class="flex items-center justify-start lg:justify-center gap-4 sm:gap-6 lg:gap-8 overflow-x-auto no-scrollbar scroll-smooth px-4 sm:px-6 py-6 sm:py-10 snap-x snap-mandatory"
+        style="perspective: 1600px;"
       >
         
         <!-- ==============================================
              CELULAR 1 (ESQUERDA): PORTAL DO ALUNO
              ============================================== -->
         <div 
-          id="phone-aluno" 
-          onclick="setPhoneFocus('aluno')"
-          class="phone-device-card phone-pos-left cursor-pointer transition-all duration-700 ease-out absolute"
+          id="device-card-aluno" 
+          class="phone-showcase-item shrink-0 snap-center transition-all duration-500 flex flex-col items-center"
+          style="transform: perspective(1200px) rotateY(12deg) scale(0.96);"
+          onmouseenter="handlePhoneHover(this, 1.02, 4)"
+          onmouseleave="handlePhoneLeave(this, 0.96, 12)"
         >
-          <div class="phone-frame w-[270px] sm:w-[320px] h-[540px] sm:h-[640px] rounded-[44px] bg-[#121214] border-[6px] border-zinc-700/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_25px_rgba(220,38,38,0.2)] p-2 relative overflow-hidden ring-1 ring-white/10 group">
+          <!-- Aparelho Celular -->
+          <div class="w-[280px] sm:w-[305px] h-[550px] sm:h-[600px] rounded-[44px] bg-[#121214] border-[5px] border-zinc-700 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(220,38,38,0.2)] p-2 relative overflow-hidden ring-1 ring-white/10 group">
+            
             <!-- Dynamic Island do Smartphone -->
-            <div class="phone-dynamic-island">
-              <span class="w-2.5 h-2.5 rounded-full bg-zinc-900/90"></span>
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+              <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
             </div>
-            <!-- Barra Superior de Status (Horário, Bateria, 5G) -->
-            <div class="phone-status-bar">
-              <span class="font-mono text-[10px] text-zinc-400 font-bold">19:30</span>
-              <div class="flex items-center gap-1.5 text-zinc-400 text-[10px]">
+
+            <!-- Barra Superior de Status -->
+            <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-400 z-30 pointer-events-none">
+              <span class="font-bold">19:30</span>
+              <div class="flex items-center gap-1">
                 <span>5G</span>
                 <span>📶</span>
                 <span>🔋 98%</span>
@@ -681,79 +696,80 @@
             </div>
 
             <!-- TELA INTERNA DO PORTAL DO ALUNO -->
-            <div class="phone-screen-content h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-10 pb-6 px-3.5 space-y-3 border border-zinc-800/80">
+            <div class="h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-9 pb-5 px-3 space-y-2.5 border border-zinc-800">
+              
+              <!-- Tag de Protótipo -->
+              <div class="p-1 rounded-lg bg-red-950/60 border border-red-500/30 text-center">
+                <span class="text-[8px] font-mono font-bold uppercase tracking-widest text-red-300">
+                  PREVIEW // PORTAL DO ALUNO
+                </span>
+              </div>
+
               <!-- Header do Aluno -->
-              <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shadow">
+              <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shrink-0">
                     <img src="/felipe-boru.jpg" alt="Aluno" class="w-full h-full rounded-full object-cover">
                   </div>
-                  <div>
-                    <span class="block text-[11px] font-black text-white italic leading-tight">Ítalo Bergamin</span>
-                    <span class="text-[9px] font-mono text-red-400 font-bold uppercase tracking-wider">Prajied Branco // Ativo</span>
+                  <div class="min-w-0">
+                    <span class="block text-[11px] font-black text-white italic truncate">Ítalo Bergamin</span>
+                    <span class="text-[8px] font-mono text-red-400 font-bold uppercase tracking-wider block truncate">Prajied Branco</span>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded-md bg-red-950/80 border border-red-500/40 text-[9px] font-mono font-bold text-red-300">
-                  ALUNO CT
+                <span class="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-[8px] font-mono font-bold text-emerald-400 shrink-0">
+                  ● ATIVO
                 </span>
               </div>
 
               <!-- BOTÃO CTA DE CHECK-IN NO TATAME -->
-              <div class="p-3 rounded-2xl bg-gradient-to-r from-red-950/90 via-red-900/60 to-zinc-900 border border-red-500/50 shadow-lg text-center space-y-1.5 relative overflow-hidden">
-                <div class="absolute -right-6 -bottom-6 w-16 h-16 bg-red-600/20 rounded-full blur-xl pointer-events-none"></div>
-                <span class="text-[9px] font-mono uppercase tracking-widest text-red-300 block font-bold">Sessão de Treino 19h</span>
-                <button type="button" class="w-full py-2 rounded-xl bg-red-600 text-white font-black text-[11px] uppercase tracking-wider shadow-md hover:bg-red-500 transition flex items-center justify-center gap-1.5">
-                  <span>⚡ BATER CHECK-IN</span>
+              <div class="p-2.5 rounded-2xl bg-gradient-to-r from-red-950/90 via-red-900/60 to-zinc-900 border border-red-500/50 shadow text-center space-y-1">
+                <span class="text-[8px] font-mono uppercase tracking-widest text-red-300 block font-bold">Treino das 19:00</span>
+                <button type="button" class="w-full py-2 rounded-xl bg-red-600 text-white font-black text-[11px] uppercase tracking-wider shadow hover:bg-red-500 transition">
+                  ⚡ BATER CHECK-IN
                 </button>
-                <span class="text-[8px] font-mono text-zinc-400 block">+100 XP computado instantaneamente</span>
+                <span class="text-[8px] font-mono text-zinc-400 block">+100 XP por presença confirmada</span>
               </div>
 
               <!-- Status de Treinos & Cartel -->
-              <div class="grid grid-cols-2 gap-2">
-                <div class="p-2.5 rounded-xl bg-[#161619] border border-zinc-800">
+              <div class="grid grid-cols-2 gap-1.5">
+                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
                   <span class="block text-[8px] font-mono uppercase text-zinc-400">Cartel de Dias</span>
-                  <span class="text-sm font-black text-emerald-400 font-mono">12 DIAS 🔥</span>
+                  <span class="text-xs font-black text-emerald-400 font-mono">12 DIAS 🔥</span>
                 </div>
-                <div class="p-2.5 rounded-xl bg-[#161619] border border-zinc-800">
-                  <span class="block text-[8px] font-mono uppercase text-zinc-400">XP na Temporada</span>
-                  <span class="text-sm font-black text-yellow-400 font-mono">1.200 XP</span>
+                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                  <span class="block text-[8px] font-mono uppercase text-zinc-400">XP no CT</span>
+                  <span class="text-xs font-black text-yellow-400 font-mono">1.200 XP</span>
                 </div>
               </div>
 
               <!-- Pódio do CT em Miniatura -->
-              <div class="p-2.5 rounded-xl bg-[#161619] border border-zinc-800 space-y-2">
-                <div class="flex items-center justify-between text-[9px] font-mono font-bold text-zinc-400">
+              <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 space-y-1.5">
+                <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
                   <span>🏆 TOP GUERREIROS</span>
                   <span class="text-red-400">LIGA ELITE</span>
                 </div>
-                <div class="flex items-center justify-between text-[10px] bg-zinc-900/70 p-1.5 rounded-lg border border-zinc-800/80">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-amber-400 font-bold">👑 #1</span>
-                    <span class="font-bold text-white text-[10px]">Ariel Amaral</span>
-                  </div>
-                  <span class="font-mono text-zinc-300 font-bold text-[9px]">1.800 XP</span>
+                <div class="flex items-center justify-between text-[9px] bg-zinc-900/80 p-1.5 rounded-lg border border-zinc-800">
+                  <span class="text-amber-400 font-bold">👑 #1 Ariel Amaral</span>
+                  <span class="font-mono text-zinc-300 font-bold">1.800 XP</span>
                 </div>
-                <div class="flex items-center justify-between text-[10px] bg-zinc-900/70 p-1.5 rounded-lg border border-zinc-800/80">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-zinc-400 font-bold">🥈 #2</span>
-                    <span class="font-bold text-white text-[10px]">Francisco M.</span>
-                  </div>
-                  <span class="font-mono text-zinc-300 font-bold text-[9px]">1.500 XP</span>
+                <div class="flex items-center justify-between text-[9px] bg-zinc-900/80 p-1.5 rounded-lg border border-zinc-800">
+                  <span class="text-zinc-400 font-bold">🥈 #2 Francisco M.</span>
+                  <span class="font-mono text-zinc-300 font-bold">1.500 XP</span>
                 </div>
               </div>
 
               <!-- Mini Radar Fight IQ -->
-              <div class="p-2.5 rounded-xl bg-[#161619] border border-zinc-800 text-center">
-                <span class="text-[9px] font-mono text-zinc-400 block font-bold mb-1">⚡ ATRIBUTOS MARCIAIS (FIGHT IQ)</span>
-                <div class="grid grid-cols-3 gap-1 text-[8px] font-mono font-bold pt-1">
-                  <div class="p-1 rounded bg-zinc-900/80 text-zinc-300">FORÇA 88</div>
-                  <div class="p-1 rounded bg-zinc-900/80 text-red-400">TÉCNICA 94</div>
-                  <div class="p-1 rounded bg-zinc-900/80 text-yellow-400">DISC 98</div>
+              <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                <span class="text-[8px] font-mono text-zinc-400 block font-bold mb-1">⚡ FIGHT IQ & ATRIBUTOS</span>
+                <div class="grid grid-cols-3 gap-1 text-[8px] font-mono font-bold">
+                  <div class="p-1 rounded bg-zinc-900 text-zinc-300">FORÇA 88</div>
+                  <div class="p-1 rounded bg-zinc-900 text-red-400">TÉCN 94</div>
+                  <div class="p-1 rounded bg-zinc-900 text-yellow-400">DISC 98</div>
                 </div>
               </div>
 
-              <!-- Bottom Bar Simulado do App -->
-              <div class="pt-1 flex items-center justify-around border-t border-zinc-800/80 text-zinc-500 text-[9px] font-mono">
+              <!-- Bottom Bar Simulado -->
+              <div class="pt-1 flex items-center justify-around border-t border-zinc-800 text-zinc-500 text-[8px] font-mono">
                 <span class="text-red-400 font-bold">🏠 Início</span>
                 <span>🥋 Check-in</span>
                 <span>🏆 Ranking</span>
@@ -761,15 +777,14 @@
               </div>
             </div>
 
-            <!-- Reflexo de Vidro Diagonal -->
-            <div class="phone-glass-reflection"></div>
-            <!-- Home Bar Inferior do iOS -->
-            <div class="phone-home-bar"></div>
+            <!-- Home Bar Inferior -->
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
           </div>
 
-          <div class="text-center mt-3">
+          <!-- Legenda Abaixo do Celular -->
+          <div class="mt-3 text-center">
             <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-red-950/80 text-red-400 border border-red-500/30">
-              Portal do Aluno (Mobile)
+              1. Portal do Aluno
             </span>
           </div>
         </div>
@@ -778,26 +793,31 @@
              CELULAR 2 (CENTRO): SITE PRINCIPAL OFICIAL DO CT
              ============================================== -->
         <div 
-          id="phone-site" 
-          onclick="setPhoneFocus('site')"
-          class="phone-device-card phone-pos-center cursor-pointer transition-all duration-700 ease-out relative z-30"
+          id="device-card-site" 
+          class="phone-showcase-item shrink-0 snap-center transition-all duration-500 flex flex-col items-center"
+          style="transform: perspective(1200px) scale(1.04) translateZ(30px);"
+          onmouseenter="handlePhoneHover(this, 1.08, 0)"
+          onmouseleave="handlePhoneLeave(this, 1.04, 0)"
         >
-          <div class="phone-frame w-[290px] sm:w-[340px] h-[580px] sm:h-[680px] rounded-[48px] bg-[#141417] border-[7px] border-red-600/90 shadow-[0_30px_90px_-20px_rgba(220,38,38,0.5),0_0_40px_rgba(245,158,11,0.25)] p-2.5 relative overflow-hidden ring-2 ring-red-500/40 group">
-            <!-- Dynamic Island do Smartphone -->
-            <div class="phone-dynamic-island">
-              <span class="w-2.5 h-2.5 rounded-full bg-zinc-900/90"></span>
+          <!-- Aparelho Celular Central (Destaque Maior com Glow) -->
+          <div class="w-[290px] sm:w-[325px] h-[570px] sm:h-[630px] rounded-[48px] bg-[#141417] border-[6px] border-red-600/90 shadow-[0_25px_80px_rgba(220,38,38,0.45),0_0_35px_rgba(245,158,11,0.2)] p-2.5 relative overflow-hidden ring-2 ring-red-500/40 group">
+            
+            <!-- Dynamic Island -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+              <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
             </div>
+
             <!-- Barra Superior de Status -->
-            <div class="phone-status-bar">
-              <span class="font-mono text-[10px] text-zinc-300 font-bold">19:30</span>
-              <div class="flex items-center gap-1.5 text-zinc-300 text-[10px]">
-                <span class="text-red-400">● BORÜ LIVE</span>
+            <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-300 z-30 pointer-events-none">
+              <span class="font-bold">19:30</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-red-400 font-bold">● BORÜ LIVE</span>
                 <span>🔋 100%</span>
               </div>
             </div>
 
             <!-- TELA INTERNA DO SITE OFICIAL CT BORÜ -->
-            <div class="phone-screen-content h-full rounded-[40px] bg-[#0B0B0C] overflow-y-auto no-scrollbar pt-10 pb-6 px-4 space-y-3.5 border border-zinc-800">
+            <div class="h-full rounded-[38px] bg-[#0B0B0C] overflow-y-auto no-scrollbar pt-9 pb-5 px-3.5 space-y-3 border border-zinc-800">
               
               <!-- Navbar do Site -->
               <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
@@ -805,20 +825,20 @@
                   <img src="/logo-boru.jpg" alt="Logo CT Borü" class="w-7 h-7 rounded-lg object-contain bg-black border border-zinc-700">
                   <div>
                     <span class="font-black text-xs text-white uppercase tracking-tighter block leading-none">CT BORÜ</span>
-                    <span class="text-[8px] font-mono text-zinc-400 uppercase tracking-widest">Centro de Combate</span>
+                    <span class="text-[7px] font-mono text-zinc-400 uppercase tracking-widest">Centro de Combate</span>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded-full bg-red-600 text-white font-mono font-black text-[9px] uppercase tracking-wider shadow">
+                <span class="px-2 py-0.5 rounded-full bg-red-600 text-white font-mono font-black text-[8px] uppercase tracking-wider shadow">
                   SITE OFICIAL
                 </span>
               </div>
 
               <!-- Hero Banner do Site -->
-              <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow-xl group/hero">
-                <img src="/hero-ct-combat.jpg" alt="Treino CT Borü" class="w-full h-36 object-cover brightness-75 group-hover/hero:scale-105 transition duration-500">
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-3">
-                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">MUAY THAI TRADICIONAL</span>
-                  <h4 class="font-display text-sm font-black text-white uppercase tracking-tight leading-tight">
+              <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow group/hero">
+                <img src="/hero-ct-combat.jpg" alt="Treino CT Borü" class="w-full h-32 object-cover brightness-75 group-hover/hero:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2.5">
+                  <span class="text-[8px] font-mono uppercase tracking-widest text-red-400 font-bold">MUAY THAI TRADICIONAL</span>
+                  <h4 class="font-display text-xs font-black text-white uppercase tracking-tight leading-tight">
                     Forjando Guerreiros no Tatame
                   </h4>
                 </div>
@@ -826,31 +846,31 @@
 
               <!-- Botão de Ação do Site -->
               <button type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/40 hover:brightness-110 transition flex items-center justify-center gap-1.5">
-                <span>AGENDAR AULA GRÁTIS 🔥</span>
+                <span>AGENDAR AULA EXPERIMENTAL 🔥</span>
               </button>
 
               <!-- Modalidades Oficiais -->
-              <div class="space-y-1.5">
-                <span class="text-[9px] font-mono uppercase tracking-widest text-zinc-400 block font-bold">MODALIDADES NO CT</span>
+              <div class="space-y-1">
+                <span class="text-[8px] font-mono uppercase tracking-widest text-zinc-400 block font-bold">MODALIDADES NO CT</span>
                 <div class="grid grid-cols-2 gap-1.5">
-                  <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                  <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 text-center">
                     <span class="block text-xs">🥊</span>
-                    <span class="text-[10px] font-black text-white uppercase block">Muay Thai</span>
-                    <span class="text-[8px] font-mono text-zinc-500">Tradicional</span>
+                    <span class="text-[9px] font-black text-white uppercase block">Muay Thai</span>
+                    <span class="text-[7px] font-mono text-zinc-500">Tradicional</span>
                   </div>
-                  <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                  <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 text-center">
                     <span class="block text-xs">🥋</span>
-                    <span class="text-[10px] font-black text-white uppercase block">Jiu-Jitsu</span>
-                    <span class="text-[8px] font-mono text-zinc-500">Gi & No-Gi</span>
+                    <span class="text-[9px] font-black text-white uppercase block">Jiu-Jitsu</span>
+                    <span class="text-[7px] font-mono text-zinc-500">Gi & No-Gi</span>
                   </div>
                 </div>
               </div>
 
               <!-- Planos em Destaque -->
-              <div class="p-3 rounded-2xl bg-gradient-to-b from-zinc-900 to-[#141416] border border-zinc-800 text-center space-y-1">
-                <span class="text-[9px] font-mono text-amber-400 uppercase font-bold">PLANO RECOMENDADO</span>
+              <div class="p-2.5 rounded-2xl bg-gradient-to-b from-zinc-900 to-[#141416] border border-zinc-800 text-center space-y-0.5">
+                <span class="text-[8px] font-mono text-amber-400 uppercase font-bold">PLANO RECOMENDADO</span>
                 <h5 class="text-xs font-black text-white uppercase">3x na Semana // R$ 130/mês</h5>
-                <span class="text-[9px] text-zinc-400 block">Wellhub & TotalPass Aceitos</span>
+                <span class="text-[8px] text-zinc-400 block">Wellhub & TotalPass Aceitos</span>
               </div>
 
               <!-- Rodapé Simulado -->
@@ -859,15 +879,14 @@
               </div>
             </div>
 
-            <!-- Reflexo de Vidro Diagonal -->
-            <div class="phone-glass-reflection"></div>
-            <!-- Home Bar Inferior do iOS -->
-            <div class="phone-home-bar"></div>
+            <!-- Home Bar Inferior -->
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
           </div>
 
-          <div class="text-center mt-3">
+          <!-- Legenda Abaixo do Celular -->
+          <div class="mt-3 text-center">
             <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-red-600 text-white shadow-lg shadow-red-600/30">
-              Site Oficial CT BORÜ (Centro)
+              2. Site Oficial (Centro)
             </span>
           </div>
         </div>
@@ -876,109 +895,118 @@
              CELULAR 3 (DIREITA): PORTAL DO PROFESSOR
              ============================================== -->
         <div 
-          id="phone-professor" 
-          onclick="setPhoneFocus('professor')"
-          class="phone-device-card phone-pos-right cursor-pointer transition-all duration-700 ease-out absolute"
+          id="device-card-professor" 
+          class="phone-showcase-item shrink-0 snap-center transition-all duration-500 flex flex-col items-center"
+          style="transform: perspective(1200px) rotateY(-12deg) scale(0.96);"
+          onmouseenter="handlePhoneHover(this, 1.02, -4)"
+          onmouseleave="handlePhoneLeave(this, 0.96, -12)"
         >
-          <div class="phone-frame w-[270px] sm:w-[320px] h-[540px] sm:h-[640px] rounded-[44px] bg-[#121214] border-[6px] border-zinc-700/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_25px_rgba(245,158,11,0.2)] p-2 relative overflow-hidden ring-1 ring-white/10 group">
-            <!-- Dynamic Island do Smartphone -->
-            <div class="phone-dynamic-island">
-              <span class="w-2.5 h-2.5 rounded-full bg-zinc-900/90"></span>
+          <!-- Aparelho Celular -->
+          <div class="w-[280px] sm:w-[305px] h-[550px] sm:h-[600px] rounded-[44px] bg-[#121214] border-[5px] border-zinc-700 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.2)] p-2 relative overflow-hidden ring-1 ring-white/10 group">
+            
+            <!-- Dynamic Island -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+              <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
             </div>
+
             <!-- Barra Superior de Status -->
-            <div class="phone-status-bar">
-              <span class="font-mono text-[10px] text-zinc-400 font-bold">19:30</span>
-              <div class="flex items-center gap-1.5 text-zinc-400 text-[10px]">
-                <span class="text-amber-400 font-mono font-bold">PROFESSOR</span>
+            <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-400 z-30 pointer-events-none">
+              <span class="font-bold">19:30</span>
+              <div class="flex items-center gap-1 text-amber-400 font-bold">
+                <span>PROFESSOR</span>
                 <span>🔋 92%</span>
               </div>
             </div>
 
             <!-- TELA INTERNA DO PORTAL DO PROFESSOR -->
-            <div class="phone-screen-content h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-10 pb-6 px-3.5 space-y-3 border border-zinc-800/80">
+            <div class="h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-9 pb-5 px-3 space-y-2.5 border border-zinc-800">
               
+              <!-- Tag de Protótipo -->
+              <div class="p-1 rounded-lg bg-amber-950/60 border border-amber-500/30 text-center">
+                <span class="text-[8px] font-mono font-bold uppercase tracking-widest text-amber-300">
+                  PREVIEW // PORTAL DO PROFESSOR
+                </span>
+              </div>
+
               <!-- Header do Mestre Felipe Borü -->
-              <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow">
+              <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shrink-0">
                     <img src="/felipe-boru.jpg" alt="Mestre Felipe Borü" class="w-full h-full rounded-full object-cover">
                   </div>
-                  <div>
-                    <span class="block text-[11px] font-black text-white italic leading-tight">Mestre Felipe Borü</span>
-                    <span class="text-[9px] font-mono text-amber-400 font-bold uppercase tracking-wider">Kru Chefe // Tatame 1</span>
+                  <div class="min-w-0">
+                    <span class="block text-[11px] font-black text-white italic truncate">Mestre Felipe Borü</span>
+                    <span class="text-[8px] font-mono text-amber-400 font-bold uppercase tracking-wider block truncate">Kru Chefe // Tatame 1</span>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-[9px] font-mono font-bold text-amber-300">
+                <span class="px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-500/40 text-[8px] font-mono font-bold text-amber-300 shrink-0">
                   ADMIN
                 </span>
               </div>
 
               <!-- Métrica do Tatame Hoje -->
-              <div class="p-2.5 rounded-xl bg-gradient-to-r from-amber-950/60 via-zinc-900 to-zinc-900 border border-amber-500/40 space-y-1">
-                <span class="text-[8px] font-mono uppercase text-amber-300 tracking-wider font-bold">AULA EM ANDAMENTO (19:00)</span>
-                <div class="flex items-baseline justify-between">
-                  <span class="text-base font-black text-white font-mono">24 PRESENTES</span>
-                  <span class="text-[9px] font-mono text-emerald-400 font-bold">● Tatame Ativo</span>
+              <div class="p-2 rounded-xl bg-gradient-to-r from-amber-950/60 via-zinc-900 to-zinc-900 border border-amber-500/40">
+                <span class="text-[8px] font-mono uppercase text-amber-300 tracking-wider font-bold block">AULA EM ANDAMENTO (19:00)</span>
+                <div class="flex items-baseline justify-between mt-0.5">
+                  <span class="text-sm font-black text-white font-mono">24 PRESENTES</span>
+                  <span class="text-[8px] font-mono text-emerald-400 font-bold">● Tatame Ativo</span>
                 </div>
               </div>
 
               <!-- Chamada Rápida (1 Toque) -->
               <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-[9px] font-mono font-bold text-zinc-400">
+                <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
                   <span>CHAMADA RÁPIDA (1 TOQUE)</span>
                   <span class="text-emerald-400">TODOS</span>
                 </div>
 
-                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
+                <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
                   <div>
-                    <span class="font-bold text-white text-[10px] block">Ariel Amaral</span>
-                    <span class="text-[8px] font-mono text-zinc-400">Prajied Vermelho</span>
+                    <span class="font-bold text-white text-[9px] block">Ariel Amaral</span>
+                    <span class="text-[7px] font-mono text-zinc-400">Prajied Vermelho</span>
                   </div>
-                  <button type="button" class="px-2 py-1 rounded-md bg-emerald-600 text-white font-mono font-bold text-[9px] uppercase shadow">
+                  <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[8px] uppercase">
                     PRESENTE ✓
-                  </button>
+                  </span>
                 </div>
 
-                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
+                <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
                   <div>
-                    <span class="font-bold text-white text-[10px] block">Ítalo Bergamin</span>
-                    <span class="text-[8px] font-mono text-zinc-400">Prajied Branco</span>
+                    <span class="font-bold text-white text-[9px] block">Ítalo Bergamin</span>
+                    <span class="text-[7px] font-mono text-zinc-400">Prajied Branco</span>
                   </div>
-                  <button type="button" class="px-2 py-1 rounded-md bg-emerald-600 text-white font-mono font-bold text-[9px] uppercase shadow">
+                  <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[8px] uppercase">
                     PRESENTE ✓
-                  </button>
+                  </span>
                 </div>
               </div>
 
               <!-- Avaliação Técnica & Alertas -->
-              <div class="p-2.5 rounded-xl bg-[#161619] border border-zinc-800 space-y-1.5">
-                <div class="flex items-center justify-between text-[9px] font-mono font-bold text-zinc-400">
+              <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 space-y-1">
+                <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
                   <span>⚡ AVALIAÇÃO DE SPARRING</span>
-                  <span class="text-yellow-400">LANÇAR</span>
+                  <span class="text-yellow-400">SALVA</span>
                 </div>
-                <div class="flex items-center justify-between text-[9px] text-zinc-300">
+                <div class="flex items-center justify-between text-[8px] text-zinc-300">
                   <span>Força: <strong class="text-white">90</strong></span>
                   <span>Técnica: <strong class="text-red-400">95</strong></span>
                   <span>Disc: <strong class="text-amber-400">100</strong></span>
                 </div>
-                <span class="block text-[8px] font-mono text-zinc-500 italic truncate">
-                  "Excelente postura e guarda no clinch."
-                </span>
               </div>
 
               <!-- Alunos Inativos (Chamada WhatsApp) -->
-              <div class="p-2 rounded-xl bg-red-950/40 border border-red-500/30 flex items-center justify-between">
+              <div class="p-1.5 rounded-xl bg-red-950/40 border border-red-500/30 flex items-center justify-between">
                 <div>
-                  <span class="text-[9px] font-black text-red-300 block">3 Alunos Inativos</span>
-                  <span class="text-[8px] font-mono text-zinc-400">Sem treinar há 2 sem.</span>
+                  <span class="text-[8px] font-black text-red-300 block">3 Alunos Inativos</span>
+                  <span class="text-[7px] font-mono text-zinc-400">Sem vir há 2 sem.</span>
                 </div>
-                <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-mono text-[8px] font-bold">
+                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[7px]">
                   WhatsApp 💬
                 </span>
               </div>
 
-              <!-- Bottom Bar Simulado do Coach -->
-              <div class="pt-1 flex items-center justify-around border-t border-zinc-800/80 text-zinc-500 text-[9px] font-mono">
+              <!-- Bottom Bar Simulado -->
+              <div class="pt-1 flex items-center justify-around border-t border-zinc-800 text-zinc-500 text-[8px] font-mono">
                 <span class="text-amber-400 font-bold">🥋 Turmas</span>
                 <span>📋 Chamada</span>
                 <span>⭐ Avaliar</span>
@@ -986,15 +1014,14 @@
               </div>
             </div>
 
-            <!-- Reflexo de Vidro Diagonal -->
-            <div class="phone-glass-reflection"></div>
-            <!-- Home Bar Inferior do iOS -->
-            <div class="phone-home-bar"></div>
+            <!-- Home Bar Inferior -->
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
           </div>
 
-          <div class="text-center mt-3">
+          <!-- Legenda Abaixo do Celular -->
+          <div class="mt-3 text-center">
             <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-400 border border-amber-500/30">
-              Portal do Professor (Mobile)
+              3. Portal do Professor
             </span>
           </div>
         </div>
@@ -1002,17 +1029,20 @@
       </div>
 
       <!-- ==============================================
-           BADGES DE LOJAS & CAPTURA DE LISTA VIP BETA
+           STATUS REAL DO PROJETO & LISTA VIP DE INTERESSE
+           (Texto transparente: NÃO está disponível ainda, em desenvolvimento)
            ============================================== -->
-      <div class="mt-12 sm:mt-16 pt-10 border-t border-zinc-800/80 max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-zinc-900/60 via-[#141416] to-zinc-900/60 p-6 sm:p-8 rounded-3xl border">
+      <div class="mt-10 sm:mt-14 max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-zinc-900/80 via-[#141416] to-zinc-900/80 p-6 sm:p-8 rounded-3xl border border-zinc-800">
         
         <div class="text-center md:text-left space-y-1">
-          <span class="text-xs font-mono font-bold uppercase tracking-widest text-amber-400">ACESSO ANTECIPADO VIP</span>
-          <h4 class="text-lg sm:text-xl font-black text-white uppercase tracking-tight">
-            Quer ser um dos primeiros a testar o App?
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-mono text-[10px] font-bold">
+            <span>⚙️</span> FASE DE DESENVOLVIMENTO
+          </div>
+          <h4 class="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+            Quer ser avisado no lançamento oficial do App?
           </h4>
           <p class="text-xs text-zinc-400 max-w-md leading-relaxed">
-            Cadastre seu WhatsApp ou e-mail para receber o link de instalação beta antes do lançamento oficial.
+            Deixe seu contato para receber o link de teste e novidades assim que o aplicativo estiver pronto para download.
           </p>
         </div>
 
@@ -1027,177 +1057,42 @@
           >
           <button 
             type="submit" 
-            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-red-900/30 transition shrink-0 flex items-center justify-center gap-2"
+            class="w-full sm:w-auto px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-red-900/30 transition shrink-0 flex items-center justify-center gap-1.5"
           >
-            <span>QUERO O APP</span>
+            <span>SER AVISADO</span>
             <span>🚀</span>
           </button>
         </form>
       </div>
 
-      <!-- Badges das Lojas (App Store & Google Play) -->
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-zinc-400">
-        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800">
-          <span class="text-base text-white">🍎</span>
-          <span>Disponível em breve na <strong>App Store</strong> (iOS)</span>
+      <!-- Informação Transparente de Plataformas Planejadas (Sem afirmar que já está nas lojas) -->
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-zinc-500">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <span class="text-zinc-400">🍎</span>
+          <span>Planejado para lançamento futuro no <strong>iOS (iPhone)</strong></span>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800">
-          <span class="text-base text-emerald-400">▶</span>
-          <span>Disponível em breve no <strong>Google Play</strong> (Android)</span>
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <span class="text-zinc-400">🤖</span>
+          <span>Planejado para lançamento futuro no <strong>Android</strong></span>
         </div>
       </div>
 
     </div>
   </section>
 
-  <style>
-    /* ========================================================
-       ESTILOS DA VITRINE DE SMARTPHONES 3D INTERATIVA
-       ======================================================== */
-    .showcase-3d-perspective {
-      perspective: 1400px;
-      perspective-origin: center center;
-    }
-
-    .phone-device-card {
-      transform-style: preserve-3d;
-      will-change: transform, opacity, filter;
-      transition: transform 0.65s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.5s ease, filter 0.5s ease;
-    }
-
-    /* POSIÇÃO 1: ESQUERDA (PORTAL DO ALUNO) */
-    .phone-pos-left {
-      transform: translateX(-190px) rotateY(18deg) rotateX(2deg) scale(0.90) translateZ(-40px);
-      z-index: 10;
-      opacity: 0.85;
-      filter: brightness(0.92);
-    }
-    .phone-pos-left:hover {
-      opacity: 1;
-      filter: brightness(1);
-      transform: translateX(-180px) rotateY(12deg) scale(0.94) translateZ(-10px);
-    }
-
-    /* POSIÇÃO 2: CENTRO (SITE PRINCIPAL DO PROJETO - DESTAQUE) */
-    .phone-pos-center {
-      transform: translateX(0px) rotateY(0deg) rotateX(0deg) scale(1.05) translateZ(40px);
-      z-index: 25;
-      opacity: 1;
-      filter: brightness(1.02);
-    }
-
-    /* POSIÇÃO 3: DIREITA (PORTAL DO PROFESSOR) */
-    .phone-pos-right {
-      transform: translateX(190px) rotateY(-18deg) rotateX(2deg) scale(0.90) translateZ(-40px);
-      z-index: 10;
-      opacity: 0.85;
-      filter: brightness(0.92);
-    }
-    .phone-pos-right:hover {
-      opacity: 1;
-      filter: brightness(1);
-      transform: translateX(180px) rotateY(-12deg) scale(0.94) translateZ(-10px);
-    }
-
-    /* Dynamic Island Realista */
-    .phone-dynamic-island {
-      position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 72px;
-      height: 18px;
-      background: #000000;
-      border-radius: 9999px;
-      z-index: 40;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-    }
-
-    /* Barra Superior de Status do iPhone */
-    .phone-status-bar {
-      position: absolute;
-      top: 15px;
-      left: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 35;
-      pointer-events: none;
-    }
-
-    /* Home Bar Inferior */
-    .phone-home-bar {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 9999px;
-      z-index: 40;
-      pointer-events: none;
-    }
-
-    /* Reflexo de Vidro Diagonal */
-    .phone-glass-reflection {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 35%, transparent 60%);
-      border-radius: inherit;
-      pointer-events: none;
-      z-index: 30;
-    }
-
-    /* RESPONSIVIDADE PARA TELAS MENORES */
-    @media (max-width: 1024px) {
-      .phone-pos-left {
-        transform: translateX(-110px) rotateY(14deg) scale(0.82) translateZ(-50px);
-      }
-      .phone-pos-right {
-        transform: translateX(110px) rotateY(-14deg) scale(0.82) translateZ(-50px);
-      }
-      .phone-pos-center {
-        transform: translateX(0px) scale(0.96) translateZ(20px);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .showcase-3d-perspective {
-        min-height: 560px;
-        perspective: 900px;
-      }
-      .phone-pos-left {
-        transform: translateX(-70px) rotateY(12deg) scale(0.72) translateZ(-70px);
-      }
-      .phone-pos-right {
-        transform: translateX(70px) rotateY(-12deg) scale(0.72) translateZ(-70px);
-      }
-      .phone-pos-center {
-        transform: translateX(0px) scale(0.86) translateZ(30px);
-      }
-    }
-  </style>
-
   <script>
     // ========================================================
-    // SCRIPT DE CONTROLE INTERATIVO 3D DOS CELULARES
+    // SCRIPT DE NAVEGAÇÃO / SCROLL SUAVE PARA OS CELULARES
     // ========================================================
-    function setPhoneFocus(focused) {
-      const pAluno = document.getElementById('phone-aluno');
-      const pSite = document.getElementById('phone-site');
-      const pProf = document.getElementById('phone-professor');
+    function scrollToPhone(target) {
+      const container = document.getElementById('phones-carousel-container');
+      const cardAluno = document.getElementById('device-card-aluno');
+      const cardSite = document.getElementById('device-card-site');
+      const cardProf = document.getElementById('device-card-professor');
 
-      const btnAluno = document.getElementById('btn-focus-aluno');
-      const btnSite = document.getElementById('btn-focus-site');
-      const btnProf = document.getElementById('btn-focus-professor');
-
-      if (!pAluno || !pSite || !pProf) return;
+      const btnAluno = document.getElementById('tab-btn-aluno');
+      const btnSite = document.getElementById('tab-btn-site');
+      const btnProf = document.getElementById('tab-btn-professor');
 
       // Reseta botões
       [btnAluno, btnSite, btnProf].forEach(btn => {
@@ -1206,58 +1101,37 @@
         }
       });
 
-      // Aplica classes de posição 3D
-      if (focused === 'aluno') {
-        pAluno.className = "phone-device-card phone-pos-center cursor-pointer transition-all duration-700 ease-out relative z-30";
-        pSite.className = "phone-device-card phone-pos-right cursor-pointer transition-all duration-700 ease-out absolute";
-        pProf.className = "phone-device-card phone-pos-left cursor-pointer transition-all duration-700 ease-out absolute";
-        if (btnAluno) {
-          btnAluno.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 scale-105";
-        }
-      } else if (focused === 'professor') {
-        pProf.className = "phone-device-card phone-pos-center cursor-pointer transition-all duration-700 ease-out relative z-30";
-        pSite.className = "phone-device-card phone-pos-left cursor-pointer transition-all duration-700 ease-out absolute";
-        pAluno.className = "phone-device-card phone-pos-right cursor-pointer transition-all duration-700 ease-out absolute";
-        if (btnProf) {
-          btnProf.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-amber-600 text-white border-amber-500 shadow-lg shadow-amber-600/30 scale-105";
-        }
-      } else {
-        // Default: Site Oficial no centro
-        pSite.className = "phone-device-card phone-pos-center cursor-pointer transition-all duration-700 ease-out relative z-30";
-        pAluno.className = "phone-device-card phone-pos-left cursor-pointer transition-all duration-700 ease-out absolute";
-        pProf.className = "phone-device-card phone-pos-right cursor-pointer transition-all duration-700 ease-out absolute";
-        if (btnSite) {
-          btnSite.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 scale-105";
-        }
+      let targetEl = cardSite;
+      let activeBtn = btnSite;
+
+      if (target === 'aluno') {
+        targetEl = cardAluno;
+        activeBtn = btnAluno;
+      } else if (target === 'professor') {
+        targetEl = cardProf;
+        activeBtn = btnProf;
+      }
+
+      if (activeBtn) {
+        activeBtn.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 font-black";
+      }
+
+      if (container && targetEl) {
+        // Scroll horizontal suave até o celular selecionado
+        const offsetLeft = targetEl.offsetLeft - (container.clientWidth / 2) + (targetEl.clientWidth / 2);
+        container.scrollTo({ left: offsetLeft, behavior: 'smooth' });
       }
     }
 
-    // EFEITO DE TILT PARALLAX 3D AO MOVER O MOUSE NA VITRINE
-    (function init3DParallax() {
-      const scene = document.getElementById('showcase-3d-scene');
-      if (!scene) return;
+    function handlePhoneHover(el, scale, rotateY) {
+      el.style.transform = `perspective(1200px) rotateY(${rotateY}deg) scale(${scale}) translateZ(20px)`;
+      el.style.zIndex = '30';
+    }
 
-      scene.addEventListener('mousemove', (e) => {
-        const rect = scene.getBoundingClientRect();
-        const x = e.clientX - rect.left - (rect.width / 2);
-        const y = e.clientY - rect.top - (rect.height / 2);
-        
-        const rotateY = (x / rect.width) * 12; // -6deg a +6deg
-        const rotateX = -(y / rect.height) * 8; // -4deg a +4deg
-
-        const centerPhone = scene.querySelector('.phone-pos-center');
-        if (centerPhone) {
-          centerPhone.style.transform = `translateX(0px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(1.05) translateZ(40px)`;
-        }
-      });
-
-      scene.addEventListener('mouseleave', () => {
-        const centerPhone = scene.querySelector('.phone-pos-center');
-        if (centerPhone) {
-          centerPhone.style.transform = '';
-        }
-      });
-    })();
+    function handlePhoneLeave(el, scale, rotateY) {
+      el.style.transform = `perspective(1200px) rotateY(${rotateY}deg) scale(${scale})`;
+      el.style.zIndex = el.id === 'device-card-site' ? '20' : '10';
+    }
 
     // SUBMIT DO FORMULÁRIO DE LISTA VIP DO APP
     function handleAppVipSubmit(e) {
@@ -1268,7 +1142,7 @@
       const valor = input.value.trim();
       input.value = '';
 
-      alert('🥋 INSCRIÇÃO VIP CONFIRMADA!\n\nObrigado pelo interesse! Seu contato (' + valor + ') foi cadastrado com sucesso. Você receberá o convite de instalação do App oficial do CT BORÜ em primeira mão assim que a versão beta for liberada!');
+      alert('🥋 CADASTRO REALIZADO COM SUCESSO!\n\nSeu contato (' + valor + ') foi registrado na lista de espera. Assim que o aplicativo oficial do CT BORÜ for liberado para testes, você receberá a notificação em primeira mão!');
     }
   </script>
 
