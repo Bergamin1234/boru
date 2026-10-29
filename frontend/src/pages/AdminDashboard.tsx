@@ -204,6 +204,18 @@ export default function AdminDashboard() {
     fixado: false
   });
 
+  // Modal Configurações da Galeria de Fotos (Página Inicial)
+  const [showModalGaleria, setShowModalGaleria] = useState(false);
+  const [fotosGaleria, setFotosGaleria] = useState<any[]>([]);
+  const [carregandoGaleria, setCarregandoGaleria] = useState(false);
+  const [salvandoFotoGaleria, setSalvandoFotoGaleria] = useState(false);
+  const [novaFotoGaleria, setNovaFotoGaleria] = useState({
+    url: '',
+    titulo: '',
+    subtitulo: '',
+    fileira: 'superior' as 'superior' | 'inferior'
+  });
+
   // Modal Novo / Editar Produto na Loja
   const [showModalProduto, setShowModalProduto] = useState(false);
   const [produtoEditandoId, setProdutoEditandoId] = useState<string | null>(null);
@@ -253,6 +265,7 @@ export default function AdminDashboard() {
       showModalProf ||
       showModalEditarProf ||
       showModalAviso ||
+      showModalGaleria ||
       modalAcaoDia ||
       leadParaConverter
     );
@@ -281,6 +294,7 @@ export default function AdminDashboard() {
     showModalProf,
     showModalEditarProf,
     showModalAviso,
+    showModalGaleria,
     modalAcaoDia,
     leadParaConverter
   ]);
@@ -498,6 +512,66 @@ export default function AdminDashboard() {
         carregarDashboard();
       } catch (error) {
         alert('Erro ao excluir aviso.');
+      }
+    }
+  };
+
+  // ==========================================
+  // CONFIGURAÇÕES DA GALERIA DE FOTOS (PÁGINA INICIAL)
+  // ==========================================
+  const carregarFotosGaleria = async () => {
+    try {
+      setCarregandoGaleria(true);
+      const res = await adminApi.getGallery();
+      setFotosGaleria(res.data?.galeria || []);
+    } catch (error) {
+      console.error('Erro ao carregar fotos da galeria:', error);
+    } finally {
+      setCarregandoGaleria(false);
+    }
+  };
+
+  const adicionarFotoGaleria = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!novaFotoGaleria.url) {
+      alert('Por favor, informe a URL da imagem ou faça o upload.');
+      return;
+    }
+    try {
+      setSalvandoFotoGaleria(true);
+      await adminApi.addGalleryPhoto(novaFotoGaleria);
+      alert('Foto adicionada à galeria com sucesso!');
+      setNovaFotoGaleria({ url: '', titulo: '', subtitulo: '', fileira: 'superior' });
+      await carregarFotosGaleria();
+    } catch (error) {
+      alert('Erro ao adicionar foto à galeria.');
+    } finally {
+      setSalvandoFotoGaleria(false);
+    }
+  };
+
+  const removerFotoGaleria = async (id: string) => {
+    if (confirm('Tem certeza que deseja remover esta foto da galeria da página inicial?')) {
+      try {
+        await adminApi.deleteGalleryPhoto(id);
+        await carregarFotosGaleria();
+      } catch (error) {
+        alert('Erro ao excluir foto da galeria.');
+      }
+    }
+  };
+
+  const restaurarFotosPadrao = async () => {
+    if (confirm('Deseja restaurar as 6 fotos originais padrão da galeria? Isso substituirá as fotos atuais.')) {
+      try {
+        setCarregandoGaleria(true);
+        await adminApi.restoreGalleryDefault();
+        await carregarFotosGaleria();
+        alert('Galeria restaurada para as fotos padrão com sucesso!');
+      } catch (error) {
+        alert('Erro ao restaurar galeria.');
+      } finally {
+        setCarregandoGaleria(false);
       }
     }
   };
@@ -2425,12 +2499,24 @@ export default function AdminDashboard() {
                 <h2 className="text-xl font-bold text-white">Mural de Avisos da Academia</h2>
                 <p className="text-xs text-zinc-400">Publicações e recados oficiais vistos por todos os alunos no portal.</p>
               </div>
-              <button 
-                onClick={() => setShowModalAviso(true)}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
-              >
-                <span>➕ Publicar Novo Aviso</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    carregarFotosGaleria();
+                    setShowModalGaleria(true);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-500/60 text-amber-400 text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-black/40"
+                  title="Gerenciar e adicionar fotos da galeria da página inicial"
+                >
+                  <span>🖼️ Configurações da Galeria</span>
+                </button>
+                <button 
+                  onClick={() => setShowModalAviso(true)}
+                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-red-900/30"
+                >
+                  <span>➕ Publicar Novo Aviso</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3414,6 +3500,310 @@ export default function AdminDashboard() {
                 <button type="submit" className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">Publicar</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIGURAÇÕES DA GALERIA DE FOTOS */}
+      {showModalGaleria && (
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowModalGaleria(false);
+            }
+          }}
+          className="fixed inset-0 bg-black/85 flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto boru-scrollbar"
+        >
+          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-6 rounded-2xl w-full max-w-4xl shadow-2xl my-auto space-y-6 max-h-[92vh] overflow-y-auto boru-scrollbar">
+            
+            {/* CABEÇALHO */}
+            <div className="flex justify-between items-start border-b border-zinc-800/80 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl shrink-0">
+                  🖼️
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    Configurações da Galeria de Fotos
+                    <span className="text-[10px] bg-red-600/30 text-red-400 border border-red-500/40 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
+                      Página Inicial
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Adicione fotos do seu aparelho ou via URL e organize nas duas fileiras do carrossel da home.
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowModalGaleria(false)}
+                className="text-zinc-400 hover:text-white text-lg font-bold p-1 transition"
+                title="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* SEÇÃO 1: FORMULÁRIO DE ADIÇÃO DE NOVA FOTO */}
+            <div className="bg-[#1A1A1E] border border-zinc-800/90 rounded-xl p-4 sm:p-5 space-y-4 shadow-inner">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>➕ Adicionar Nova Foto</span>
+                </h4>
+                <span className="text-[11px] text-zinc-400">Suporta upload do celular/PC ou link direto</span>
+              </div>
+
+              <form onSubmit={adicionarFotoGaleria} className="space-y-4">
+                {/* UPLOAD DE ARQUIVO OU URL */}
+                <FileUploadInput
+                  label="📸 Imagem da Foto (Upload do PC / Celular ou Link Web)"
+                  value={novaFotoGaleria.url}
+                  onChange={(uploadedUrl) => setNovaFotoGaleria({ ...novaFotoGaleria, url: uploadedUrl })}
+                  folder="galeria_fotos"
+                  helperText="Clique em 'Escolher Arquivo Local' para selecionar foto do seu dispositivo (JPG, PNG, WEBP)"
+                />
+
+                {novaFotoGaleria.url && (
+                  <div className="relative h-40 w-full sm:w-72 rounded-xl overflow-hidden border border-zinc-700 bg-zinc-900 group">
+                    <img
+                      src={novaFotoGaleria.url}
+                      alt="Pré-visualização"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setNovaFotoGaleria({ ...novaFotoGaleria, url: '' })}
+                        className="px-2.5 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-lg"
+                      >
+                        🗑️ Limpar Foto
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-400 text-xs font-semibold mb-1">
+                      Título Superior (Em destaque)
+                    </label>
+                    <input 
+                      type="text" 
+                      value={novaFotoGaleria.titulo} 
+                      onChange={(e) => setNovaFotoGaleria({ ...novaFotoGaleria, titulo: e.target.value })} 
+                      className="w-full bg-[#141416] border border-zinc-700 rounded-lg p-2.5 text-xs sm:text-sm text-white focus:border-amber-500 outline-none transition" 
+                      placeholder="Ex: TÉCNICA DE CHUTE ou SPARRING" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-400 text-xs font-semibold mb-1">
+                      Subtítulo / Legenda (Em itálico)
+                    </label>
+                    <input 
+                      type="text" 
+                      value={novaFotoGaleria.subtitulo} 
+                      onChange={(e) => setNovaFotoGaleria({ ...novaFotoGaleria, subtitulo: e.target.value })} 
+                      className="w-full bg-[#141416] border border-zinc-700 rounded-lg p-2.5 text-xs sm:text-sm text-white focus:border-amber-500 outline-none transition" 
+                      placeholder="Ex: Potência, foco & guarda firme" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div>
+                    <label className="block text-zinc-400 text-xs font-semibold mb-1">
+                      Em qual fileira do carrossel exibir?
+                    </label>
+                    <select
+                      value={novaFotoGaleria.fileira}
+                      onChange={(e) => setNovaFotoGaleria({ ...novaFotoGaleria, fileira: e.target.value as 'superior' | 'inferior' })}
+                      className="w-full bg-[#141416] border border-zinc-700 rounded-lg p-2.5 text-xs sm:text-sm text-white focus:border-amber-500 outline-none transition"
+                    >
+                      <option value="superior">⬆️ Fileira Superior (Desliza para a esquerda)</option>
+                      <option value="inferior">⬇️ Fileira Inferior (Desliza para a direita)</option>
+                    </select>
+                  </div>
+                  <div className="sm:pt-5">
+                    <button
+                      type="submit"
+                      disabled={salvandoFotoGaleria || !novaFotoGaleria.url}
+                      className="w-full px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-red-900/40"
+                    >
+                      {salvandoFotoGaleria ? (
+                        <span>⏳ Salvando na Galeria...</span>
+                      ) : (
+                        <span>➕ Adicionar Foto à Galeria</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* SEÇÃO 2: LISTAGEM DE FOTOS ATIVAS NA GALERIA */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-white">Fotos Atuais no Carrossel</h4>
+                  <span className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full border border-zinc-700 font-mono">
+                    {fotosGaleria.length} foto(s)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={carregarFotosGaleria}
+                    disabled={carregandoGaleria}
+                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition"
+                    title="Recarregar lista"
+                  >
+                    🔄 Atualizar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={restaurarFotosPadrao}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-semibold transition"
+                    title="Voltar para as 6 fotos originais do CT BORÜ"
+                  >
+                    ⏮️ Restaurar Originais
+                  </button>
+                </div>
+              </div>
+
+              {carregandoGaleria ? (
+                <div className="py-12 text-center text-zinc-400 text-xs">
+                  Carregando fotos da galeria...
+                </div>
+              ) : fotosGaleria.length === 0 ? (
+                <div className="py-8 text-center bg-[#1A1A1E] border border-zinc-800 rounded-xl text-zinc-400 text-xs">
+                  Nenhuma foto cadastrada. Adicione uma foto no formulário acima ou clique em "Restaurar Originais".
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* GRUPO FILEIRA SUPERIOR */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                      <h5 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                        Fileira Superior ({fotosGaleria.filter(f => f.fileira === 'superior').length})
+                      </h5>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {fotosGaleria
+                        .filter(f => f.fileira === 'superior')
+                        .map(foto => (
+                          <div 
+                            key={foto.id} 
+                            className="bg-[#1A1A1E] border border-zinc-800 rounded-xl overflow-hidden group hover:border-red-600/60 transition shadow-md flex flex-col justify-between"
+                          >
+                            <div className="relative h-32 w-full bg-zinc-900 overflow-hidden">
+                              <img 
+                                src={foto.url} 
+                                alt={foto.titulo || 'Foto Galeria'} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                onError={(e: any) => { e.target.src = '/galeria-treino-chute.jpg'; }}
+                              />
+                              <span className="absolute top-2 left-2 text-[10px] font-mono uppercase bg-red-600/90 text-white px-2 py-0.5 rounded shadow">
+                                Superior
+                              </span>
+                            </div>
+
+                            <div className="p-3 space-y-1">
+                              <p className="text-xs font-bold text-white truncate">
+                                {foto.titulo || 'Sem título'}
+                              </p>
+                              <p className="text-[11px] text-zinc-400 truncate italic">
+                                {foto.subtitulo || 'Sem legenda'}
+                              </p>
+                              <div className="pt-2 flex justify-between items-center border-t border-zinc-800/80">
+                                <span className="text-[10px] text-zinc-500 font-mono">
+                                  {foto.criadoEm ? new Date(foto.criadoEm).toLocaleDateString('pt-BR') : 'Padrão'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removerFotoGaleria(foto.id)}
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded text-xs transition flex items-center gap-1 font-semibold"
+                                  title="Excluir foto da galeria"
+                                >
+                                  🗑️ Excluir
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* GRUPO FILEIRA INFERIOR */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                      <h5 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                        Fileira Inferior ({fotosGaleria.filter(f => f.fileira === 'inferior').length})
+                      </h5>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {fotosGaleria
+                        .filter(f => f.fileira === 'inferior')
+                        .map(foto => (
+                          <div 
+                            key={foto.id} 
+                            className="bg-[#1A1A1E] border border-zinc-800 rounded-xl overflow-hidden group hover:border-amber-500/60 transition shadow-md flex flex-col justify-between"
+                          >
+                            <div className="relative h-32 w-full bg-zinc-900 overflow-hidden">
+                              <img 
+                                src={foto.url} 
+                                alt={foto.titulo || 'Foto Galeria'} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                onError={(e: any) => { e.target.src = '/galeria-mestre-aluno.jpg'; }}
+                              />
+                              <span className="absolute top-2 left-2 text-[10px] font-mono uppercase bg-amber-600/90 text-white px-2 py-0.5 rounded shadow">
+                                Inferior
+                              </span>
+                            </div>
+
+                            <div className="p-3 space-y-1">
+                              <p className="text-xs font-bold text-white truncate">
+                                {foto.titulo || 'Sem título'}
+                              </p>
+                              <p className="text-[11px] text-zinc-400 truncate italic">
+                                {foto.subtitulo || 'Sem legenda'}
+                              </p>
+                              <div className="pt-2 flex justify-between items-center border-t border-zinc-800/80">
+                                <span className="text-[10px] text-zinc-500 font-mono">
+                                  {foto.criadoEm ? new Date(foto.criadoEm).toLocaleDateString('pt-BR') : 'Padrão'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removerFotoGaleria(foto.id)}
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded text-xs transition flex items-center gap-1 font-semibold"
+                                  title="Excluir foto da galeria"
+                                >
+                                  🗑️ Excluir
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RODAPÉ DO MODAL */}
+            <div className="flex justify-end pt-4 border-t border-zinc-800/80">
+              <button 
+                type="button" 
+                onClick={() => setShowModalGaleria(false)} 
+                className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition"
+              >
+                Concluir & Fechar
+              </button>
+            </div>
+
           </div>
         </div>
       )}

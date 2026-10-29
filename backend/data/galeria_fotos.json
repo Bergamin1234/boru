@@ -1,0 +1,56 @@
+[
+  {
+    "id": "foto-1",
+    "url": "/galeria-treino-chute.jpg",
+    "titulo": "Técnica de Chute",
+    "subtitulo": "Potência & Guarda Firme",
+    "fileira": "superior",
+    "ordem": 1,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-2",
+    "url": "/hero-ct-combat.jpg",
+    "titulo": "Sparring Supervisionado",
+    "subtitulo": "Tatame Principal do CT",
+    "fileira": "superior",
+    "ordem": 2,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-3",
+    "url": "/ct-boru-estrutura.jpg",
+    "titulo": "Infraestrutura",
+    "subtitulo": "Sacos Pesados & Ringue",
+    "fileira": "superior",
+    "ordem": 3,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-4",
+    "url": "/galeria-mestre-aluno.jpg",
+    "titulo": "Disciplina & Respeito",
+    "subtitulo": "Mestre Felipe Borü & Alunos",
+    "fileira": "inferior",
+    "ordem": 4,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-5",
+    "url": "/modalidade-muaythai.jpg",
+    "titulo": "Tradição Tailandesa",
+    "subtitulo": "Arte das 8 Armas",
+    "fileira": "inferior",
+    "ordem": 5,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-6",
+    "url": "/oque-e-ct-boru.jpg",
+    "titulo": "Evolução Técnica",
+    "subtitulo": "Velocidade & Combinações",
+    "fileira": "inferior",
+    "ordem": 6,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  }
+]

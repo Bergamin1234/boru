@@ -1990,13 +1990,54 @@
 
   <script>
     // ========================================================
-    // MOTOR DE LOOP CONTÍNUO CONSTANTE E SUAVE (SEM LINHA E SEM MUDAR VELOCIDADE)
+    // MOTOR DE LOOP CONTÍNUO CONSTANTE E SUAVE COM DADOS DINÂMICOS DA API
     // ========================================================
     (function initGalleryLoop() {
       const rowTop = document.getElementById('gallery-row-top');
       const rowBottom = document.getElementById('gallery-row-bottom');
 
       if (!rowTop || !rowBottom) return;
+
+      function createCardHtml(foto, index) {
+        const borderHover = index % 2 === 0 ? 'hover:border-red-600/70' : 'hover:border-amber-500/70';
+        const tagColor = index % 2 === 0 ? 'text-red-400' : 'text-amber-400';
+        return `
+          <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 ${borderHover} shadow-xl relative group transition duration-300">
+            <img src="${foto.url}" alt="${foto.titulo || 'CT BORÜ'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='/galeria-treino-chute.jpg'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+              <span class="text-[9px] font-mono uppercase tracking-widest ${tagColor} font-bold">${foto.titulo || 'CT BORÜ MUAY THAI'}</span>
+              <span class="text-xs font-black text-white uppercase italic">${foto.subtitulo || 'Treinamento & Disciplina'}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function populateRow(container, fotos) {
+        if (!fotos || fotos.length === 0) return;
+        let baseList = [...fotos];
+        while (baseList.length < 3) {
+          baseList = baseList.concat(fotos);
+        }
+        // Clona a lista completa para o loop contínuo suave
+        const fullList = [...baseList, ...baseList];
+        container.innerHTML = fullList.map((foto, idx) => createCardHtml(foto, idx)).join('');
+      }
+
+      // Sincroniza dinamicamente com o backend da galeria gerenciado pelo Admin
+      fetch('/api/galeria')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.galeria && Array.isArray(data.galeria) && data.galeria.length > 0) {
+            const fotosTop = data.galeria.filter(f => f.fileira === 'superior');
+            const fotosBottom = data.galeria.filter(f => f.fileira === 'inferior');
+
+            if (fotosTop.length > 0) populateRow(rowTop, fotosTop);
+            if (fotosBottom.length > 0) populateRow(rowBottom, fotosBottom);
+          }
+        })
+        .catch(() => {
+          // Mantém as fotos padrão estáticas já presentes no HTML caso ocorra erro
+        });
 
       let posTop = 0;
       let posBottom = 0;

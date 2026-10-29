@@ -471,6 +471,140 @@ app.delete('/api/admin/avisos/:id', async (req, res) => {
   }
 });
 
+
+// ==========================================
+// CONFIGURAÇÕES DA GALERIA DE FOTOS (ADMIN & PÚBLICO)
+// ==========================================
+const galeriaFilePath = path.join(__dirname, '../data/galeria_fotos.json');
+
+const fotosPadraoGaleria = [
+  {
+    "id": "foto-1",
+    "url": "/galeria-treino-chute.jpg",
+    "titulo": "Técnica de Chute",
+    "subtitulo": "Potência & Guarda Firme",
+    "fileira": "superior",
+    "ordem": 1,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-2",
+    "url": "/hero-ct-combat.jpg",
+    "titulo": "Sparring Supervisionado",
+    "subtitulo": "Tatame Principal do CT",
+    "fileira": "superior",
+    "ordem": 2,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-3",
+    "url": "/ct-boru-estrutura.jpg",
+    "titulo": "Infraestrutura",
+    "subtitulo": "Sacos Pesados & Ringue",
+    "fileira": "superior",
+    "ordem": 3,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-4",
+    "url": "/galeria-mestre-aluno.jpg",
+    "titulo": "Disciplina & Respeito",
+    "subtitulo": "Mestre Felipe Borü & Alunos",
+    "fileira": "inferior",
+    "ordem": 4,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-5",
+    "url": "/modalidade-muaythai.jpg",
+    "titulo": "Tradição Tailandesa",
+    "subtitulo": "Arte das 8 Armas",
+    "fileira": "inferior",
+    "ordem": 5,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-6",
+    "url": "/oque-e-ct-boru.jpg",
+    "titulo": "Evolução Técnica",
+    "subtitulo": "Velocidade & Combinações",
+    "fileira": "inferior",
+    "ordem": 6,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  }
+];
+
+function carregarGaleria(): any[] {
+  try {
+    if (fs.existsSync(galeriaFilePath)) {
+      const data = JSON.parse(fs.readFileSync(galeriaFilePath, 'utf8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch (e) {}
+  return fotosPadraoGaleria;
+}
+
+function salvarGaleria(fotos: any[]) {
+  try {
+    const dir = path.dirname(galeriaFilePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(galeriaFilePath, JSON.stringify(fotos, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar galeria:', e);
+  }
+}
+
+// Listar fotos da galeria (Público & Admin)
+app.get('/api/galeria', (_req, res) => {
+  const fotos = carregarGaleria();
+  res.json(fotos);
+});
+
+// Adicionar nova foto na galeria (Admin)
+app.post('/api/admin/galeria', (req, res) => {
+  const { url, titulo, subtitulo, fileira } = req.body;
+  if (!url || !url.trim()) {
+    return res.status(400).json({ erro: 'A URL da foto é obrigatória.' });
+  }
+
+  const fotos = carregarGaleria();
+  const novaFoto = {
+    id: 'foto-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+    url: url.trim(),
+    titulo: (titulo && titulo.trim()) || 'Tatame CT BORÜ',
+    subtitulo: (subtitulo && subtitulo.trim()) || 'Treino & Evolução',
+    fileira: fileira === 'inferior' ? 'inferior' : 'superior',
+    ordem: fotos.length + 1,
+    criadoEm: new Date().toISOString()
+  };
+
+  fotos.push(novaFoto);
+  salvarGaleria(fotos);
+
+  res.json({ mensagem: 'Foto adicionada à galeria com sucesso!', foto: novaFoto, total: fotos.length });
+});
+
+// Excluir foto da galeria (Admin)
+app.delete('/api/admin/galeria/:id', (req, res) => {
+  const { id } = req.params;
+  let fotos = carregarGaleria();
+  const inicial = fotos.length;
+  fotos = fotos.filter(f => f.id !== id);
+
+  if (fotos.length === inicial) {
+    return res.status(404).json({ erro: 'Foto não encontrada.' });
+  }
+
+  salvarGaleria(fotos);
+  res.json({ mensagem: 'Foto removida da galeria.', total: fotos.length });
+});
+
+// Restaurar fotos padrão da galeria (Admin)
+app.post('/api/admin/galeria/restaurar', (_req, res) => {
+  salvarGaleria(fotosPadraoGaleria);
+  res.json({ mensagem: 'Galeria restaurada para o padrão oficial com sucesso!', fotos: fotosPadraoGaleria });
+});
+
 // ==========================================
 // LOJA & MERCADO BORÜ (BETA)
 // ==========================================
