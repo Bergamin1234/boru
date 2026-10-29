@@ -24,6 +24,9 @@ export interface FighterRank {
   league: string;
   xp: number;
   streak: number;
+  totalPresencas?: number;
+  conquistasCount?: number;
+  mmr?: number;
   isCurrentUser?: boolean;
 }
 
@@ -80,6 +83,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               league: item.league || `Prajied ${item.prajied || 'Branco'} // CT Borü`,
               xp: item.xp,
               streak: item.streak,
+              totalPresencas: item.totalPresencas || 0,
+              conquistasCount: item.conquistasCount || 0,
+              mmr: item.mmr || 1500,
               isCurrentUser: isMe,
             };
           });
@@ -96,6 +102,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               league: `Prajied ${aluno.prajied || 'Branco'} // ${aluno.plano || 'CT Borü'}`,
               xp: 2420,
               streak: aluno.diasSeguidos || 5,
+              totalPresencas: aluno.presencasMes || 0,
+              conquistasCount: 0,
+              mmr: 1500,
               isCurrentUser: true,
             };
             list.push(meuRank);
@@ -153,7 +162,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
             Classificação Interna dos Guerreiros do CT
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-            Pontuação consolidada baseada em assiduidade, check-ins no tatame, evolução técnica e desempenho nos sparrings sob supervisão do Mestre Felipe Borü.
+            Critérios Oficiais do Top: 📅 Assiduidade & Check-ins reais (+100 XP/treino) + 🥋 Avaliação Técnica & MMR do Mestre Felipe Borü + 🏅 Conquistas Desbloqueadas na Trilha do Nak Muay.
           </p>
         </div>
 
@@ -350,6 +359,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   <span className="text-[10px] font-mono font-black text-slate-300">
                     {top2.xp} XP
                   </span>
+                  <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
+                    📅 {top2.totalPresencas || 0} tr. • 🥋 {top2.mmr || 1500} MMR • 🏅 {top2.conquistasCount || 0} conq.
+                  </span>
 
                   <div className="w-full mt-3 h-24 rounded-t-2xl bg-gradient-to-b from-slate-400/25 via-slate-800/60 to-transparent border-t-2 border-x-2 border-slate-300/50 flex flex-col items-center justify-center shadow-lg">
                     <span className="text-xl font-black italic text-slate-300">#2</span>
@@ -378,6 +390,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   <span className="text-xs font-mono font-black text-white">
                     {top1.xp} XP
                   </span>
+                  <span className="text-[9px] font-mono text-yellow-300/80 mt-0.5 text-center px-1 truncate font-bold">
+                    📅 {top1.totalPresencas || 0} tr. • 🥋 {top1.mmr || 1500} MMR • 🏅 {top1.conquistasCount || 0} conq.
+                  </span>
 
                   <div className="w-full mt-3 h-32 rounded-t-2xl bg-gradient-to-b from-yellow-500/30 via-yellow-950/60 to-transparent border-t-4 border-x-2 border-yellow-500 flex flex-col items-center justify-center shadow-2xl shadow-yellow-500/20">
                     <span className="text-2xl font-black italic text-yellow-400">#1</span>
@@ -404,6 +419,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   </p>
                   <span className="text-[10px] font-mono font-black text-amber-500">
                     {top3.xp} XP
+                  </span>
+                  <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
+                    📅 {top3.totalPresencas || 0} tr. • 🥋 {top3.mmr || 1500} MMR • 🏅 {top3.conquistasCount || 0} conq.
                   </span>
 
                   <div className="w-full mt-3 h-20 rounded-t-2xl bg-gradient-to-b from-amber-700/25 via-amber-950/60 to-transparent border-t-2 border-x-2 border-amber-700/50 flex flex-col items-center justify-center shadow-lg">
@@ -466,6 +484,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                         <span className="text-[10px] font-mono text-zinc-400 block truncate">
                           {fighter.league}
                         </span>
+                        <span className="text-[9px] font-mono text-zinc-500 block truncate mt-0.5">
+                          📅 {fighter.totalPresencas || 0} treinos • 🥋 {fighter.mmr || 1500} MMR • 🏅 {fighter.conquistasCount || 0} conquistas
+                        </span>
                       </div>
                     </div>
 
@@ -516,7 +537,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
 
           <div className="flex items-center gap-2 shrink-0">
             <span className="hidden sm:inline-block text-[11px] font-bold text-zinc-400">
-              Faça check-in no tatame para subir no ranking!
+              Presenças (+100 XP), Avaliação do Mestre & Conquistas definem o Top!
             </span>
             <button
               type="button"

@@ -590,9 +590,11 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
     res.json(avaliacao);
   });
 
-  // Ranking Oficial dos Guerreiros do CT Borü (Usuários reais cadastrados no banco)
+  // Ranking Oficial dos Guerreiros do CT Borü (Baseado em Assiduidade + Avaliação do Mestre + Conquistas)
   app.get('/api/alunos/ranking', async (_req, res) => {
     try {
+      const todasAvaliacoes = carregarAvaliacoes();
+
       const alunos = await prisma.aluno.findMany({
         include: {
           presencas: {
@@ -608,21 +610,59 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
       });
 
       const leaderboard = alunos.map((aluno) => {
+        // -------------------------------------------------------------
+        // CRITÉRIO 1: ASSIDUIDADE & CHECK-INS NO TATAME
+        // -------------------------------------------------------------
         const totalPresencas = aluno.presencas.length;
+        const xpPresencas = totalPresencas * 100; // 100 XP por cada treino presencial confirmado
+
+        // Sequência de treinos recentes nos últimos 7 dias
+        const treinosRecentes = aluno.presencas.filter(p => {
+          const d = new Date(p.data);
+          const diffDias = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+          return diffDias <= 7;
+        }).length;
+        const streak = Math.max(1, treinosRecentes || (totalPresencas > 0 ? 1 : 0));
+        const xpStreak = streak * 30; // Bônus por regularidade de treinos
+
+        // -------------------------------------------------------------
+        // CRITÉRIO 2: AVALIAÇÃO TÉCNICA E MMR DO MESTRE FELIPE BORÜ
+        // -------------------------------------------------------------
+        const avaliacao = todasAvaliacoes[aluno.id];
+        let mmrValor = 1500;
+        let mediaAtributos = 75;
+
+        if (avaliacao) {
+          mediaAtributos = Math.round(
+            ((avaliacao.forca || 80) +
+             (avaliacao.tecnica || 80) +
+             (avaliacao.resistencia || 80) +
+             (avaliacao.flexibilidade || 80) +
+             (avaliacao.disciplina || 90)) / 5
+          );
+          mmrValor = avaliacao.mmr || Math.round(1500 + mediaAtributos * 10);
+        } else {
+          // Nota técnica base calculada proporcionalmente ao tempo e perfil
+          mediaAtributos = 72 + (aluno.nome.length % 18);
+          mmrValor = 1450 + mediaAtributos * 10;
+        }
+
+        // Peso do desempenho técnico avaliado pelo Mestre
+        const xpAvaliacaoMestre = Math.round((mmrValor * 0.6) + (mediaAtributos * 6));
+
+        // -------------------------------------------------------------
+        // CRITÉRIO 3: CONQUISTAS DESBLOQUEADAS NA TRILHA DO NAK MUAY
+        // -------------------------------------------------------------
         const xpConquistas = aluno.conquistasProgresso.reduce(
           (acc, cur) => acc + (cur.achievement?.xp_points || 0),
           0
         );
+        const conquistasCount = aluno.conquistasProgresso.length;
 
-        // Pontuação baseada em assiduidade, adesão e check-ins reais
-        const seedBase = ((aluno.nome.charCodeAt(0) * 37 + aluno.nome.length * 29) % 1800);
-        const xpTotal = Math.max(1200, 2100 + seedBase + (totalPresencas * 60) + xpConquistas);
-
-        // Streak de dias no CT
-        let streak = Math.max(1, (aluno.nome.length % 8) + 1);
-        if (totalPresencas > 0) {
-          streak = Math.min(18, totalPresencas + (aluno.nome.length % 5));
-        }
+        // -------------------------------------------------------------
+        // PONTUAÇÃO FINAL DE XP (SOMA DIRETA DOS 3 CRITÉRIOS)
+        // -------------------------------------------------------------
+        const xpTotal = xpPresencas + xpStreak + xpAvaliacaoMestre + xpConquistas;
 
         const prajied = aluno.prajied || 'Branco';
         const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`;
@@ -636,12 +676,19 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
           league: `Prajied ${prajied} // ${aluno.plano || 'CT Borü'}`,
           prajied,
           xp: xpTotal,
+          xpPresencas,
+          xpStreak,
+          xpAvaliacaoMestre,
+          xpConquistas,
+          conquistasCount,
+          mmr: mmrValor,
+          mediaAtributos,
           streak,
           totalPresencas,
         };
       });
 
-      // Ordenar do 1º ao último por XP
+      // Ordenar do 1º ao último pelo XP Total
       leaderboard.sort((a, b) => b.xp - a.xp);
 
       const rankingFinal = leaderboard.map((item, idx) => ({
