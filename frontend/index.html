@@ -1815,66 +1815,221 @@
   </section>
 
   <!-- ================= SEÇÃO: GALERIA DO CT (ATMOSFERA) ================= -->
-  <section id="galeria" class="py-24 bg-[#141416]/85 backdrop-blur-[2px] border-y border-zinc-800/80 relative z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <!-- ========================================================
+       SEÇÃO: GALERIA DO CT (PORTAL SCANNER DE FOTOS)
+       Inspirado no conceito "Scanner de Cartões / Scanner de Logotipo" (DesignsCode)
+       2 Fileiras (1 em cima e 1 embaixo) de 3 fotos em loop contínuo
+       Feixe de Scanner Laser Vertical Neon no centro
+       Permite puxar com o mouse/touch para acelerar a velocidade
+       ======================================================== -->
+  <section id="galeria" class="py-20 sm:py-32 bg-[#0B0B0C] relative z-10 overflow-hidden border-y border-zinc-800/80 select-none">
+    
+    <!-- Luzes de Atmosfera de Fundo -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[160px] pointer-events-none"></div>
+    <div class="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[130px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       
-      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Dia a Dia no Tatame</h2>
-        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+      <!-- CABEÇALHO DA GALERIA -->
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/70 border border-red-500/40 text-red-400 font-mono font-bold uppercase tracking-widest text-xs shadow-lg shadow-red-950/40">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>SCANNER VISUAL // PORTAL DO TATAME</span>
+        </div>
+
+        <h2 class="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
           Galeria de Fotos do CT
-        </h3>
-        <p class="text-zinc-400 text-sm">
-          Veja a energia, a infraestrutura e a união da nossa equipe nos treinos e graduações.
+        </h2>
+
+        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mx-auto">
+          Veja a energia, a disciplina e a evolução dos nossos guerreiros no tatame. As fotos passam continuamente pelo feixe do portal — <span class="text-amber-400 font-bold">clique e arraste com o mouse para acelerar!</span>
         </p>
+
+        <!-- Indicador de Arraste / Aceleração -->
+        <div class="pt-1 flex items-center justify-center gap-3 text-xs font-mono text-zinc-400">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900/80 border border-zinc-800">
+            <span class="text-amber-400 animate-bounce">⚡</span> Puxe para acelerar
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-900/80 border border-zinc-800">
+            <span class="text-red-400">●</span> Loop infinito contínuo
+          </span>
+        </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      <!-- ========================================================
+           PORTAL SCANNER CONTAINER (COM FEIXE LASER VERTICAL NO CENTRO)
+           ======================================================== -->
+      <div id="gallery-scanner-wrapper" class="relative w-full max-w-6xl mx-auto py-4 cursor-grab active:cursor-grabbing overflow-hidden rounded-3xl bg-[#0E0E11]/90 border border-zinc-800/90 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(220,38,38,0.15)]">
         
-        <!-- Foto 1: Chute & Manopla -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/galeria-treino-chute.jpg" alt="Treino de Chute e Manopla no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-600/90 px-3 py-1 rounded shadow">Chute & Manopla</span>
+        <!-- ================= FEIXE DE SCANNER VERTICAL (LASER NEON CENTRAL) ================= -->
+        <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1.5 z-40 pointer-events-none">
+          <!-- Linha Laser Central -->
+          <div class="w-full h-full bg-gradient-to-b from-transparent via-red-500 to-transparent shadow-[0_0_20px_#ef4444,0_0_40px_#f59e0b]"></div>
+          
+          <!-- Brilho Amplo de Varredura Laser -->
+          <div class="absolute inset-y-0 -left-6 -right-6 bg-gradient-to-r from-transparent via-red-500/25 to-transparent blur-md"></div>
+          
+          <!-- Emissor Superior do Scanner -->
+          <div class="absolute top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black border border-red-500 text-[8px] font-mono font-black uppercase tracking-widest text-red-400 whitespace-nowrap shadow-lg shadow-red-500/50 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
+            <span>SCANNER // CT BORÜ</span>
+          </div>
+
+          <!-- Emissor Inferior do Scanner -->
+          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black border border-amber-500 text-[8px] font-mono font-black uppercase tracking-widest text-amber-400 whitespace-nowrap shadow-lg shadow-amber-500/50">
+            <span>PORTAL ATIVO</span>
           </div>
         </div>
 
-        <!-- Foto 2: Sparring Técnico -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/hero-ct-combat.jpg" alt="Sparring e Disciplina no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-amber-500/90 text-black px-3 py-1 rounded shadow">Sparring Técnico</span>
+        <!-- Gradientes de fade nas laterais (Efeito de Portal infinito entrando e saindo) -->
+        <div class="absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-[#0E0E11] to-transparent z-30 pointer-events-none"></div>
+        <div class="absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-[#0E0E11] to-transparent z-30 pointer-events-none"></div>
+
+        <!-- ================= AS 2 FILEIRAS DE FOTOS (1 EM CIMA E 1 EMBAIXO) ================= -->
+        <div class="py-6 sm:py-8 space-y-4 sm:space-y-6">
+          
+          <!-- FILEIRA 1 (SUPERIOR) - 3 FOTOS DUPLICADAS EM STREAMING CONTÍNUO -->
+          <div class="overflow-hidden w-full relative">
+            <div id="scanner-row-top" class="flex gap-4 sm:gap-6 will-change-transform">
+              
+              <!-- CARD FOTO 1: CHUTE & MANOPLA -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
+                  <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #01</div>
+              </div>
+
+              <!-- CARD FOTO 2: SPARRING TÉCNICO -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #02</div>
+              </div>
+
+              <!-- CARD FOTO 3: ESTRUTURA DO CT -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #03</div>
+              </div>
+
+              <!-- CLONES PARA LOOP PERFEITO CONTÍNUO (REPETIÇÃO) -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
+                  <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #01</div>
+              </div>
+
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #02</div>
+              </div>
+
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #03</div>
+              </div>
+
+            </div>
           </div>
+
+          <!-- FILEIRA 2 (INFERIOR) - 3 FOTOS DUPLICADAS EM STREAMING CONTÍNUO -->
+          <div class="overflow-hidden w-full relative">
+            <div id="scanner-row-bottom" class="flex gap-4 sm:gap-6 will-change-transform">
+              
+              <!-- CARD FOTO 4: MESTRE & ALUNO -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #04</div>
+              </div>
+
+              <!-- CARD FOTO 5: CANTO DE RINGUE -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #05</div>
+              </div>
+
+              <!-- CARD FOTO 6: TREINO DE MANOPLAS -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #06</div>
+              </div>
+
+              <!-- CLONES PARA LOOP PERFEITO CONTÍNUO (REPETIÇÃO) -->
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #04</div>
+              </div>
+
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #05</div>
+              </div>
+
+              <div class="scanner-photo-card shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl relative group">
+                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
+                </div>
+                <div class="scanner-card-hud">SCAN #06</div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
-        <!-- Foto 3: Tatame & Saúde -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-700/90 px-3 py-1 rounded shadow">Tatame & Saúde</span>
+        <!-- Barra Inferior de Controle & Aceleração -->
+        <div class="px-6 py-3 border-t border-zinc-800/80 bg-zinc-950/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex items-center gap-2 text-zinc-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Varredura Holográfica: <strong>Ativa (Loop 360°)</strong></span>
           </div>
-        </div>
-
-        <!-- Foto 4: Mestre & Aluno -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/galeria-mestre-aluno.jpg" alt="Mestre Felipe Borü e Aluno no CT BORÜ" class="w-full h-full object-cover object-top group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-600/90 px-3 py-1 rounded shadow">Irmandade & Treino</span>
-          </div>
-        </div>
-
-        <!-- Foto 5: Canto de Ringue -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/modalidade-muaythai.jpg" alt="Canto de Ringue e Orientação no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-zinc-800 px-3 py-1 rounded shadow">Canto de Ringue</span>
-          </div>
-        </div>
-
-        <!-- Foto 6: Treino de Manoplas & Técnica -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/oque-e-ct-boru.jpg" alt="Treino Técnico de Manopla no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-amber-600/90 text-white px-3 py-1 rounded shadow">Treino de Manoplas</span>
+          <div class="flex items-center gap-2 text-zinc-400">
+            <span>Velocidade Dinâmica:</span>
+            <span id="scanner-speed-display" class="px-2 py-0.5 rounded bg-zinc-800 font-bold text-amber-400">1.2x</span>
+            <span class="text-zinc-500">(puxe para acelerar)</span>
           </div>
         </div>
 
@@ -1883,7 +2038,176 @@
     </div>
   </section>
 
-  <!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
+  <style>
+    /* ========================================================
+       ESTILOS DO SCANNER DE CARTÕES / PORTAL DE FOTOS
+       ======================================================== */
+    .scanner-photo-card {
+      position: relative;
+      transition: filter 0.3s ease, border-color 0.3s ease;
+    }
+
+    .scanner-photo-card:hover {
+      border-color: rgba(239, 68, 68, 0.7);
+      box-shadow: 0 0 25px rgba(220, 38, 38, 0.35);
+    }
+
+    .scanner-card-hud {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      font-family: monospace;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      pointer-events: none;
+    }
+
+    /* Brilho ao cruzar a linha do scanner */
+    .scanner-crossed {
+      filter: brightness(1.25) contrast(1.1);
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+    }
+  </style>
+
+  <script>
+    // ========================================================
+    // MOTOR DE STREAMING CONTÍNUO, LOOP E ACELERAÇÃO AO PUXAR
+    // ========================================================
+    (function initGalleryScanner() {
+      const wrapper = document.getElementById('gallery-scanner-wrapper');
+      const rowTop = document.getElementById('scanner-row-top');
+      const rowBottom = document.getElementById('scanner-row-bottom');
+      const speedDisplay = document.getElementById('scanner-speed-display');
+
+      if (!wrapper || !rowTop || !rowBottom) return;
+
+      let posTop = 0;
+      let posBottom = 0;
+      
+      const baseSpeed = 1.2; // Velocidade base contínua em px/frame
+      let currentSpeed = baseSpeed;
+      let targetSpeed = baseSpeed;
+
+      let isDragging = false;
+      let startX = 0;
+      let lastX = 0;
+      let lastTime = 0;
+      let dragVelocity = 0;
+
+      // Largura da metade (conjunto original de 3 fotos com gap)
+      // Calculada dinamicamente para garantir loop sem emenda
+      function getHalfWidth(row) {
+        return row.scrollWidth / 2;
+      }
+
+      // Animação contínua com requestAnimationFrame
+      function step() {
+        // Suaviza a velocidade atual em direção à velocidade alvo (inércia suave)
+        if (!isDragging) {
+          targetSpeed = baseSpeed;
+          currentSpeed += (targetSpeed - currentSpeed) * 0.04;
+        }
+
+        const halfWidthTop = getHalfWidth(rowTop) || 1000;
+        const halfWidthBottom = getHalfWidth(rowBottom) || 1000;
+
+        // Fileira superior corre para a esquerda
+        posTop -= currentSpeed;
+        if (posTop <= -halfWidthTop) {
+          posTop += halfWidthTop;
+        } else if (posTop > 0) {
+          posTop -= halfWidthTop;
+        }
+
+        // Fileira inferior corre sincronizada (ou levemente invertida/deslocada para riqueza visual)
+        posBottom -= currentSpeed * 1.05;
+        if (posBottom <= -halfWidthBottom) {
+          posBottom += halfWidthBottom;
+        } else if (posBottom > 0) {
+          posBottom -= halfWidthBottom;
+        }
+
+        rowTop.style.transform = 'translate3d(' + posTop + 'px, 0, 0)';
+        rowBottom.style.transform = 'translate3d(' + posBottom + 'px, 0, 0)';
+
+        // Atualiza display de velocidade
+        if (speedDisplay) {
+          const ratio = (Math.abs(currentSpeed) / baseSpeed).toFixed(1);
+          speedDisplay.textContent = ratio + 'x';
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      requestAnimationFrame(step);
+
+      // ==========================================
+      // INTERAÇÃO: PUXAR COM O MOUSE PARA ACELERAR
+      // ==========================================
+      function onStart(clientX) {
+        isDragging = true;
+        startX = clientX;
+        lastX = clientX;
+        lastTime = performance.now();
+        dragVelocity = 0;
+      }
+
+      function onMove(clientX) {
+        if (!isDragging) return;
+        const now = performance.now();
+        const dt = Math.max(1, now - lastTime);
+        const dx = clientX - lastX;
+
+        lastX = clientX;
+        lastTime = now;
+
+        // Puxar acelera o movimento na direção do arrasto
+        dragVelocity = (dx / dt) * 18;
+        
+        // Aumenta a velocidade consideravelmente ao puxar
+        currentSpeed = baseSpeed + Math.abs(dragVelocity) * 1.5;
+        if (dx > 0) {
+          // Se puxou para a direita, inverte ou acelera suavemente
+          posTop += dx * 1.2;
+          posBottom += dx * 1.2;
+        } else {
+          posTop += dx * 1.2;
+          posBottom += dx * 1.2;
+        }
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        // Inércia final após soltar
+        currentSpeed = Math.min(14, baseSpeed + Math.abs(dragVelocity) * 1.2);
+      }
+
+      // Mouse Events
+      wrapper.addEventListener('mousedown', (e) => onStart(e.clientX));
+      window.addEventListener('mousemove', (e) => onMove(e.clientX));
+      window.addEventListener('mouseup', onEnd);
+
+      // Touch Events (Celular / Tablet)
+      wrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) onStart(e.touches[0].clientX);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) onMove(e.touches[0].clientX);
+      }, { passive: true });
+
+      window.addEventListener('touchend', onEnd, { passive: true });
+    })();
+  </script>
+
+<!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
   <section id="faq" class="py-24 bg-[#0B0B0C]/80 backdrop-blur-[2px] relative z-10">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       
