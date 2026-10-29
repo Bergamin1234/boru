@@ -8,8 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from 'recharts';
 
 interface MatchItem {
@@ -26,82 +24,10 @@ interface MatchItem {
   coachNote: string;
 }
 
-const mockMatches: MatchItem[] = [
-  {
-    id: 'm-1',
-    date: 'Ontem, 19:30',
-    opponent: 'Alexandre "Viper" Ramos',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-    tier: 'Prajied Vermelho e Branco',
-    modality: 'Muay Thai Tradicional',
-    result: 'VITÓRIA',
-    method: 'KO / Round 2 (02:14)',
-    score: '+35 MMR',
-    event: 'Sparring Supervisionado #14',
-    coachNote: 'Excelente pêndulo e contra-golpe de direita com cotovelo de encontro. Guarda alta e reflexos rápidos.'
-  },
-  {
-    id: 'm-2',
-    date: '24 Out, 20:15',
-    opponent: 'Marcus "Titan" Miller',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-    tier: 'Faixa Marrom',
-    modality: 'Jiu-Jitsu / No-Gi',
-    result: 'VITÓRIA',
-    method: 'Finalização (Armlock / Solo)',
-    score: '+28 MMR',
-    event: 'Open Mat de Sexta CT Borü',
-    coachNote: 'Transição da guarda laçada direta para a chave de braço. Pressão de quadril e técnica perfeita.'
-  },
-  {
-    id: 'm-3',
-    date: '19 Out, 18:45',
-    opponent: 'Dmitri "The Bear" Volkov',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-    tier: 'Prajied Vermelho',
-    modality: 'Boxe & Striking',
-    result: 'DERROTA',
-    method: 'Decisão Dividida (29-28)',
-    score: '-14 MMR',
-    event: 'Torneio Preparatório Interno Borü',
-    coachNote: 'Luta equilibradíssima. Ajustar esquiva lateral contra canhotos e velocidade de retorno do jab.'
-  },
-  {
-    id: 'm-4',
-    date: '15 Out, 20:00',
-    opponent: 'Renato "Caveira" Silva',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    tier: 'Prajied Azul Escuro',
-    modality: 'Kickboxing K-1',
-    result: 'VITÓRIA',
-    method: 'TKO / Round 1 (Low Kicks)',
-    score: '+40 MMR',
-    event: 'Desafio Noturno de Striking',
-    coachNote: 'Sequência de chutes na coxa com calejamento impecável e saída em ângulo seguro.'
-  }
-];
-
-const attendanceWeeklyData = [
-  { dia: 'Seg', treinos: 2, meta: 2 },
-  { dia: 'Ter', treinos: 1, meta: 1 },
-  { dia: 'Qua', treinos: 2, meta: 2 },
-  { dia: 'Qui', treinos: 1, meta: 1 },
-  { dia: 'Sex', treinos: 2, meta: 2 },
-  { dia: 'Sáb', treinos: 1, meta: 1 },
-];
-
-const mmrEvolutionData = [
-  { mes: 'Mai', mmr: 1840 },
-  { mes: 'Jun', mmr: 2020 },
-  { mes: 'Jul', mmr: 2190 },
-  { mes: 'Ago', mmr: 2410 },
-  { mes: 'Set', mmr: 2650 },
-  { mes: 'Out', mmr: 2840 },
-];
-
 export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
   const [filterPeriod, setFilterPeriod] = useState<'30dias' | 'trimestre' | 'ano'>('30dias');
   const [evalData, setEvalData] = useState<any>(null);
+  const [matches] = useState<MatchItem[]>([]);
 
   useEffect(() => {
     if (aluno?.id) {
@@ -114,6 +40,40 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
         .catch(() => {});
     }
   }, [aluno?.id]);
+
+  // Cálculo de lutas e taxa de vitórias
+  const totalLutas = matches.length;
+  const vitorias = matches.filter((m) => m.result === 'VITÓRIA').length;
+  const derrotas = matches.filter((m) => m.result === 'DERROTA').length;
+  const taxaVitoria = totalLutas > 0 ? `${Math.round((vitorias / totalLutas) * 100)}%` : '--';
+
+  // Frequência semanal calculada a partir de presenças reais
+  const presencasAluno = Array.isArray(aluno?.presencas) ? aluno.presencas : [];
+  const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const diasAbbr = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const attendanceWeeklyData = diasAbbr.map((dia) => ({ dia, treinos: 0 }));
+
+  let treinosEstaSemana = 0;
+  if (presencasAluno.length > 0) {
+    const agora = new Date();
+    const day = agora.getDay();
+    const diff = agora.getDate() - (day === 0 ? 6 : day - 1);
+    const inicioSemana = new Date(agora);
+    inicioSemana.setDate(diff);
+    inicioSemana.setHours(0, 0, 0, 0);
+
+    presencasAluno.forEach((p: any) => {
+      const d = new Date(p.data);
+      if (d >= inicioSemana && p.status === 'PRESENTE') {
+        const dayName = diasSemana[d.getDay()];
+        const item = attendanceWeeklyData.find((x) => x.dia === dayName);
+        if (item) {
+          item.treinos += 1;
+          treinosEstaSemana += 1;
+        }
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -128,89 +88,77 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
             Estatísticas de Desempenho &amp; Evolução
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-            Acompanhe métricas consolidadas de assiduidade, aproveitamento de golpes, taxa de vitórias em sparrings e seu ranking consolidado de MMR para impulsionar sua evolução sob supervisão do Mestre Felipe Borü.
+            Acompanhe métricas consolidadas de assiduidade, aproveitamento técnico, taxa de vitórias em sparrings e seu prontuário individual sob supervisão do Mestre Felipe Borü.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="px-4 py-2.5 rounded-xl border border-zinc-800 bg-[#1A1A1E] text-center">
             <span className="block text-base font-mono font-black text-emerald-400">
-              87.5%
+              {taxaVitoria}
             </span>
             <span className="text-[10px] text-zinc-400 uppercase font-bold">Taxa de Vitória</span>
           </div>
 
           <div className="px-4 py-2.5 rounded-xl border border-zinc-800 bg-[#1A1A1E] text-center">
             <span className="block text-base font-mono font-black text-red-500">
-              {evalData?.mmr ? evalData.mmr.toLocaleString('pt-BR') : '2,840'}
+              {evalData?.mmr ? evalData.mmr.toLocaleString('pt-BR') : '--'}
             </span>
             <span className="text-[10px] text-zinc-400 uppercase font-bold">MMR Atual</span>
           </div>
         </div>
       </div>
 
-      {/* PARECER TÉCNICO DO PROFESSOR (SE HOUVER) */}
-      {evalData?.parecerMestre && (
-        <div className="p-4 sm:p-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 shadow-md flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-xl shrink-0 border border-yellow-500/30">
-            🥋
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm font-black text-white uppercase tracking-wider">
-                Parecer Técnico do Professor ({evalData.avaliadoPor || 'Mestre Felipe Borü'})
-              </h4>
-              <span className="text-[10px] font-mono text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800">
-                {evalData.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'Avaliação Recente'}
-              </span>
-            </div>
-            <p className="text-xs text-yellow-100/90 italic leading-relaxed">
-              "{evalData.parecerMestre}"
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* GRADE DE CARDS KPI (4 MÉTRICAS PRINCIPAIS) */}
+      {/* CARDS DE RESUMO RÁPIDO */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Vitórias / Derrotas */}
+        {/* Card 1: Sparrings Registrados */}
         <div className="p-4 sm:p-5 rounded-2xl border border-zinc-800 bg-[#141416] shadow-md space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-bold uppercase tracking-wider text-[10px]">Recorde (W / L)</span>
-            <span className="text-emerald-400 font-bold">+12% mês</span>
+            <span className="font-bold uppercase tracking-wider text-[10px]">Sparrings Registrados</span>
+            <span className="text-red-400 font-bold">Tatame</span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-emerald-400">28V - 4D</p>
-          <p className="text-[11px] text-zinc-400 font-medium">87.5% de aproveitamento em lutas</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-white">{totalLutas}</p>
+          <p className="text-[11px] text-zinc-400 font-medium">Lutas no prontuário</p>
         </div>
 
-        {/* Card 2: Pontuação MMR */}
+        {/* Card 2: Vitórias / Derrotas */}
         <div className="p-4 sm:p-5 rounded-2xl border border-zinc-800 bg-[#141416] shadow-md space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-bold uppercase tracking-wider text-[10px]">Classificação MMR</span>
-            <span className="text-red-400 font-bold">Top CT Borü</span>
+            <span className="font-bold uppercase tracking-wider text-[10px]">Cartel de Sparring</span>
+            <span className="text-emerald-400 font-bold">{taxaVitoria}</span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-red-500">{evalData?.mmr ? `${evalData.mmr.toLocaleString('pt-BR')} MMR` : '2,840 MMR'}</p>
-          <p className="text-[11px] text-zinc-400 font-medium">Divisão Ouro // Nak Muay de Ferro</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-emerald-400">
+            {vitorias}V <span className="text-zinc-600 font-normal">/</span> {derrotas}D
+          </p>
+          <p className="text-[11px] text-zinc-400 font-medium">{totalLutas > 0 ? 'Confrontos computados' : 'Nenhuma luta registrada'}</p>
         </div>
 
-        {/* Card 3: Aproveitamento de Golpes */}
+        {/* Card 3: Precisão Técnica */}
         <div className="p-4 sm:p-5 rounded-2xl border border-zinc-800 bg-[#141416] shadow-md space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-bold uppercase tracking-wider text-[10px]">Precisão de Golpes</span>
-            <span className="text-cyan-400 font-bold">Excelente</span>
+            <span className="font-bold uppercase tracking-wider text-[10px]">Precisão Técnica</span>
+            <span className="text-cyan-400 font-bold">{evalData?.precisaoGolpes ? 'Avaliado' : '--'}</span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-cyan-400">{evalData?.precisaoGolpes ? `${evalData.precisaoGolpes}%` : '78.4%'}</p>
-          <p className="text-[11px] text-zinc-400 font-medium">Golpes contundentes conectados</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-cyan-400">
+            {evalData?.precisaoGolpes ? `${evalData.precisaoGolpes}%` : '--'}
+          </p>
+          <p className="text-[11px] text-zinc-400 font-medium">Aproveitamento nos treinos</p>
         </div>
 
         {/* Card 4: Assiduidade Mensal */}
         <div className="p-4 sm:p-5 rounded-2xl border border-zinc-800 bg-[#141416] shadow-md space-y-2">
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span className="font-bold uppercase tracking-wider text-[10px]">Assiduidade</span>
-            <span className="text-amber-400 font-bold">🔥 14d streak</span>
+            <span className="text-amber-400 font-bold">
+              {aluno?.diasSeguidos ? `🔥 ${aluno.diasSeguidos}d streak` : '--'}
+            </span>
           </div>
-          <p className="text-xl sm:text-2xl font-mono font-black text-amber-400">94.2%</p>
-          <p className="text-[11px] text-zinc-400 font-medium">22 treinos no mês (Meta: 20)</p>
+          <p className="text-xl sm:text-2xl font-mono font-black text-amber-400">
+            {aluno?.porcentagemPresenca !== undefined && aluno?.porcentagemPresenca !== null ? `${aluno.porcentagemPresenca}%` : '--'}
+          </p>
+          <p className="text-[11px] text-zinc-400 font-medium">
+            {aluno?.presencasMes !== undefined ? `${aluno.presencasMes} presenças no mês` : 'Frequência do aluno'}
+          </p>
         </div>
       </div>
 
@@ -226,7 +174,7 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
               <p className="text-xs text-zinc-400">Distribuição de treinos presenciais no tatame do CT Borü.</p>
             </div>
             <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              9/9 Treinos Cumpridos
+              {treinosEstaSemana > 0 ? `${treinosEstaSemana} Treino(s) esta semana` : '0 Treinos esta semana'}
             </span>
           </div>
 
@@ -235,7 +183,7 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
               <BarChart data={attendanceWeeklyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="dia" stroke="#71717A" fontSize={11} tickLine={false} />
-                <YAxis stroke="#71717A" fontSize={11} tickLine={false} />
+                <YAxis stroke="#71717A" fontSize={11} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#141416',
@@ -261,42 +209,21 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
               <p className="text-xs text-zinc-400">Crescimento contínuo de pontuação marcial no CT Borü.</p>
             </div>
             <span className="text-xs font-mono font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30">
-              +1,000 MMR (+54%)
+              {evalData?.mmr ? `${evalData.mmr} MMR` : '--'}
             </span>
           </div>
 
-          <div className="h-56 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mmrEvolutionData}>
-                <defs>
-                  <linearGradient id="boruMmrGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#DC2626" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#DC2626" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="mes" stroke="#71717A" fontSize={11} tickLine={false} />
-                <YAxis stroke="#71717A" fontSize={11} tickLine={false} domain={['dataMin - 200', 'dataMax + 200']} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#141416',
-                    borderColor: 'rgba(255,255,255,0.15)',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    color: '#fff',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="mmr"
-                  stroke="#EF4444"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#boruMmrGradient)"
-                  name="Pontuação MMR"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-56 w-full flex flex-col items-center justify-center text-center p-4 rounded-xl bg-[#1A1A1E]/30 border border-zinc-800/60">
+            <span className="text-3xl text-zinc-600 mb-2">📈</span>
+            <p className="text-xs text-zinc-400 font-semibold">Sem histórico de evolução acumulado</p>
+            <p className="text-[11px] text-zinc-500 max-w-xs mt-1">
+              A curva de evolução será traçada conforme os sparrings e avaliações periódicas do Mestre Felipe Borü.
+            </p>
+            {evalData?.mmr && (
+              <span className="mt-3 text-xs font-mono font-bold text-red-400 bg-red-950/40 px-3 py-1 rounded-full border border-red-500/30">
+                MMR Atual: {evalData.mmr}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -332,69 +259,88 @@ export function StudentPerformanceStatsTab({ aluno }: { aluno?: any }) {
           </div>
         </div>
 
-        {/* Lista de Sparrings */}
-        <div className="space-y-3">
-          {mockMatches.map((match) => (
-            <div
-              key={match.id}
-              className="p-4 rounded-xl border border-zinc-800 bg-[#1A1A1E] hover:border-zinc-700 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              {/* Oponente + Dados da Luta */}
-              <div className="flex items-center gap-3.5 min-w-0">
-                <img
-                  src={match.avatar}
-                  alt={match.opponent}
-                  className="w-12 h-12 rounded-xl object-cover border border-zinc-700 shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-sm text-white truncate">
-                      vs {match.opponent}
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-zinc-800 text-zinc-300">
-                      {match.tier}
-                    </span>
-                    <span className="text-xs text-zinc-500 font-mono">• {match.date}</span>
+        {/* Lista de Sparrings ou Estado Vazio */}
+        {matches.length === 0 ? (
+          <div className="p-10 sm:p-14 text-center rounded-2xl border border-zinc-800/80 bg-[#1A1A1E]/40 space-y-3">
+            <span className="text-3xl block">🥊</span>
+            <div className="space-y-1">
+              <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider">
+                Nenhum Sparring ou Combate Registrado
+              </h4>
+              <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                Seus registros individuais de sparrings técnicos e lutas supervisionadas pelo Mestre Felipe Borü aparecerão aqui no prontuário conforme forem realizados no tatame.
+              </p>
+            </div>
+            <div className="pt-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-zinc-400 bg-zinc-900 border border-zinc-800">
+                Participe dos treinos presenciais para preencher seu prontuário marcial.
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {matches.map((match) => (
+              <div
+                key={match.id}
+                className="p-4 rounded-xl border border-zinc-800 bg-[#1A1A1E] hover:border-zinc-700 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                {/* Oponente + Dados da Luta */}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img
+                    src={match.avatar}
+                    alt={match.opponent}
+                    className="w-12 h-12 rounded-xl object-cover border border-zinc-700 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-sm text-white truncate">
+                        vs {match.opponent}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-zinc-800 text-zinc-300">
+                        {match.tier}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-mono">• {match.date}</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 font-medium">
+                      {match.event} • <strong className="text-zinc-300">{match.modality}</strong>
+                    </p>
+                    <p className="text-xs text-zinc-400 italic mt-1 bg-[#141416] p-2 rounded-lg border border-zinc-800">
+                      <strong className="text-red-400 not-italic">Mestre Felipe Borü:</strong> "{match.coachNote}"
+                    </p>
                   </div>
-                  <p className="text-xs text-zinc-400 font-medium">
-                    {match.event} • <strong className="text-zinc-300">{match.modality}</strong>
-                  </p>
-                  <p className="text-xs text-zinc-400 italic mt-1 bg-[#141416] p-2 rounded-lg border border-zinc-800">
-                    <strong className="text-red-400 not-italic">Mestre Felipe Borü:</strong> "{match.coachNote}"
-                  </p>
                 </div>
-              </div>
 
-              {/* Resultado + MMR */}
-              <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
-                <div className="text-right">
-                  <span
-                    className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
-                      match.result === 'VITÓRIA'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                {/* Resultado + MMR */}
+                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+                  <div className="text-right">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                        match.result === 'VITÓRIA'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                      }`}
+                    >
+                      {match.result}
+                    </span>
+                    <span className="block text-[11px] text-zinc-400 font-mono mt-0.5">
+                      {match.method}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`px-3 py-2 rounded-xl font-mono font-black text-sm border ${
+                      match.score.startsWith('+')
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20'
                     }`}
                   >
-                    {match.result}
-                  </span>
-                  <span className="block text-[11px] text-zinc-400 font-mono mt-0.5">
-                    {match.method}
-                  </span>
-                </div>
-
-                <div
-                  className={`px-3 py-2 rounded-xl font-mono font-black text-sm border ${
-                    match.score.startsWith('+')
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-red-500/10 text-red-400 border-red-500/20'
-                  }`}
-                >
-                  {match.score}
+                    {match.score}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
