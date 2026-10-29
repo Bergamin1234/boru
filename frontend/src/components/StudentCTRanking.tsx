@@ -69,9 +69,10 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
     }
   }, [aluno?.id]);
 
-  // Carrega o ranking oficial com os alunos reais cadastrados no banco de dados
+  // Carrega o ranking oficial com os alunos reais filtrados por período
   useEffect(() => {
-    studentApi.getLeaderboard()
+    setLoading(true);
+    studentApi.getLeaderboard(filterPeriod)
       .then((res: any) => {
         if (Array.isArray(res.data) && res.data.length > 0) {
           const list: FighterRank[] = res.data.map((item: any, idx: number) => {
@@ -85,16 +86,16 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               nickname: item.nickname || item.name.split(' ')[0].toUpperCase(),
               avatar: item.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=18181b&color=ef4444&bold=true&size=128`,
               league: item.league || `Prajied ${item.prajied || 'Branco'} // CT Borü`,
-              xp: item.xp,
-              streak: item.streak,
-              totalPresencas: item.totalPresencas || 0,
-              conquistasCount: item.conquistasCount || 0,
-              mmr: item.mmr || 1500,
+              xp: Number(item.xp) || 0,
+              streak: Number(item.streak) || 0,
+              totalPresencas: Number(item.totalPresencas) || 0,
+              conquistasCount: Number(item.conquistasCount) || 0,
+              mmr: Number(item.mmr) || 0,
               isCurrentUser: isMe,
             };
           });
 
-          // Se o aluno logado não estiver no ranking, adiciona-o
+          // Se o aluno logado não estiver no ranking, adiciona-o zerado
           const jaTemEu = list.some(f => f.isCurrentUser);
           if (!jaTemEu && aluno?.nome) {
             const meuRank: FighterRank = {
@@ -104,11 +105,11 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               nickname: aluno.nome.split(' ')[0].toUpperCase(),
               avatar: aluno.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`,
               league: `Prajied ${aluno.prajied || 'Branco'} // ${aluno.plano || 'CT Borü'}`,
-              xp: aluno.xp || 0,
-              streak: aluno.diasSeguidos || 0,
-              totalPresencas: aluno.presencasMes || 0,
+              xp: 0,
+              streak: 0,
+              totalPresencas: 0,
               conquistasCount: 0,
-              mmr: 1500,
+              mmr: 0,
               isCurrentUser: true,
             };
             list.push(meuRank);
@@ -121,7 +122,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
         console.error('Erro ao buscar ranking dos alunos:', err);
       })
       .finally(() => setLoading(false));
-  }, [aluno?.id, aluno?.nome]);
+  }, [filterPeriod, aluno?.id, aluno?.nome]);
 
   // Identifica o aluno atual no ranking
   const currentUser: FighterRank = leaderboard.find((u) => u.isCurrentUser) || (leaderboard.length > 0 ? leaderboard[Math.min(14, leaderboard.length - 1)] : {
@@ -211,7 +212,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   {currentUser.name}
                 </h3>
                 <p className="text-xs font-mono font-bold text-red-500 tracking-wider">
-                  CARTEL // {currentUser.streak > 0 ? `${currentUser.streak} DIAS SEGUIDOS 🔥` : '0 DIAS • INICIE NO TATAME 🥋'}
+                  CARTEL // {currentUser.streak > 0 ? `${currentUser.streak} DIAS SEGUIDOS 🔥` : '0 CHECK-INS REGISTRADOS 🥋'}
                 </p>
               </div>
             </div>
@@ -364,9 +365,13 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
             ) : (
               <>
                 {top1.xp === 0 && (
-                  <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-red-950/40 to-zinc-900/80 border border-red-500/30 text-center">
-                    <p className="text-xs font-bold text-red-200">
-                      🏁 <span className="uppercase text-red-400 font-black">Temporada Iniciada:</span> Registre seu primeiro check-in de treino no tatame ou receba uma avaliação do Mestre para assumir a liderança do pódio!
+                  <div className="mb-5 p-4 rounded-2xl bg-[#18181b] border-2 border-dashed border-zinc-700/80 text-center shadow-lg">
+                    <span className="text-2xl block mb-1">🥋</span>
+                    <h4 className="text-xs font-black uppercase text-white tracking-widest">
+                      PÓDIO ZERADO // CONTAGEM POR CHECK-IN
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-1 max-w-md mx-auto leading-relaxed">
+                      O pódio está 100% zerado (0 XP). Cada check-in de treino confirmado no tatame gera <strong className="text-amber-400">+100 XP</strong>. O primeiro guerreiro a registrar presença assumirá o topo!
                     </p>
                   </div>
                 )}
@@ -392,7 +397,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                     {top2.xp} XP
                   </span>
                   <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
-                    📅 {top2.totalPresencas || 0} tr. • 🥋 {top2.mmr || 1500} MMR • 🏅 {top2.conquistasCount || 0} conq.
+                    📅 {top2.totalPresencas || 0} check-ins • 0 XP
                   </span>
 
                   <div className="w-full mt-3 h-24 rounded-t-2xl bg-gradient-to-b from-slate-400/25 via-slate-800/60 to-transparent border-t-2 border-x-2 border-slate-300/50 flex flex-col items-center justify-center shadow-lg">
@@ -403,7 +408,13 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
 
                 {/* 1º LUGAR (OURO - MAIOR / COROA) */}
                 <div className="flex flex-col items-center -mt-6">
-                  <div className="text-3xl mb-1 animate-bounce">👑</div>
+                  {top1.xp > 0 ? (
+                    <div className="text-3xl mb-1 animate-bounce">👑</div>
+                  ) : (
+                    <div className="text-xs font-mono font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                      AGUARDANDO CHECK-IN
+                    </div>
+                  )}
                   <div className="relative mb-2">
                     <div className="w-20 h-20 rounded-full p-1.5 bg-gradient-to-tr from-yellow-500 via-amber-400 to-yellow-200 shadow-2xl shadow-yellow-500/30 ring-4 ring-yellow-500/20">
                       <img
@@ -423,7 +434,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                     {top1.xp} XP
                   </span>
                   <span className="text-[9px] font-mono text-yellow-300/80 mt-0.5 text-center px-1 truncate font-bold">
-                    📅 {top1.totalPresencas || 0} tr. • 🥋 {top1.mmr || 1500} MMR • 🏅 {top1.conquistasCount || 0} conq.
+                    📅 {top1.totalPresencas || 0} check-ins • 0 XP
                   </span>
 
                   <div className="w-full mt-3 h-32 rounded-t-2xl bg-gradient-to-b from-yellow-500/30 via-yellow-950/60 to-transparent border-t-4 border-x-2 border-yellow-500 flex flex-col items-center justify-center shadow-2xl shadow-yellow-500/20">
@@ -453,7 +464,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                     {top3.xp} XP
                   </span>
                   <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
-                    📅 {top3.totalPresencas || 0} tr. • 🥋 {top3.mmr || 1500} MMR • 🏅 {top3.conquistasCount || 0} conq.
+                    📅 {top3.totalPresencas || 0} check-ins • 0 XP
                   </span>
 
                   <div className="w-full mt-3 h-20 rounded-t-2xl bg-gradient-to-b from-amber-700/25 via-amber-950/60 to-transparent border-t-2 border-x-2 border-amber-700/50 flex flex-col items-center justify-center shadow-lg">
@@ -518,7 +529,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                           {fighter.league}
                         </span>
                         <span className="text-[9px] font-mono text-zinc-500 block truncate mt-0.5">
-                          📅 {fighter.totalPresencas || 0} treinos • 🥋 {fighter.mmr || 1500} MMR • 🏅 {fighter.conquistasCount || 0} conquistas
+                          📅 {fighter.totalPresencas || 0} check-ins registrados
                         </span>
                       </div>
                     </div>

@@ -148,5 +148,5 @@ export const studentApi = {
   signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
     api.post(`/alunos/${studentId}/assinar-contrato`, data),
   getEvaluation: (studentId: string) => api.get(`/alunos/${studentId}/avaliacao`),
-  getLeaderboard: () => api.get('/alunos/ranking'),
+  getLeaderboard: (periodo?: string) => api.get(`/alunos/ranking${periodo ? `?periodo=${periodo}` : ''}`),
 };

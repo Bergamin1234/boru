@@ -596,9 +596,10 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
     res.json({ ...avaliacao, avaliado: true });
   });
 
-  // Ranking Oficial dos Guerreiros do CT Borü (Baseado em Assiduidade + Avaliação do Mestre + Conquistas)
-  app.get('/api/alunos/ranking', async (_req, res) => {
+  // Ranking Oficial dos Guerreiros do CT Borü (XP ZERADO - CONTA ESTRITAMENTE A PARTIR DOS CHECK-INS)
+  app.get('/api/alunos/ranking', async (req, res) => {
     try {
+      const periodo = String(req.query.periodo || 'temporada').toLowerCase();
       const todasAvaliacoes = carregarAvaliacoes();
 
       const alunos = await prisma.aluno.findMany({
@@ -615,31 +616,49 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
         orderBy: { nome: 'asc' },
       });
 
+      const agora = Date.now();
+
       const leaderboard = alunos.map((aluno) => {
+        // Filtrar presenças reais de acordo com o período selecionado
+        let presencasNoPeriodo = aluno.presencas;
+        if (periodo === 'semanal') {
+          presencasNoPeriodo = aluno.presencas.filter(p => {
+            const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
+            return diffDias <= 7;
+          });
+        } else if (periodo === 'mensal') {
+          presencasNoPeriodo = aluno.presencas.filter(p => {
+            const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
+            return diffDias <= 30;
+          });
+        }
+
         // -------------------------------------------------------------
-        // CRITÉRIO 1: ASSIDUIDADE & CHECK-INS REAIS NO TATAME
+        // PONTUAÇÃO: ESTRITAMENTE POR CHECK-INS REAIS (+100 XP / CHECK-IN)
         // -------------------------------------------------------------
-        const totalPresencas = aluno.presencas.length;
-        const xpPresencas = totalPresencas * 100; // 100 XP por cada treino presencial confirmado
+        const totalPresencas = presencasNoPeriodo.length;
+        const xpPresencas = totalPresencas * 100; // Cada check-in registrado = +100 XP
 
         // Sequência real de treinos nos últimos 7 dias (0 se nunca treinou)
         const treinosRecentes = aluno.presencas.filter(p => {
-          const d = new Date(p.data);
-          const diffDias = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+          const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
           return diffDias <= 7;
         }).length;
         const streak = totalPresencas > 0 ? Math.max(1, treinosRecentes) : 0;
-        const xpStreak = streak * 30; // Bônus por regularidade de treinos
+        const xpStreak = streak > 1 ? (streak - 1) * 20 : 0; // Bônus apenas para sequências reais consecutivas
 
-        // -------------------------------------------------------------
-        // CRITÉRIO 2: AVALIAÇÃO TÉCNICA E MMR DO MESTRE FELIPE BORÜ
-        // -------------------------------------------------------------
+        // Conquistas completadas reais
+        const conquistasCount = aluno.conquistasProgresso.length;
+        const xpConquistas = aluno.conquistasProgresso.reduce(
+          (acc, cur) => acc + (cur.achievement?.xp_points || 0),
+          0
+        );
+
+        // Avaliação do mestre (apenas informativa, não soma XP prévio falso)
         const avaliacao = todasAvaliacoes[aluno.id];
         let mmrValor = 0;
         let mediaAtributos = 0;
-        let xpAvaliacaoMestre = 0;
-
-        if (avaliacao && avaliacao.avaliado !== false) {
+        if (avaliacao && avaliacao.avaliado) {
           mediaAtributos = Math.round(
             ((Number(avaliacao.forca) || 0) +
              (Number(avaliacao.tecnica) || 0) +
@@ -648,22 +667,11 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
              (Number(avaliacao.disciplina) || 0)) / 5
           );
           mmrValor = Number(avaliacao.mmr) || 1500;
-          xpAvaliacaoMestre = Math.round((mmrValor * 0.6) + (mediaAtributos * 6));
         }
 
-        // -------------------------------------------------------------
-        // CRITÉRIO 3: CONQUISTAS DESBLOQUEADAS NA TRILHA DO NAK MUAY
-        // -------------------------------------------------------------
-        const xpConquistas = aluno.conquistasProgresso.reduce(
-          (acc, cur) => acc + (cur.achievement?.xp_points || 0),
-          0
-        );
-        const conquistasCount = aluno.conquistasProgresso.length;
-
-        // -------------------------------------------------------------
-        // PONTUAÇÃO FINAL DE XP (SOMA EXATA DOS DADOS REAIS)
-        // -------------------------------------------------------------
-        const xpTotal = xpPresencas + xpStreak + xpAvaliacaoMestre + xpConquistas;
+        // PONTUAÇÃO FINAL DE XP: 0 SE NÃO HOUVER CHECK-INS OU CONQUISTAS REAIS
+        const xpAvaliacaoMestre = 0;
+        const xpTotal = xpPresencas + xpStreak + xpConquistas;
 
         const prajied = aluno.prajied || 'Branco';
         const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`;
