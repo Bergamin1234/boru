@@ -31,11 +31,11 @@ export interface FighterRank {
 }
 
 const defaultAttributes: CombatAttribute[] = [
-  { attribute: 'FORÇA', value: 88, fullMark: 100 },
-  { attribute: 'TÉCNICA', value: 94, fullMark: 100 },
-  { attribute: 'RESISTÊNCIA', value: 82, fullMark: 100 },
-  { attribute: 'FLEXIBILIDADE', value: 76, fullMark: 100 },
-  { attribute: 'DISCIPLINA', value: 98, fullMark: 100 },
+  { attribute: 'FORÇA', value: 0, fullMark: 100 },
+  { attribute: 'TÉCNICA', value: 0, fullMark: 100 },
+  { attribute: 'RESISTÊNCIA', value: 0, fullMark: 100 },
+  { attribute: 'FLEXIBILIDADE', value: 0, fullMark: 100 },
+  { attribute: 'DISCIPLINA', value: 0, fullMark: 100 },
 ];
 
 export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
@@ -50,18 +50,22 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
     if (aluno?.id) {
       studentApi.getEvaluation(aluno.id)
         .then((res: any) => {
-          if (res?.data) {
+          if (res?.data && res.data.avaliado) {
             setEvalData(res.data);
             setAtributos([
-              { attribute: 'FORÇA', value: res.data.forca ?? 88, fullMark: 100 },
-              { attribute: 'TÉCNICA', value: res.data.tecnica ?? 94, fullMark: 100 },
-              { attribute: 'RESISTÊNCIA', value: res.data.resistencia ?? 82, fullMark: 100 },
-              { attribute: 'FLEXIBILIDADE', value: res.data.flexibilidade ?? 76, fullMark: 100 },
-              { attribute: 'DISCIPLINA', value: res.data.disciplina ?? 98, fullMark: 100 },
+              { attribute: 'FORÇA', value: Number(res.data.forca) || 0, fullMark: 100 },
+              { attribute: 'TÉCNICA', value: Number(res.data.tecnica) || 0, fullMark: 100 },
+              { attribute: 'RESISTÊNCIA', value: Number(res.data.resistencia) || 0, fullMark: 100 },
+              { attribute: 'FLEXIBILIDADE', value: Number(res.data.flexibilidade) || 0, fullMark: 100 },
+              { attribute: 'DISCIPLINA', value: Number(res.data.disciplina) || 0, fullMark: 100 },
             ]);
+          } else {
+            setEvalData({ avaliado: false });
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setEvalData({ avaliado: false });
+        });
     }
   }, [aluno?.id]);
 
@@ -100,8 +104,8 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               nickname: aluno.nome.split(' ')[0].toUpperCase(),
               avatar: aluno.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`,
               league: `Prajied ${aluno.prajied || 'Branco'} // ${aluno.plano || 'CT Borü'}`,
-              xp: 2420,
-              streak: aluno.diasSeguidos || 5,
+              xp: aluno.xp || 0,
+              streak: aluno.diasSeguidos || 0,
               totalPresencas: aluno.presencasMes || 0,
               conquistasCount: 0,
               mmr: 1500,
@@ -127,8 +131,8 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
     nickname: (aluno?.nome || 'Guerreiro').split(' ')[0].toUpperCase(),
     avatar: aluno?.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno?.nome || 'Guerreiro')}&background=18181b&color=ef4444&bold=true&size=128`,
     league: `Prajied ${aluno?.prajied || 'Branco'} // ${aluno?.plano || 'CT Borü'}`,
-    xp: 2420,
-    streak: aluno?.diasSeguidos || 5,
+    xp: aluno?.xp || 0,
+    streak: aluno?.diasSeguidos || 0,
     isCurrentUser: true,
   });
 
@@ -207,7 +211,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   {currentUser.name}
                 </h3>
                 <p className="text-xs font-mono font-bold text-red-500 tracking-wider">
-                  CARTEL // {currentUser.streak} DIAS SEGUIDOS 🔥
+                  CARTEL // {currentUser.streak > 0 ? `${currentUser.streak} DIAS SEGUIDOS 🔥` : '0 DIAS • INICIE NO TATAME 🥋'}
                 </p>
               </div>
             </div>
@@ -240,62 +244,82 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               </h4>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                {evalData?.avaliadoPor ? `Avaliado por: ${evalData.avaliadoPor}` : 'Avaliado por: Mestre Felipe Borü'}
+                {evalData?.avaliado ? `Avaliado por: ${evalData.avaliadoPor || 'Mestre Felipe Borü'}` : 'Aguardando Avaliação'}
               </span>
             </div>
 
-            <div className="w-full h-64 -my-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={atributos}>
-                  <PolarGrid stroke="#27272A" />
-                  <PolarAngleAxis
-                    dataKey="attribute"
-                    tick={{ fill: '#A1A1AA', fontSize: 10, fontWeight: 700 }}
-                  />
-                  <PolarRadiusAxis
-                    angle={90}
-                    domain={[0, 100]}
-                    stroke="#3F3F46"
-                    tick={false}
-                    axisLine={false}
-                  />
-                  <Radar
-                    name="Atributos"
-                    dataKey="value"
-                    stroke="#EF4444"
-                    strokeWidth={2.5}
-                    fill="#DC2626"
-                    fillOpacity={0.35}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-zinc-800/70 text-center">
-              {atributos.map((attr) => (
-                <div key={attr.attribute} className="p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-                  <span className="block text-[8px] font-mono font-bold text-zinc-400 truncate">
-                    {attr.attribute.slice(0, 4)}
-                  </span>
-                  <span className="text-xs font-black italic text-white">
-                    {attr.value}
-                  </span>
+            {evalData?.avaliado ? (
+              <>
+                <div className="w-full h-64 -my-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={atributos}>
+                      <PolarGrid stroke="#27272A" />
+                      <PolarAngleAxis
+                        dataKey="attribute"
+                        tick={{ fill: '#A1A1AA', fontSize: 10, fontWeight: 700 }}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 100]}
+                        stroke="#3F3F46"
+                        tick={false}
+                        axisLine={false}
+                      />
+                      <Radar
+                        name="Atributos"
+                        dataKey="value"
+                        stroke="#EF4444"
+                        strokeWidth={2.5}
+                        fill="#DC2626"
+                        fillOpacity={0.35}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
 
-            <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
-              Última avaliação de tatame: {evalData?.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'recente'} • {evalData?.avaliadoPor || 'Mestre Felipe Borü'}
-            </p>
+                <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-zinc-800/70 text-center">
+                  {atributos.map((attr) => (
+                    <div key={attr.attribute} className="p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
+                      <span className="block text-[8px] font-mono font-bold text-zinc-400 truncate">
+                        {attr.attribute.slice(0, 4)}
+                      </span>
+                      <span className="text-xs font-black italic text-white">
+                        {attr.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-            {evalData?.parecerMestre && (
-              <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-200/90 italic flex items-start gap-2.5">
-                <span className="text-base not-italic">🥋</span>
+                <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
+                  Última avaliação de tatame: {evalData?.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'recente'} • {evalData?.avaliadoPor || 'Mestre Felipe Borü'}
+                </p>
+
+                {evalData?.parecerMestre && (
+                  <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-200/90 italic flex items-start gap-2.5">
+                    <span className="text-base not-italic">🥋</span>
+                    <div>
+                      <span className="font-bold font-mono text-[10px] uppercase text-yellow-400 block not-italic">
+                        Parecer do Professor:
+                      </span>
+                      <span>"{evalData.parecerMestre}"</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-10 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-zinc-900/40 rounded-2xl border border-zinc-800/60 my-2">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-2xl shadow-inner">
+                  🥋
+                </div>
                 <div>
-                  <span className="font-bold font-mono text-[10px] uppercase text-yellow-400 block not-italic">
-                    Parecer do Professor:
-                  </span>
-                  <span>"{evalData.parecerMestre}"</span>
+                  <h5 className="text-xs font-black text-white uppercase italic tracking-wider">Aguardando Avaliação Técnica</h5>
+                  <p className="text-[11px] text-zinc-400 mt-1.5 max-w-xs leading-relaxed">
+                    O Mestre Felipe Borü ainda não avaliou seus atributos no tatame. Conforme seus treinos e sparrings, suas notas e Fight IQ serão lançados aqui!
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-mono text-zinc-400 bg-black/40 border border-zinc-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+                  Status: Pendente no tatame
                 </div>
               </div>
             )}
@@ -338,6 +362,14 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                 Carregando guerreiros do tatame...
               </div>
             ) : (
+              <>
+                {top1.xp === 0 && (
+                  <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-red-950/40 to-zinc-900/80 border border-red-500/30 text-center">
+                    <p className="text-xs font-bold text-red-200">
+                      🏁 <span className="uppercase text-red-400 font-black">Temporada Iniciada:</span> Registre seu primeiro check-in de treino no tatame ou receba uma avaliação do Mestre para assumir a liderança do pódio!
+                    </p>
+                  </div>
+                )}
               <div className="grid grid-cols-3 gap-2 items-end pt-6">
                 {/* 2º LUGAR (PRATA) */}
                 <div className="flex flex-col items-center">
@@ -430,7 +462,8 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   </div>
                 </div>
               </div>
-            )}
+            </>
+          )}
           </section>
 
           {/* LISTA DE INTEGRANTES DO CT NA ARENA (4º LUGAR EM DIANTE) */}

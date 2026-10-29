@@ -532,16 +532,17 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
     const { id } = req.params;
     const todas = carregarAvaliacoes();
     const avaliacao = todas[id] || {
-      forca: 88,
-      tecnica: 94,
-      resistencia: 82,
-      flexibilidade: 76,
-      disciplina: 98,
-      mmr: 2840,
-      precisaoGolpes: 78.4,
-      parecerMestre: 'Excelente disciplina e aproveitamento nas aulas e sparrings técnicos no tatame.',
+      avaliado: false,
+      forca: 80,
+      tecnica: 80,
+      resistencia: 80,
+      flexibilidade: 80,
+      disciplina: 80,
+      mmr: 1500,
+      precisaoGolpes: 75.0,
+      parecerMestre: '',
       avaliadoPor: 'Mestre Felipe Borü',
-      avaliadoEm: new Date().toISOString()
+      avaliadoEm: null
     };
     res.json(avaliacao);
   });
@@ -562,7 +563,8 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
       precisaoGolpes: Number(precisaoGolpes) || 78.4,
       parecerMestre: parecerMestre || 'Ótima evolução nas aulas e sparrings técnicos.',
       avaliadoPor: avaliadoPor || 'Mestre Felipe Borü',
-      avaliadoEm: new Date().toISOString()
+      avaliadoEm: new Date().toISOString(),
+      avaliado: true
     };
 
     todas[id] = novaAvaliacao;
@@ -571,23 +573,27 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
     res.json({ mensagem: 'Avaliação de desempenho salva com sucesso!', avaliacao: novaAvaliacao });
   });
 
-  // Obter avaliação para o Portal do Aluno
+  // Obter avaliação para o Portal do Aluno (retorna null/avaliado=false se o Mestre ainda não avaliou)
   app.get('/api/alunos/:id/avaliacao', async (req, res) => {
     const { id } = req.params;
     const todas = carregarAvaliacoes();
-    const avaliacao = todas[id] || {
-      forca: 88,
-      tecnica: 94,
-      resistencia: 82,
-      flexibilidade: 76,
-      disciplina: 98,
-      mmr: 2840,
-      precisaoGolpes: 78.4,
-      parecerMestre: 'Excelente disciplina e aproveitamento nas aulas e sparrings técnicos no tatame.',
-      avaliadoPor: 'Mestre Felipe Borü',
-      avaliadoEm: new Date().toISOString()
-    };
-    res.json(avaliacao);
+    const avaliacao = todas[id];
+    if (!avaliacao) {
+      return res.json({
+        avaliado: false,
+        forca: null,
+        tecnica: null,
+        resistencia: null,
+        flexibilidade: null,
+        disciplina: null,
+        mmr: 0,
+        precisaoGolpes: null,
+        parecerMestre: null,
+        avaliadoPor: 'Mestre Felipe Borü',
+        avaliadoEm: null
+      });
+    }
+    res.json({ ...avaliacao, avaliado: true });
   });
 
   // Ranking Oficial dos Guerreiros do CT Borü (Baseado em Assiduidade + Avaliação do Mestre + Conquistas)
@@ -611,44 +617,39 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
 
       const leaderboard = alunos.map((aluno) => {
         // -------------------------------------------------------------
-        // CRITÉRIO 1: ASSIDUIDADE & CHECK-INS NO TATAME
+        // CRITÉRIO 1: ASSIDUIDADE & CHECK-INS REAIS NO TATAME
         // -------------------------------------------------------------
         const totalPresencas = aluno.presencas.length;
         const xpPresencas = totalPresencas * 100; // 100 XP por cada treino presencial confirmado
 
-        // Sequência de treinos recentes nos últimos 7 dias
+        // Sequência real de treinos nos últimos 7 dias (0 se nunca treinou)
         const treinosRecentes = aluno.presencas.filter(p => {
           const d = new Date(p.data);
           const diffDias = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
           return diffDias <= 7;
         }).length;
-        const streak = Math.max(1, treinosRecentes || (totalPresencas > 0 ? 1 : 0));
+        const streak = totalPresencas > 0 ? Math.max(1, treinosRecentes) : 0;
         const xpStreak = streak * 30; // Bônus por regularidade de treinos
 
         // -------------------------------------------------------------
         // CRITÉRIO 2: AVALIAÇÃO TÉCNICA E MMR DO MESTRE FELIPE BORÜ
         // -------------------------------------------------------------
         const avaliacao = todasAvaliacoes[aluno.id];
-        let mmrValor = 1500;
-        let mediaAtributos = 75;
+        let mmrValor = 0;
+        let mediaAtributos = 0;
+        let xpAvaliacaoMestre = 0;
 
-        if (avaliacao) {
+        if (avaliacao && avaliacao.avaliado !== false) {
           mediaAtributos = Math.round(
-            ((avaliacao.forca || 80) +
-             (avaliacao.tecnica || 80) +
-             (avaliacao.resistencia || 80) +
-             (avaliacao.flexibilidade || 80) +
-             (avaliacao.disciplina || 90)) / 5
+            ((Number(avaliacao.forca) || 0) +
+             (Number(avaliacao.tecnica) || 0) +
+             (Number(avaliacao.resistencia) || 0) +
+             (Number(avaliacao.flexibilidade) || 0) +
+             (Number(avaliacao.disciplina) || 0)) / 5
           );
-          mmrValor = avaliacao.mmr || Math.round(1500 + mediaAtributos * 10);
-        } else {
-          // Nota técnica base calculada proporcionalmente ao tempo e perfil
-          mediaAtributos = 72 + (aluno.nome.length % 18);
-          mmrValor = 1450 + mediaAtributos * 10;
+          mmrValor = Number(avaliacao.mmr) || 1500;
+          xpAvaliacaoMestre = Math.round((mmrValor * 0.6) + (mediaAtributos * 6));
         }
-
-        // Peso do desempenho técnico avaliado pelo Mestre
-        const xpAvaliacaoMestre = Math.round((mmrValor * 0.6) + (mediaAtributos * 6));
 
         // -------------------------------------------------------------
         // CRITÉRIO 3: CONQUISTAS DESBLOQUEADAS NA TRILHA DO NAK MUAY
@@ -660,7 +661,7 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
         const conquistasCount = aluno.conquistasProgresso.length;
 
         // -------------------------------------------------------------
-        // PONTUAÇÃO FINAL DE XP (SOMA DIRETA DOS 3 CRITÉRIOS)
+        // PONTUAÇÃO FINAL DE XP (SOMA EXATA DOS DADOS REAIS)
         // -------------------------------------------------------------
         const xpTotal = xpPresencas + xpStreak + xpAvaliacaoMestre + xpConquistas;
 
