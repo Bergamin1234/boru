@@ -130,7 +130,10 @@ export const adminApi = {
   deleteGamificationAchievement: (id: string) => api.delete(`/admin/gamificacao/conquistas/${id}`),
   resetGamificationDefault: () => api.post('/admin/gamificacao/reset-padrao'),
   exportGamificationJson: () => api.get('/admin/gamificacao/export-json'),
-<<<<<<< HEAD
+
+  // Avaliação física e marcial do aluno
+  getStudentEvaluation: (studentId: string) => api.get(`/admin/alunos/${studentId}/avaliacao`),
+  saveStudentEvaluation: (studentId: string, data: any) => api.post(`/admin/alunos/${studentId}/avaliacao`, data),
 
   // Módulo Next-Gen Fase 1: Loja & Resgates na Recepção
   getStoreRedemptions: (status?: string) =>
@@ -170,10 +173,6 @@ export const adminApi = {
   // Módulo Next-Gen Fase 1: Dashboard de Ocupação & Visão 360 do Aluno
   getOccupancyDashboard: () => api.get('/admin/dashboard/ocupacao'),
   getStudent360: (alunoId: string) => api.get(`/admin/alunos/${alunoId}/visao360`),
-=======
-  getStudentEvaluation: (studentId: string) => api.get(`/admin/alunos/${studentId}/avaliacao`),
-  saveStudentEvaluation: (studentId: string, data: any) => api.post(`/admin/alunos/${studentId}/avaliacao`, data),
->>>>>>> 547efd5a7748348208fb6552c77d1256a7d0a39f
 };
 
 export const studentApi = {
@@ -194,7 +193,9 @@ export const studentApi = {
   getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
   signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
     api.post(`/alunos/${studentId}/assinar-contrato`, data),
-<<<<<<< HEAD
+
+  getEvaluation: (studentId: string) => api.get(`/alunos/${studentId}/avaliacao`),
+  getLeaderboard: (periodo?: string) => api.get(`/alunos/ranking${periodo ? `?periodo=${periodo}` : ''}`),
 
   // Módulo Next-Gen Fase 1: Carteira de Points, Loja de Recompensas & Graduações
   getPointsWallet: (studentId: string) => api.get(`/alunos/${studentId}/carteira-pontos`),
@@ -202,8 +203,4 @@ export const studentApi = {
   redeemStoreItem: (studentId: string, itemId: string) =>
     api.post(`/alunos/${studentId}/loja/resgatar`, { itemId }),
   getGraduations: (studentId: string) => api.get(`/alunos/${studentId}/graduacoes`),
-=======
-  getEvaluation: (studentId: string) => api.get(`/alunos/${studentId}/avaliacao`),
-  getLeaderboard: (periodo?: string) => api.get(`/alunos/ranking${periodo ? `?periodo=${periodo}` : ''}`),
->>>>>>> 547efd5a7748348208fb6552c77d1256a7d0a39f
 };
