@@ -170,7 +170,7 @@ export const PublicQuickCheckinCard: React.FC = () => {
                 disabled={aula.cancelada || aula.lotado}
                 className={aula.cancelada ? 'text-zinc-500 line-through' : aula.lotado ? 'text-red-400' : 'text-white'}
               >
-                {aula.horario} - {aula.professorNome} ({aula.modalidade})
+                {aula.horario} - {aula.professorNome} ({aula.titulo})
                 {aula.cancelada ? ' [AULA CANCELADA PELO PROFESSOR]' : aula.lotado ? ' [TURMA LOTADA]' : ' [HÁ VAGAS]'}
               </option>
             ))

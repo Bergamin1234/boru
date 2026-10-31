@@ -759,18 +759,44 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
 
   app.get('/api/admin/dashboard/ocupacao', async (_req: Request, res: Response) => {
     try {
-      const turmas = [
-        { id: 't-1', horario: '07:00 - 08:00', modalidade: 'Muay Thai Matutino', capacidade: 25, matriculados: 18, mediaPresenca: 15, status: 'IDEAL' },
-        { id: 't-2', horario: '08:30 - 09:30', modalidade: 'Muay Thai & Boxe', capacidade: 25, matriculados: 9, mediaPresenca: 7, status: 'OCIOSA' },
-        { id: 't-3', horario: '12:00 - 13:00', modalidade: 'Muay Thai Almoço', capacidade: 20, matriculados: 14, mediaPresenca: 11, status: 'IDEAL' },
-        { id: 't-4', horario: '17:00 - 18:00', modalidade: 'Iniciantes & Teens', capacidade: 25, matriculados: 20, mediaPresenca: 17, status: 'IDEAL' },
-        { id: 't-5', horario: '18:30 - 19:30', modalidade: 'Muay Thai Noite (Pico)', capacidade: 30, matriculados: 29, mediaPresenca: 27, status: 'LOTADA_PICO' },
-        { id: 't-6', horario: '20:00 - 21:00', modalidade: 'Sparring & Competição', capacidade: 30, matriculados: 28, mediaPresenca: 26, status: 'LOTADA_PICO' },
-      ];
+      const agora = new Date();
+      const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
+      const fimDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
+
+      const eventos = await prisma.eventoDeAula.findMany({
+        where: {
+          dataInicio: { gte: inicioDia, lte: fimDia }
+        },
+        include: {
+          agendamentos: {
+            where: { status: { in: ['AGENDADO', 'PRESENTE'] } }
+          }
+        },
+        orderBy: { dataInicio: 'asc' }
+      });
+
+      const turmas = eventos.map((ev: any) => {
+        const d = new Date(ev.dataInicio);
+        const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const totalMatriculados = ev.agendamentos.length;
+        const cap = ev.capacidade || 25;
+        const ocupacaoPct = Math.round((totalMatriculados / cap) * 100);
+        const status = ocupacaoPct >= 90 ? 'LOTADA_PICO' : ocupacaoPct >= 40 ? 'IDEAL' : 'OCIOSA';
+
+        return {
+          id: ev.id,
+          horario: horaStr,
+          modalidade: `${ev.titulo} (${ev.modalidade})`,
+          capacidade: cap,
+          matriculados: totalMatriculados,
+          mediaPresenca: totalMatriculados,
+          status
+        };
+      });
 
       res.json(turmas);
     } catch (error) {
-      console.error('Erro ao buscar ocupação:', error);
+      console.error('Erro ao buscar ocupação real:', error);
       res.status(500).json({ erro: 'Erro ao buscar dados de ocupação.' });
     }
   });

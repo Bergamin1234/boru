@@ -2,25 +2,73 @@ import { Express, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { evaluateStudentGamification } from './gamificationService';
 
-// Grade horária padrão oficial do CT Borü
-const GRADE_HORARIOS_SEMANA = [
-  { horario: '07:00', horaFim: '08:00', titulo: 'Muay Thai Matutino', professor: 'Felipe Borü', modalidade: 'Muay Thai', capacidade: 25 },
-  { horario: '08:30', horaFim: '09:30', titulo: 'Muay Thai & Boxe', professor: 'Felipe Borü', modalidade: 'Muay Thai / Boxe', capacidade: 25 },
-  { horario: '12:00', horaFim: '13:00', titulo: 'Muay Thai Almoço', professor: 'Felipe Borü', modalidade: 'Muay Thai', capacidade: 20 },
-  { horario: '16:00', horaFim: '17:00', titulo: 'Muay Thai Tarde (16h)', professor: 'Felipe Borü', modalidade: 'Muay Thai', capacidade: 25 },
-  { horario: '17:00', horaFim: '18:00', titulo: 'Iniciantes & Kids', professor: 'Felipe Borü', modalidade: 'Iniciantes', capacidade: 25 },
-  { horario: '18:00', horaFim: '19:30', titulo: 'Muay Thai Noite (18h)', professor: 'Felipe Borü', modalidade: 'Muay Thai', capacidade: 30 },
-  { horario: '19:30', horaFim: '20:30', titulo: 'Muay Thai & Kickboxing', professor: 'Felipe Borü', modalidade: 'Kickboxing', capacidade: 25 },
-  { horario: '20:00', horaFim: '21:30', titulo: 'Sparring & Competição (20h)', professor: 'Felipe Borü', modalidade: 'Sparring Avançado', capacidade: 30 },
-];
-
-const GRADE_HORARIOS_SABADO = [
-  { horario: '09:00', horaFim: '10:30', titulo: 'Aulão Geral & Sparring', professor: 'Felipe Borü', modalidade: 'Muay Thai Geral', capacidade: 35 },
-  { horario: '10:30', horaFim: '12:00', titulo: 'Sparring Livre & Treino Técnico', professor: 'Felipe Borü', modalidade: 'Treino Livre', capacidade: 30 },
-];
+// Grade horária oficial real do CT Borü (Mestre Felipe Ferreira Pontes)
+const GRADE_OFICIAL_POR_DIA: Record<number, Array<{ horario: string; horaFim: string; titulo: string; modalidade: string; professor: string; capacidade: number }>> = {
+  // Segunda-feira (1)
+  1: [
+    { horario: '16:00', horaFim: '17:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '18:00', horaFim: '19:00', titulo: 'Muay Thai KIDS', modalidade: 'Muay Thai Kids', professor: 'Felipe Borü', capacidade: 20 },
+    { horario: '19:00', horaFim: '20:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '20:00', horaFim: '21:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+  ],
+  // Terça-feira (2)
+  2: [
+    { horario: '15:00', horaFim: '16:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '19:00', horaFim: '20:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '20:00', horaFim: '21:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '22:30', horaFim: '23:30', titulo: 'Muay Thai Corujão', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 20 },
+  ],
+  // Quarta-feira (3)
+  3: [
+    { horario: '16:00', horaFim: '17:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '18:00', horaFim: '19:00', titulo: 'Muay Thai KIDS', modalidade: 'Muay Thai Kids', professor: 'Felipe Borü', capacidade: 20 },
+    { horario: '19:00', horaFim: '20:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '20:00', horaFim: '21:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+  ],
+  // Quinta-feira (4)
+  4: [
+    { horario: '15:00', horaFim: '16:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '19:00', horaFim: '20:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '20:00', horaFim: '21:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '22:30', horaFim: '23:30', titulo: 'Muay Thai Corujão', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 20 },
+  ],
+  // Sexta-feira (5)
+  5: [
+    { horario: '16:00', horaFim: '17:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '18:00', horaFim: '19:00', titulo: 'Muay Thai KIDS', modalidade: 'Muay Thai Kids', professor: 'Felipe Borü', capacidade: 20 },
+    { horario: '19:00', horaFim: '20:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+    { horario: '20:00', horaFim: '21:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 25 },
+  ],
+  // Sábado (6)
+  6: [
+    { horario: '08:00', horaFim: '09:30', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 30 },
+    { horario: '12:30', horaFim: '14:00', titulo: 'Muay Thai', modalidade: 'Muay Thai', professor: 'Felipe Borü', capacidade: 30 },
+  ],
+  // Domingo (0): Tatame em descanso
+};
 
 export async function ensureMonthClassesCreated(prisma: PrismaClient, ano: number, mes: number) {
   try {
+    // 1. Limpa todas as turmas teóricas de exemplo/teste criadas anteriormente
+    await prisma.eventoDeAula.deleteMany({
+      where: {
+        OR: [
+          { titulo: { contains: 'Aulão Geral' } },
+          { titulo: { contains: 'Treino Livre' } },
+          { titulo: { contains: 'Sparring Livre' } },
+          { titulo: { contains: 'Muay Thai Geral' } },
+          { titulo: { contains: 'Muay Thai Matutino' } },
+          { titulo: { contains: 'Muay Thai Almoço' } },
+          { titulo: { contains: 'Muay Thai Tarde' } },
+          { titulo: { contains: 'Muay Thai Noite' } },
+          { titulo: { contains: 'Kickboxing' } },
+          { titulo: { contains: 'Iniciantes & Kids' } },
+          { titulo: { contains: 'Sparring & Competição' } },
+          { modalidade: { in: ['Treino Livre', 'Muay Thai Geral', 'Kickboxing', 'Sparring Avançado', 'Iniciantes', 'Muay Thai / Boxe'] } }
+        ]
+      }
+    });
+
     const dataInicioMes = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
     const dataFimMes = new Date(ano, mes, 0, 23, 59, 59, 999);
 
@@ -30,7 +78,7 @@ export async function ensureMonthClassesCreated(prisma: PrismaClient, ano: numbe
       }
     });
 
-    // Se já existirem aulas criadas para este mês, não duplica
+    // Se já existirem aulas oficiais para este mês, não duplica
     if (count > 0) return;
 
     const diasNoMes = new Date(ano, mes, 0).getDate();
@@ -40,12 +88,10 @@ export async function ensureMonthClassesCreated(prisma: PrismaClient, ano: numbe
       const dataDia = new Date(ano, mes - 1, dia);
       const diaDaSemana = dataDia.getDay(); // 0 = Dom, 1 = Seg, ..., 6 = Sab
 
-      // Domingo não tem aulas regulares
-      if (diaDaSemana === 0) continue;
+      const gradeDoDia = GRADE_OFICIAL_POR_DIA[diaDaSemana];
+      if (!gradeDoDia || gradeDoDia.length === 0) continue;
 
-      const grade = diaDaSemana === 6 ? GRADE_HORARIOS_SABADO : GRADE_HORARIOS_SEMANA;
-
-      for (const item of grade) {
+      for (const item of gradeDoDia) {
         const [horaInicio, minInicio] = item.horario.split(':').map(Number);
         const [horaFim, minFim] = item.horaFim.split(':').map(Number);
 
@@ -53,7 +99,7 @@ export async function ensureMonthClassesCreated(prisma: PrismaClient, ano: numbe
         const dFim = new Date(ano, mes - 1, dia, horaFim, minFim, 0, 0);
 
         eventosParaCriar.push({
-          titulo: `${item.titulo} - ${item.professor}`,
+          titulo: item.titulo,
           dataInicio: dInicio,
           dataFim: dFim,
           cancelada: false,
@@ -68,7 +114,7 @@ export async function ensureMonthClassesCreated(prisma: PrismaClient, ano: numbe
       await prisma.eventoDeAula.createMany({
         data: eventosParaCriar
       });
-      console.log(`✅ ${eventosParaCriar.length} aulas geradas para ${mes}/${ano} no CT Borü`);
+      console.log(`✅ ${eventosParaCriar.length} aulas reais da grade oficial geradas para ${mes}/${ano} no CT Borü`);
     }
   } catch (error) {
     console.error('Erro ao auto-gerar aulas do mês:', error);
@@ -127,7 +173,7 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
         const d = new Date(ev.dataInicio);
         const dataIso = d.toISOString().split('T')[0];
         const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        const horaCurta = `${d.getHours()}h`;
+        const horaCurta = d.getMinutes() > 0 ? `${d.getHours()}h${d.getMinutes()}` : `${d.getHours()}h`;
         const profCurto = ev.professorNome ? ev.professorNome.split(' ')[0] : 'Felipe';
         const horarioFormatado = `${horaCurta} ${profCurto}`;
 
@@ -238,7 +284,7 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
       const aulasFormatadas = eventos.map(ev => {
         const d = new Date(ev.dataInicio);
         const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        const horaCurta = `${d.getHours()}h`;
+        const horaCurta = d.getMinutes() > 0 ? `${d.getHours()}h${d.getMinutes()}` : `${d.getHours()}h`;
         const profCurto = ev.professorNome ? ev.professorNome.split(' ')[0] : 'Felipe';
         const horarioFormatado = `${horaCurta} ${profCurto}`;
 
