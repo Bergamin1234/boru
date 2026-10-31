@@ -10,6 +10,7 @@ import { ContractBlockingModal, MyContractsTab } from '../components/ContractMod
 import { PublicQuickCheckinCard, LoggedQuickCheckinBanner } from '../components/QuickCheckinWidget';
 import { isImageSource } from '../components/FileUploadInput';
 import { StudentRewardStoreTab } from '../components/StudentRewardStoreTab';
+import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
 
 export default function PortalAluno() {
   const [aulas, setAulas] = useState<any[]>([]);
@@ -1259,84 +1260,18 @@ export default function PortalAluno() {
                 )}
 
                 {/* CALENDÁRIO */}
-                <div id="calendario-mensal-aluno" className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 sm:p-6 space-y-4 scroll-mt-24">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                      📅 Frequência Mensal ({mesAtual}/{anoAtual})
-                    </h3>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => {
-                          const novo = mesAtual === 1 ? 12 : mesAtual - 1;
-                          setMesAtual(novo);
-                          carregarFrequencia(alunoLogado.id, novo, anoAtual);
-                        }} 
-                        className="px-2.5 py-1 bg-[#1A1A1E] border border-zinc-700 text-xs font-bold rounded"
-                      >
-                        ← Mês Anterior
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const novo = mesAtual === 12 ? 1 : mesAtual + 1;
-                          setMesAtual(novo);
-                          carregarFrequencia(alunoLogado.id, novo, anoAtual);
-                        }} 
-                        className="px-2.5 py-1 bg-[#1A1A1E] border border-zinc-700 text-xs font-bold rounded"
-                      >
-                        Próximo →
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Dias da semana */}
-                  <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-bold text-zinc-500">
-                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {Array.from({ length: new Date(anoAtual, mesAtual - 1, 1).getDay() }).map((_, i) => (
-                      <div key={`emp-${i}`} className="h-16 rounded bg-zinc-900/20"></div>
-                    ))}
-                    {Array.from({ length: new Date(anoAtual, mesAtual, 0).getDate() }).map((_, i) => {
-                      const dia = i + 1;
-                      const dataIso = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-                      const pres = dadosFrequencia.presencasPorDia?.[dataIso]?.[0];
-                      const ehHoje = new Date().toISOString().split('T')[0] === dataIso;
-
-                      return (
-                        <div 
-                          key={`d-${dia}`}
-                          className={`h-16 p-1.5 rounded-lg border text-left flex flex-col justify-between ${
-                            pres?.status === 'PRESENTE' ? 'bg-green-500/15 border-green-500/40 text-white' :
-                            pres?.status === 'DOENCA' ? 'bg-blue-500/15 border-blue-500/40 text-white' :
-                            pres?.status === 'FALTA' ? 'bg-red-500/15 border-red-500/40 text-white' :
-                            pres?.status === 'AGENDADO' ? 'bg-amber-500/15 border-amber-500/40 text-white' :
-                            ehHoje ? 'bg-[#1A1A1E] border-red-500 text-white' :
-                            'bg-[#1A1A1E] border-zinc-800 text-zinc-500'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold">{dia}</span>
-                            {ehHoje && <span className="text-[8px] bg-red-600 px-1 rounded text-white font-bold">HOJE</span>}
-                          </div>
-                          <span className="text-[9px] font-bold truncate">
-                            {pres?.status === 'PRESENTE' ? '✓ Presente' :
-                             pres?.status === 'DOENCA' ? '🩺 Doença' :
-                             pres?.status === 'FALTA' ? '✗ Falta' :
-                             pres?.status === 'AGENDADO' ? '⏳ Agendado' : ''}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Legenda */}
-                  <div className="flex flex-wrap gap-4 pt-3 border-t border-zinc-800 text-xs text-zinc-400">
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500"></span> Presença Confirmada</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span> Ausência por Doença (Atestado)</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500"></span> Falta Não Justificada</span>
-                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Check-in Pendente</span>
-                  </div>
+                <div id="calendario-mensal-aluno" className="scroll-mt-24">
+                  <InteractiveCombatCalendar
+                    userRole="ALUNO"
+                    alunoId={alunoLogado?.id}
+                    alunoNome={alunoLogado?.nome}
+                    onCheckinChanged={() => {
+                      if (alunoLogado?.id) {
+                        carregarFrequencia(alunoLogado.id, mesAtual, anoAtual);
+                        carregarAulas(alunoLogado.id);
+                      }
+                    }}
+                  />
                 </div>
               </>
             )}

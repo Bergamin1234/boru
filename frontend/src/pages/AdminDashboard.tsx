@@ -12,6 +12,7 @@ import { TeacherCommissionsTab } from '../components/TeacherCommissionsTab';
 import { OccupancyDashboardTab } from '../components/OccupancyDashboardTab';
 import { Student360Modal } from '../components/Student360Modal';
 import { AdminStoreRedemptionsTab } from '../components/AdminStoreRedemptionsTab';
+import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
 
 const graduacoesPorModalidade: Record<string, string[]> = {
   'Muay Thai': [
@@ -143,6 +144,7 @@ export default function AdminDashboard() {
   // Modal Lançar Aluno no Dia do Calendário Geral (Individual & Em Lote via Tabela)
   const [modalLancarDia, setModalLancarDia] = useState(false);
   const [modoLancarDia, setModoLancarDia] = useState<'LOTE' | 'INDIVIDUAL'>('LOTE');
+  const [subAbaCalendario, setSubAbaCalendario] = useState<'grade_aulas' | 'coletivo_lote'>('grade_aulas');
   const [alunoLancarDia, setAlunoLancarDia] = useState('');
   const [buscaAlunoLancarIndividual, setBuscaAlunoLancarIndividual] = useState('');
   const [statusLancarDia, setStatusLancarDia] = useState('PRESENTE');
@@ -1929,6 +1931,48 @@ export default function AdminDashboard() {
         {/* CONTEÚDO DA ABA: CALENDÁRIO DA ACADEMIA & FREQUÊNCIA GERAL */}
         {abaAtiva === 'calendario_geral' && (
           <div className="space-y-5">
+            {/* SELETOR DE MODO DO CALENDÁRIO: GRADE INTERATIVA (SKETCH BORÜ) VS COLETIVO EM LOTE */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#141416] border border-zinc-800 rounded-xl p-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSubAbaCalendario('grade_aulas')}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
+                    subAbaCalendario === 'grade_aulas'
+                      ? 'bg-red-600 text-white shadow-lg shadow-red-900/40'
+                      : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                  }`}
+                >
+                  <span>🥋 Grade de Aulas & Tatame (Horários, Cancelamentos e Presença)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubAbaCalendario('coletivo_lote')}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${
+                    subAbaCalendario === 'coletivo_lote'
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
+                      : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                  }`}
+                >
+                  <span>📊 Painel Coletivo & Lançamento em Lote</span>
+                </button>
+              </div>
+              <span className="text-[11px] text-zinc-400 hidden sm:inline">
+                {subAbaCalendario === 'grade_aulas'
+                  ? 'Veja os horários diários, risque aulas canceladas e aprove check-ins'
+                  : 'Visão agregada por dia e lançamento rápido em tabela'}
+              </span>
+            </div>
+
+            {subAbaCalendario === 'grade_aulas' ? (
+              <InteractiveCombatCalendar
+                userRole={usuarioLogado?.cargo === 'ADMIN' ? 'ADMIN' : 'PROFESSOR'}
+                usuarioLogado={usuarioLogado}
+                onCheckinChanged={() => carregarDashboard()}
+              />
+            ) : (
+              <div className="space-y-5">
+
             {/* CABEÇALHO DO CALENDÁRIO GERAL */}
             <div className="bg-[#141416] border border-zinc-800 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -2309,6 +2353,9 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+          
+              </div>
+            )}
           </div>
         )}
 

@@ -173,6 +173,16 @@ export const adminApi = {
   // Módulo Next-Gen Fase 1: Dashboard de Ocupação & Visão 360 do Aluno
   getOccupancyDashboard: () => api.get('/admin/dashboard/ocupacao'),
   getStudent360: (alunoId: string) => api.get(`/admin/alunos/${alunoId}/visao360`),
+
+  // Módulo de Grade de Aulas, Horários e Calendário Geral (Sketch do Guardanapo)
+  getMonthSchedule: (params: { mes: number; ano: number; alunoId?: string }) =>
+    api.get('/calendario/aulas-mes', { params }),
+  cancelClass: (eventoId: string, motivo?: string) =>
+    api.post(`/aulas/${eventoId}/cancelar`, { motivo }),
+  reactivateClass: (eventoId: string) =>
+    api.post(`/aulas/${eventoId}/reativar`),
+  markClassAttendance: (eventoId: string, data: { alunoId: string; status: string }) =>
+    api.post(`/aulas/${eventoId}/marcar-presenca`, data),
 };
 
 export const studentApi = {
@@ -203,4 +213,12 @@ export const studentApi = {
   redeemStoreItem: (studentId: string, itemId: string) =>
     api.post(`/alunos/${studentId}/loja/resgatar`, { itemId }),
   getGraduations: (studentId: string) => api.get(`/alunos/${studentId}/graduacoes`),
+
+  // Módulo de Grade de Aulas, Escolha de Horário e Cancelamento (Sketch do Guardanapo)
+  getMonthSchedule: (params: { mes: number; ano: number; alunoId?: string }) =>
+    api.get('/calendario/aulas-mes', { params }),
+  checkInBySchedule: (data: { alunoId: string; eventoId: string; shift?: string }) =>
+    api.post('/checkin/horario', data),
+  cancelCheckIn: (data: { checkinId: string; alunoId: string }) =>
+    api.post('/checkin/cancelar', data),
 };

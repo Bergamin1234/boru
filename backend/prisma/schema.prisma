@@ -88,7 +88,13 @@ model EventoDeAula {
   id          String                @id @default(uuid())
   titulo      String
   dataInicio  DateTime
-  dataFim     DateTime
+  dataFim             DateTime
+  cancelada           Boolean               @default(false)
+  motivoCancelamento  String?
+  professorId         String?
+  professorNome       String?               @default("Felipe Borü")
+  modalidade          String?               @default("Muay Thai")
+  capacidade          Int                   @default(25)
 
   agendamentos AgendamentoPresenca[]
 
