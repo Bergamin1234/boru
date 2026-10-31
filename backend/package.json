@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate",
-    "start": "prisma db push --accept-data-loss && tsx src/server.ts",
+    "start": "prisma db push && tsx src/server.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
   },
