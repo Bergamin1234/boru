@@ -7,6 +7,11 @@ import { FileUploadInput } from '../components/FileUploadInput';
 import { DevDashboardTab } from '../components/DevDashboardTab';
 import { FinancialDashboardTab } from '../components/FinancialDashboardTab';
 import { SplitRollCallTab } from '../components/SplitRollCallTab';
+import { CashRegisterTab } from '../components/CashRegisterTab';
+import { TeacherCommissionsTab } from '../components/TeacherCommissionsTab';
+import { OccupancyDashboardTab } from '../components/OccupancyDashboardTab';
+import { Student360Modal } from '../components/Student360Modal';
+import { AdminStoreRedemptionsTab } from '../components/AdminStoreRedemptionsTab';
 
 const graduacoesPorModalidade: Record<string, string[]> = {
   'Muay Thai': [
@@ -115,6 +120,7 @@ export default function AdminDashboard() {
   // Abas: 'alunos' | 'calendario_geral' | 'presencas' | 'avisos' | 'loja' | 'agendamentos' | 'professores'
   const [abaAtiva, setAbaAtiva] = useState('alunos');
   const [subAbaExperimental, setSubAbaExperimental] = useState<'pendentes' | 'posAula'>('pendentes');
+  const [aluno360Id, setAluno360Id] = useState<string | null>(null);
 
   // Filtros e busca de Alunos
   const [buscaAluno, setBuscaAluno] = useState('');
@@ -1255,6 +1261,42 @@ export default function AdminDashboard() {
                 💰 Gestão Financeira & Baixa
               </button>
             )}
+            {usuarioLogado?.cargo === 'ADMIN' && (
+              <button 
+                onClick={() => setAbaAtiva('caixa_diario')}
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                  abaAtiva === 'caixa_diario' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40'
+                }`}
+              >
+                💵 Caixa Diário (Fechamento)
+              </button>
+            )}
+            {usuarioLogado?.cargo === 'ADMIN' && (
+              <button 
+                onClick={() => setAbaAtiva('comissoes')}
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                  abaAtiva === 'comissoes' ? 'bg-amber-600 text-white' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50'
+                }`}
+              >
+                🥋 Comissões Professores
+              </button>
+            )}
+            <button 
+              onClick={() => setAbaAtiva('ocupacao')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                abaAtiva === 'ocupacao' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              }`}
+            >
+              🔥 Ocupação de Turmas
+            </button>
+            <button 
+              onClick={() => setAbaAtiva('resgates_loja')}
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                abaAtiva === 'resgates_loja' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+              }`}
+            >
+              🎟️ Vouchers & Retiradas
+              </button>
             <button 
               onClick={() => setAbaAtiva('avisos')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
@@ -1633,6 +1675,13 @@ export default function AdminDashboard() {
                         </td>
                         <td className="p-3 sm:p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            <button 
+                              onClick={() => setAluno360Id(aluno.id)}
+                              className="px-2.5 py-1 rounded bg-red-600/20 text-red-300 hover:bg-red-600 hover:text-white border border-red-500/40 text-xs font-black transition flex items-center gap-1 shadow-sm"
+                              title="Abrir Visão 360° do Aluno (Contratos, Finanças, XP, Points, Graduações)"
+                            >
+                              <span>🔍 Visão 360°</span>
+                            </button>
                             <button 
                               onClick={() => abrirCalendarioAluno(aluno)}
                               className="px-2.5 py-1 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold transition flex items-center gap-1"
@@ -2730,6 +2779,26 @@ export default function AdminDashboard() {
         )}
 
       </div>
+
+        {/* CONTEÚDO DA ABA: CAIXA DIÁRIO OBRIGATÓRIO (FASE 1) */}
+        {abaAtiva === 'caixa_diario' && usuarioLogado?.cargo === 'ADMIN' && (
+          <CashRegisterTab usuarioLogado={usuarioLogado} />
+        )}
+
+        {/* CONTEÚDO DA ABA: COMISSIONAMENTO DINÂMICO DE PROFESSORES (FASE 1) */}
+        {abaAtiva === 'comissoes' && usuarioLogado?.cargo === 'ADMIN' && (
+          <TeacherCommissionsTab />
+        )}
+
+        {/* CONTEÚDO DA ABA: DASHBOARD DE OCUPAÇÃO & HEATMAP (FASE 1) */}
+        {abaAtiva === 'ocupacao' && (
+          <OccupancyDashboardTab />
+        )}
+
+        {/* CONTEÚDO DA ABA: VOUCHERS & RESGATES DA LOJA NA RECEPÇÃO (FASE 1) */}
+        {abaAtiva === 'resgates_loja' && (
+          <AdminStoreRedemptionsTab usuarioLogado={usuarioLogado} />
+        )}
 
       {/* MODAL NOVO ALUNO */}
       {showModal && (
@@ -4137,6 +4206,15 @@ export default function AdminDashboard() {
         );
       })()}
 
+
+      {/* MODAL: VISÃO 360 DO ALUNO (FASE 1) */}
+      {aluno360Id && (
+        <Student360Modal
+          studentId={aluno360Id}
+          onClose={() => setAluno360Id(null)}
+          onRefreshStudentList={carregarDashboard}
+        />
+      )}
     </div>
   );
 }

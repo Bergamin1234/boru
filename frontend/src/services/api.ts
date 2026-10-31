@@ -125,6 +125,45 @@ export const adminApi = {
   deleteGamificationAchievement: (id: string) => api.delete(`/admin/gamificacao/conquistas/${id}`),
   resetGamificationDefault: () => api.post('/admin/gamificacao/reset-padrao'),
   exportGamificationJson: () => api.get('/admin/gamificacao/export-json'),
+
+  // Módulo Next-Gen Fase 1: Loja & Resgates na Recepção
+  getStoreRedemptions: (status?: string) =>
+    api.get('/admin/loja/resgates', { params: status ? { status } : undefined }),
+  deliverStoreRedemption: (id: string, entreguePor?: string) =>
+    api.post(`/admin/loja/resgates/${id}/entregar`, { entreguePor }),
+
+  // Módulo Next-Gen Fase 1: Exames de Graduação
+  registerGraduation: (alunoId: string, data: unknown) =>
+    api.post(`/admin/alunos/${alunoId}/graduacoes`, data),
+
+  // Módulo Next-Gen Fase 1: Fechamento de Caixa Diário Obrigatório
+  getCashRegisterStatus: () => api.get('/admin/caixa/status'),
+  openCashRegister: (data: { saldo_inicial_dinheiro: number; operador_id?: string; operador_nome?: string }) =>
+    api.post('/admin/caixa/abrir', data),
+  closeCashRegister: (data: {
+    caixaId: string;
+    saldo_dinheiro_contado: number;
+    justificativa_diferenca?: string;
+    operador_fechamento_id?: string;
+    operador_fechamento_nome?: string;
+  }) => api.post('/admin/caixa/fechar', data),
+  getCashRegisterReports: () => api.get('/admin/caixa/relatorios'),
+
+  // Módulo Next-Gen Fase 1: Gestão de Contratos Longos (3, 6, 12 meses)
+  getStudentContracts: (alunoId: string) => api.get(`/admin/alunos/${alunoId}/contratos`),
+  createStudentContract: (alunoId: string, data: unknown) =>
+    api.post(`/admin/alunos/${alunoId}/contratos`, data),
+
+  // Módulo Next-Gen Fase 1: Comissionamento Dinâmico de Professores
+  getTeacherCommissionConfigs: () => api.get('/admin/professores/comissoes/config'),
+  saveTeacherCommissionConfig: (data: unknown) =>
+    api.post('/admin/professores/comissoes/config', data),
+  getTeacherCommissionReport: (params?: { mes?: number; ano?: number }) =>
+    api.get('/admin/professores/comissoes/relatorio', { params }),
+
+  // Módulo Next-Gen Fase 1: Dashboard de Ocupação & Visão 360 do Aluno
+  getOccupancyDashboard: () => api.get('/admin/dashboard/ocupacao'),
+  getStudent360: (alunoId: string) => api.get(`/admin/alunos/${alunoId}/visao360`),
 };
 
 export const studentApi = {
@@ -145,4 +184,11 @@ export const studentApi = {
   getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
   signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
     api.post(`/alunos/${studentId}/assinar-contrato`, data),
+
+  // Módulo Next-Gen Fase 1: Carteira de Points, Loja de Recompensas & Graduações
+  getPointsWallet: (studentId: string) => api.get(`/alunos/${studentId}/carteira-pontos`),
+  getRewardStoreItems: () => api.get('/loja/recompensas'),
+  redeemStoreItem: (studentId: string, itemId: string) =>
+    api.post(`/alunos/${studentId}/loja/resgatar`, { itemId }),
+  getGraduations: (studentId: string) => api.get(`/alunos/${studentId}/graduacoes`),
 };

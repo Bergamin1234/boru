@@ -9,6 +9,7 @@ import { StudentGamificationTab } from '../components/StudentGamificationTab';
 import { ContractBlockingModal, MyContractsTab } from '../components/ContractModalAndTab';
 import { PublicQuickCheckinCard, LoggedQuickCheckinBanner } from '../components/QuickCheckinWidget';
 import { isImageSource } from '../components/FileUploadInput';
+import { StudentRewardStoreTab } from '../components/StudentRewardStoreTab';
 
 export default function PortalAluno() {
   const [aulas, setAulas] = useState<any[]>([]);
@@ -37,7 +38,7 @@ export default function PortalAluno() {
   // Sincroniza aba via query param (?tab=...) ou rota direta (/ranking, /dashboard-lutador, /torneios)
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['treinos', 'frequencia', 'conquistas', 'contratos', 'avisos', 'mercado', 'financeiro', 'torneios', 'ranking', 'desempenho'].includes(tabParam)) {
+    if (tabParam && ['treinos', 'frequencia', 'conquistas', 'contratos', 'avisos', 'mercado', 'financeiro', 'torneios', 'ranking', 'desempenho', 'recompensas'].includes(tabParam)) {
       setAbaAtiva(tabParam);
     } else if (location.pathname === '/ranking') {
       setAbaAtiva('ranking');
@@ -758,6 +759,14 @@ export default function PortalAluno() {
             }`}
           >
             🛍️ Loja & Lanches (Beta)
+          </button>
+          <button 
+            onClick={() => setAbaAtiva('recompensas')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              abaAtiva === 'recompensas' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+            }`}
+          >
+            🪙 Loja de Points & Prêmios
           </button>
           <button 
             onClick={() => setAbaAtiva('financeiro')}
@@ -1652,6 +1661,11 @@ export default function PortalAluno() {
           <StudentPerformanceStatsTab aluno={alunoLogado} />
         )}
 
+        {/* CONTEÚDO DA ABA: LOJA DE POINTS & GRADUAÇÕES FASE 1 */}
+        {abaAtiva === 'recompensas' && alunoLogado && (
+          <StudentRewardStoreTab alunoId={alunoLogado.id} alunoNome={alunoLogado.nome} />
+        )}
+
       </div>
 
       {/* MODAL JUSTIFICAR AUSÊNCIA / INFORMAR DOENÇA */}
@@ -1763,6 +1777,16 @@ export default function PortalAluno() {
         >
           <span className="text-base">🛍️</span>
           <span>Loja</span>
+        </button>
+
+        <button 
+          onClick={() => setAbaAtiva('recompensas')}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
+            abaAtiva === 'recompensas' ? 'text-amber-400' : 'text-zinc-500'
+          }`}
+        >
+          <span className="text-base">🪙</span>
+          <span>Points</span>
         </button>
 
         <button 

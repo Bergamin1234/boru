@@ -5,6 +5,7 @@ import path from 'path';
 import { evaluateStudentGamification } from './gamificationService';
 import { registerGamificationRoutes } from './gamificationRoutes';
 import { registerAddonRoutes, calcularProximoVencimentoPorAdesao } from './addonRoutes';
+import { registerPhase1Routes } from './phase1Routes';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -29,6 +30,7 @@ app.use(cors({
 app.use(express.json({ limit: '15mb' }));
 registerGamificationRoutes(app, prisma);
 registerAddonRoutes(app, prisma);
+registerPhase1Routes(app, prisma);
 
 // Servir arquivos estáticos do frontend e uploads (modo portátil / produção)
 app.use(express.static(path.join(__dirname, '../public')));

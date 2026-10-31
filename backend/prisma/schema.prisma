@@ -55,11 +55,17 @@ model Aluno {
   data_de_adesao             DateTime? // Data de adesão para fixar dia de vencimento financeiro (Módulo 2)
   contract_signed_at         DateTime? // Timestamp da assinatura eletrônica (Módulo 2)
   contract_signature_payload String?   // Payload JSON de auditoria (Nome, CPF, Timestamp) (Módulo 2)
+  total_xp                   Int       @default(0) // Experiência cumulativa vitalícia (define nível e patente)
+  spendable_points           Int       @default(0) // Moeda virtual para resgate na Loja In-App
   criadoEm                   DateTime  @default(now())
 
   mensalidades        Mensalidade[]
   presencas           AgendamentoPresenca[]
   conquistasProgresso UserAchievementProgress[]
+  extratoPontos       PointsLedger[]
+  resgatesLoja        RewardRedemption[]
+  historicoGraduacoes GraduationHistory[]
+  contratosLongos     StudentContract[]
 }
 
 model Mensalidade {
@@ -240,3 +246,141 @@ model TransacaoFinanceira {
   criadoEm        DateTime @default(now())
 }
 
+
+
+// ==========================================
+// MÓDULO DE ECONOMIA GAMIFICADA (POINTS & RECOMPENSAS)
+// ==========================================
+model PointsLedger {
+  id                 String   @id @default(uuid())
+  alunoId            String
+  aluno              Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  tipo               String   // PRESENCA_TATAME, STREAK_SEMANAL, CONQUISTA_DESBLOQUEADA, RESGATE_LOJA, BONUS_CONTRATO, AJUSTE_ADMIN
+  xp_delta           Int      @default(0)
+  points_delta       Int      @default(0)
+  saldo_pontos_apos  Int
+  descricao          String
+  referenciaId       String?
+  criadoEm           DateTime @default(now())
+}
+
+model RewardStoreItem {
+  id                 String             @id @default(uuid())
+  nome               String
+  categoria          String             // ACESSORIOS, EQUIPAMENTOS, VESTUARIO
+  custo_points       Int
+  estoque            Int                @default(10)
+  descricao          String?
+  imagem_url         String?
+  ativo              Boolean            @default(true)
+  criadoEm           DateTime           @default(now())
+
+  resgates           RewardRedemption[]
+}
+
+model RewardRedemption {
+  id                 String          @id @default(uuid())
+  alunoId            String
+  aluno              Aluno           @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  itemId             String
+  item               RewardStoreItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  pontos_gastos      Int
+  codigo_voucher     String          @unique
+  status             String          @default("PENDENTE_RETIRADA") // PENDENTE_RETIRADA, ENTREGUE, CANCELADO
+  entregueEm         DateTime?
+  entreguePor        String?
+  criadoEm           DateTime        @default(now())
+}
+
+model GraduationHistory {
+  id                 String   @id @default(uuid())
+  alunoId            String
+  aluno              Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  modalidade         String   @default("Muay Thai")
+  graduacao_anterior String?
+  nova_graduacao     String
+  professorId        String?
+  professorNome      String?
+  data_graduacao     DateTime @default(now())
+  notas_exame        String?
+  certificado_url    String?
+  criadoEm           DateTime @default(now())
+}
+
+// ==========================================
+// MÓDULO DE FECHAMENTO DE CAIXA DIÁRIO OBRIGATÓRIO
+// ==========================================
+model CashRegisterSession {
+  id                       String    @id @default(uuid())
+  data_abertura            DateTime  @default(now())
+  data_fechamento          DateTime?
+  operador_abertura_id     String?
+  operador_abertura_nome   String?
+  operador_fechamento_id   String?
+  operador_fechamento_nome String?
+  saldo_inicial_dinheiro   Float     @default(0)
+  entradas_dinheiro        Float     @default(0)
+  entradas_pix             Float     @default(0)
+  entradas_cartao          Float     @default(0)
+  saidas_dinheiro          Float     @default(0)
+  saldo_dinheiro_esperado  Float     @default(0)
+  saldo_dinheiro_contado   Float?
+  diferenca_dinheiro       Float?
+  justificativa_diferenca  String?
+  status                   String    @default("ABERTO") // ABERTO, FECHADO
+  resumo_json              String?
+  criadoEm                 DateTime  @default(now())
+}
+
+// ==========================================
+// GESTÃO DE CONTRATOS LONGOS (3M, 6M, 1 ANO)
+// ==========================================
+model StudentContract {
+  id                       String   @id @default(uuid())
+  alunoId                  String
+  aluno                    Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  nome_plano               String   // Trimestral, Semestral, Anual
+  tipo_duracao             String   // TRIMESTRAL, SEMESTRAL, ANUAL
+  duracao_meses            Int      @default(3)
+  valor_total              Float
+  valor_mensal_competencia Float
+  data_inicio              DateTime @default(now())
+  data_fim                 DateTime
+  status                   String   @default("ATIVO") // ATIVO, CONCLUIDO, CANCELADO
+  observacao               String?
+  criadoEm                 DateTime @default(now())
+}
+
+// ==========================================
+// COMISSIONAMENTO DINÂMICO DE PROFESSORES
+// ==========================================
+model TeacherCommissionSetting {
+  id                   String   @id @default(uuid())
+  professorId          String   @unique
+  modelo               String   @default("POR_ALUNO_PRESENTE") // POR_ALUNO_PRESENTE, POR_MATRICULADO_ATIVO, HIBRIDO
+  valor_por_presenca   Float    @default(3.0)
+  valor_por_matriculado Float   @default(5.0)
+  bonus_conversao_lead Float    @default(30.0)
+  criadoEm             DateTime @default(now())
+}
+
+model TeacherCommissionReport {
+  id                           String   @id @default(uuid())
+  professorId                  String
+  professorNome                String
+  mes                          Int
+  ano                          Int
+  aulas_ministradas            Int      @default(0)
+  total_presencas              Int      @default(0)
+  total_matriculados           Int      @default(0)
+  total_conversoes             Int      @default(0)
+  valor_comissao_presenca      Float    @default(0)
+  valor_comissao_matriculados  Float    @default(0)
+  valor_bonus_conversoes       Float    @default(0)
+  valor_total                  Float    @default(0)
+  status                       String   @default("PENDENTE") // PENDENTE, PAGO
+  pagoEm                       DateTime?
+  criadoEm                     DateTime @default(now())
+
+  @@unique([professorId, mes, ano])
+}
