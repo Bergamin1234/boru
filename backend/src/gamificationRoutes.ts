@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Express } from 'express';
 import { PrismaClient } from '@prisma/client';
 import {
@@ -500,4 +502,214 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
       res.status(500).json({ erro: 'Erro ao exportar configuração JSON.' });
     }
   });
+
+
+  // AVALIAÇÃO DE DESEMPENHO E ATRIBUTOS (FIGHT IQ & RADAR)
+  // ==========================================
+  const avaliacoesFilePath = path.join(__dirname, '../data/avaliacoes_alunos.json');
+
+  function carregarAvaliacoes(): Record<string, any> {
+    try {
+      if (fs.existsSync(avaliacoesFilePath)) {
+        return JSON.parse(fs.readFileSync(avaliacoesFilePath, 'utf8'));
+      }
+    } catch (e) {}
+    return {};
+  }
+
+  function salvarAvaliacoes(dados: Record<string, any>) {
+    try {
+      const dir = path.dirname(avaliacoesFilePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(avaliacoesFilePath, JSON.stringify(dados, null, 2), 'utf8');
+    } catch (e) {
+      console.error('Erro ao salvar avaliações:', e);
+    }
+  }
+
+  // Obter avaliação do aluno (Admin / Professor)
+  app.get('/api/admin/alunos/:id/avaliacao', async (req, res) => {
+    const { id } = req.params;
+    const todas = carregarAvaliacoes();
+    const avaliacao = todas[id] || {
+      avaliado: false,
+      forca: 80,
+      tecnica: 80,
+      resistencia: 80,
+      flexibilidade: 80,
+      disciplina: 80,
+      mmr: 1500,
+      precisaoGolpes: 75.0,
+      parecerMestre: '',
+      avaliadoPor: 'Mestre Felipe Borü',
+      avaliadoEm: null
+    };
+    res.json(avaliacao);
+  });
+
+  // Salvar/Atualizar avaliação do aluno (Professor / Admin)
+  app.post('/api/admin/alunos/:id/avaliacao', async (req, res) => {
+    const { id } = req.params;
+    const { forca, tecnica, resistencia, flexibilidade, disciplina, mmr, precisaoGolpes, parecerMestre, avaliadoPor } = req.body;
+    
+    const todas = carregarAvaliacoes();
+    const novaAvaliacao = {
+      forca: Math.min(100, Math.max(0, Number(forca) || 80)),
+      tecnica: Math.min(100, Math.max(0, Number(tecnica) || 80)),
+      resistencia: Math.min(100, Math.max(0, Number(resistencia) || 80)),
+      flexibilidade: Math.min(100, Math.max(0, Number(flexibilidade) || 80)),
+      disciplina: Math.min(100, Math.max(0, Number(disciplina) || 90)),
+      mmr: Number(mmr) || 2840,
+      precisaoGolpes: Number(precisaoGolpes) || 78.4,
+      parecerMestre: parecerMestre || 'Ótima evolução nas aulas e sparrings técnicos.',
+      avaliadoPor: avaliadoPor || 'Mestre Felipe Borü',
+      avaliadoEm: new Date().toISOString(),
+      avaliado: true
+    };
+
+    todas[id] = novaAvaliacao;
+    salvarAvaliacoes(todas);
+
+    res.json({ mensagem: 'Avaliação de desempenho salva com sucesso!', avaliacao: novaAvaliacao });
+  });
+
+  // Obter avaliação para o Portal do Aluno (retorna null/avaliado=false se o Mestre ainda não avaliou)
+  app.get('/api/alunos/:id/avaliacao', async (req, res) => {
+    const { id } = req.params;
+    const todas = carregarAvaliacoes();
+    const avaliacao = todas[id];
+    if (!avaliacao) {
+      return res.json({
+        avaliado: false,
+        forca: null,
+        tecnica: null,
+        resistencia: null,
+        flexibilidade: null,
+        disciplina: null,
+        mmr: 0,
+        precisaoGolpes: null,
+        parecerMestre: null,
+        avaliadoPor: 'Mestre Felipe Borü',
+        avaliadoEm: null
+      });
+    }
+    res.json({ ...avaliacao, avaliado: true });
+  });
+
+  // Ranking Oficial dos Guerreiros do CT Borü (XP ZERADO - CONTA ESTRITAMENTE A PARTIR DOS CHECK-INS)
+  app.get('/api/alunos/ranking', async (req, res) => {
+    try {
+      const periodo = String(req.query.periodo || 'temporada').toLowerCase();
+      const todasAvaliacoes = carregarAvaliacoes();
+
+      const alunos = await prisma.aluno.findMany({
+        include: {
+          presencas: {
+            where: { status: 'PRESENTE' },
+            orderBy: { data: 'desc' },
+          },
+          conquistasProgresso: {
+            where: { status: 'completed' },
+            include: { achievement: true },
+          },
+        },
+        orderBy: { nome: 'asc' },
+      });
+
+      const agora = Date.now();
+
+      const leaderboard = alunos.map((aluno) => {
+        // Filtrar presenças reais de acordo com o período selecionado
+        let presencasNoPeriodo = aluno.presencas;
+        if (periodo === 'semanal') {
+          presencasNoPeriodo = aluno.presencas.filter(p => {
+            const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
+            return diffDias <= 7;
+          });
+        } else if (periodo === 'mensal') {
+          presencasNoPeriodo = aluno.presencas.filter(p => {
+            const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
+            return diffDias <= 30;
+          });
+        }
+
+        // -------------------------------------------------------------
+        // PONTUAÇÃO: ESTRITAMENTE POR CHECK-INS REAIS (+100 XP / CHECK-IN)
+        // -------------------------------------------------------------
+        const totalPresencas = presencasNoPeriodo.length;
+        const xpPresencas = totalPresencas * 100; // Cada check-in registrado = +100 XP
+
+        // Sequência real de treinos nos últimos 7 dias (0 se nunca treinou)
+        const treinosRecentes = aluno.presencas.filter(p => {
+          const diffDias = Math.floor((agora - new Date(p.data).getTime()) / (1000 * 60 * 60 * 24));
+          return diffDias <= 7;
+        }).length;
+        const streak = totalPresencas > 0 ? Math.max(1, treinosRecentes) : 0;
+        const xpStreak = streak > 1 ? (streak - 1) * 20 : 0; // Bônus apenas para sequências reais consecutivas
+
+        // Conquistas completadas reais
+        const conquistasCount = aluno.conquistasProgresso.length;
+        const xpConquistas = aluno.conquistasProgresso.reduce(
+          (acc, cur) => acc + (cur.achievement?.xp_points || 0),
+          0
+        );
+
+        // Avaliação do mestre (apenas informativa, não soma XP prévio falso)
+        const avaliacao = todasAvaliacoes[aluno.id];
+        let mmrValor = 0;
+        let mediaAtributos = 0;
+        if (avaliacao && avaliacao.avaliado) {
+          mediaAtributos = Math.round(
+            ((Number(avaliacao.forca) || 0) +
+             (Number(avaliacao.tecnica) || 0) +
+             (Number(avaliacao.resistencia) || 0) +
+             (Number(avaliacao.flexibilidade) || 0) +
+             (Number(avaliacao.disciplina) || 0)) / 5
+          );
+          mmrValor = Number(avaliacao.mmr) || 1500;
+        }
+
+        // PONTUAÇÃO FINAL DE XP: 0 SE NÃO HOUVER CHECK-INS OU CONQUISTAS REAIS
+        const xpAvaliacaoMestre = 0;
+        const xpTotal = xpPresencas + xpStreak + xpConquistas;
+
+        const prajied = aluno.prajied || 'Branco';
+        const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`;
+        const primeiroNome = aluno.nome.trim().split(' ')[0];
+
+        return {
+          id: aluno.id,
+          name: aluno.nome,
+          nickname: primeiroNome.toUpperCase(),
+          avatar,
+          league: `Prajied ${prajied} // ${aluno.plano || 'CT Borü'}`,
+          prajied,
+          xp: xpTotal,
+          xpPresencas,
+          xpStreak,
+          xpAvaliacaoMestre,
+          xpConquistas,
+          conquistasCount,
+          mmr: mmrValor,
+          mediaAtributos,
+          streak,
+          totalPresencas,
+        };
+      });
+
+      // Ordenar do 1º ao último pelo XP Total
+      leaderboard.sort((a, b) => b.xp - a.xp);
+
+      const rankingFinal = leaderboard.map((item, idx) => ({
+        ...item,
+        rank: idx + 1,
+      }));
+
+      res.json(rankingFinal);
+    } catch (error) {
+      console.error('Erro ao gerar ranking dos alunos:', error);
+      res.status(500).json({ erro: 'Erro ao gerar ranking dos alunos.' });
+    }
+  });
+
 }

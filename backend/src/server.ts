@@ -473,6 +473,140 @@ app.delete('/api/admin/avisos/:id', async (req, res) => {
   }
 });
 
+
+// ==========================================
+// CONFIGURAÇÕES DA GALERIA DE FOTOS (ADMIN & PÚBLICO)
+// ==========================================
+const galeriaFilePath = path.join(__dirname, '../data/galeria_fotos.json');
+
+const fotosPadraoGaleria = [
+  {
+    "id": "foto-1",
+    "url": "/galeria-treino-chute.jpg",
+    "titulo": "Técnica de Chute",
+    "subtitulo": "Potência & Guarda Firme",
+    "fileira": "superior",
+    "ordem": 1,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-2",
+    "url": "/hero-ct-combat.jpg",
+    "titulo": "Sparring Supervisionado",
+    "subtitulo": "Tatame Principal do CT",
+    "fileira": "superior",
+    "ordem": 2,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-3",
+    "url": "/ct-boru-estrutura.jpg",
+    "titulo": "Infraestrutura",
+    "subtitulo": "Sacos Pesados & Ringue",
+    "fileira": "superior",
+    "ordem": 3,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-4",
+    "url": "/galeria-mestre-aluno.jpg",
+    "titulo": "Disciplina & Respeito",
+    "subtitulo": "Mestre Felipe Borü & Alunos",
+    "fileira": "inferior",
+    "ordem": 4,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-5",
+    "url": "/modalidade-muaythai.jpg",
+    "titulo": "Tradição Tailandesa",
+    "subtitulo": "Arte das 8 Armas",
+    "fileira": "inferior",
+    "ordem": 5,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  },
+  {
+    "id": "foto-6",
+    "url": "/oque-e-ct-boru.jpg",
+    "titulo": "Evolução Técnica",
+    "subtitulo": "Velocidade & Combinações",
+    "fileira": "inferior",
+    "ordem": 6,
+    "criadoEm": "2026-10-29T10:00:00.000Z"
+  }
+];
+
+function carregarGaleria(): any[] {
+  try {
+    if (fs.existsSync(galeriaFilePath)) {
+      const data = JSON.parse(fs.readFileSync(galeriaFilePath, 'utf8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch (e) {}
+  return fotosPadraoGaleria;
+}
+
+function salvarGaleria(fotos: any[]) {
+  try {
+    const dir = path.dirname(galeriaFilePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(galeriaFilePath, JSON.stringify(fotos, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Erro ao salvar galeria:', e);
+  }
+}
+
+// Listar fotos da galeria (Público & Admin)
+app.get('/api/galeria', (_req, res) => {
+  const fotos = carregarGaleria();
+  res.json(fotos);
+});
+
+// Adicionar nova foto na galeria (Admin)
+app.post('/api/admin/galeria', (req, res) => {
+  const { url, titulo, subtitulo, fileira } = req.body;
+  if (!url || !url.trim()) {
+    return res.status(400).json({ erro: 'A URL da foto é obrigatória.' });
+  }
+
+  const fotos = carregarGaleria();
+  const novaFoto = {
+    id: 'foto-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+    url: url.trim(),
+    titulo: (titulo && titulo.trim()) || 'Tatame CT BORÜ',
+    subtitulo: (subtitulo && subtitulo.trim()) || 'Treino & Evolução',
+    fileira: fileira === 'inferior' ? 'inferior' : 'superior',
+    ordem: fotos.length + 1,
+    criadoEm: new Date().toISOString()
+  };
+
+  fotos.push(novaFoto);
+  salvarGaleria(fotos);
+
+  res.json({ mensagem: 'Foto adicionada à galeria com sucesso!', foto: novaFoto, total: fotos.length });
+});
+
+// Excluir foto da galeria (Admin)
+app.delete('/api/admin/galeria/:id', (req, res) => {
+  const { id } = req.params;
+  let fotos = carregarGaleria();
+  const inicial = fotos.length;
+  fotos = fotos.filter(f => f.id !== id);
+
+  if (fotos.length === inicial) {
+    return res.status(404).json({ erro: 'Foto não encontrada.' });
+  }
+
+  salvarGaleria(fotos);
+  res.json({ mensagem: 'Foto removida da galeria.', total: fotos.length });
+});
+
+// Restaurar fotos padrão da galeria (Admin)
+app.post('/api/admin/galeria/restaurar', (_req, res) => {
+  salvarGaleria(fotosPadraoGaleria);
+  res.json({ mensagem: 'Galeria restaurada para o padrão oficial com sucesso!', fotos: fotosPadraoGaleria });
+});
+
 // ==========================================
 // LOJA & MERCADO BORÜ (BETA)
 // ==========================================
@@ -947,7 +1081,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
       include: {
         mensalidades: { orderBy: { dataVencimento: 'desc' }, take: 1 },
         presencas: {
-          where: { data: { gte: inicioMes, lte: fimMes } }
+          orderBy: { data: 'desc' }
         }
       },
       orderBy: { nome: 'asc' }
@@ -956,6 +1090,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
     let somaPorcentagens = 0;
     let totalMensalistas = 0;
     let alunosEmRiscoCount = 0;
+    let alunosAtivosCount = 0;
+    let alunosInativosCount = 0;
 
     const alunosFormatados = alunos.map(aluno => {
       const ultimaMensalidade = aluno.mensalidades[0];
@@ -977,11 +1113,38 @@ app.get('/api/admin/dashboard', async (req, res) => {
       const planoLower = (aluno.plano || '').toLowerCase();
       const isDiariaOuConvenio = planoLower.includes('diária') || planoLower.includes('diaria') || planoLower.includes('wellhub') || planoLower.includes('totalpass') || planoLower.includes('gympass');
 
-      // Frequência no mês
-      const presencasMes = aluno.presencas.filter(p => p.status === 'PRESENTE').length;
-      const doencaMes = aluno.presencas.filter(p => p.status === 'DOENCA' || p.tipoJustificativa === 'DOENCA').length;
-      const faltasMes = aluno.presencas.filter(p => p.status === 'FALTA' || p.status === 'AUSENTE').length;
+      // Frequência filtrada para o mês vigente
+      const presencasDoMes = aluno.presencas.filter(p => p.data >= inicioMes && p.data <= fimMes);
+      const presencasMes = presencasDoMes.filter(p => p.status === 'PRESENTE').length;
+      const doencaMes = presencasDoMes.filter(p => p.status === 'DOENCA' || p.tipoJustificativa === 'DOENCA').length;
+      const faltasMes = presencasDoMes.filter(p => p.status === 'FALTA' || p.status === 'AUSENTE').length;
       const treinosSemana = aluno.presencas.filter(p => p.data >= inicioSemana && p.data <= fimSemana && ['PRESENTE', 'DOENCA', 'JUSTIFICADO'].includes(p.status)).length;
+
+      // Último treino registrado para cálculo de inatividade (ausente há 2 a 3 semanas ou mais sem treinar)
+      const ultimoTreinoPresenca = aluno.presencas.find(p => p.status === 'PRESENTE');
+      let diasSemTreinar = 0;
+      let dataUltimoTreino: string | null = null;
+
+      if (ultimoTreinoPresenca) {
+        dataUltimoTreino = ultimoTreinoPresenca.data.toISOString().split('T')[0];
+        const diffTime = agora.getTime() - new Date(ultimoTreinoPresenca.data).getTime();
+        diasSemTreinar = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      } else {
+        const refDate = aluno.data_de_adesao ? new Date(aluno.data_de_adesao) : new Date(aluno.criadoEm);
+        const diffTime = agora.getTime() - refDate.getTime();
+        diasSemTreinar = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      }
+
+      // Regra de Inatividade: Alunos ausentes há 2 a 3 semanas (14 a 21+ dias) sem vir treinar
+      const isInativo = diasSemTreinar >= 14;
+      const statusAtividade: 'ATIVO' | 'INATIVO' = isInativo ? 'INATIVO' : 'ATIVO';
+      const semanasSemTreinar = Math.floor(diasSemTreinar / 7);
+
+      if (isInativo) {
+        alunosInativosCount++;
+      } else {
+        alunosAtivosCount++;
+      }
 
       let aulasEsperadas = 8;
       if (planoLower.includes('3x')) aulasEsperadas = 12;
@@ -995,7 +1158,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
         statusAssiduidade = treinosSemana > 0 ? 'ATIVO_SEMANA' : 'SEM_TREINO_SEMANA';
       } else {
         totalMensalistas++;
-        const base = Math.max(aulasEsperadas, aluno.presencas.length || 1);
+        const base = Math.max(aulasEsperadas, presencasDoMes.length || 1);
         porcentagemPresenca = Math.min(100, Math.round(((presencasMes + doencaMes) / base) * 100));
         somaPorcentagens += porcentagemPresenca;
 
@@ -1031,7 +1194,11 @@ app.get('/api/admin/dashboard', async (req, res) => {
         treinosSemana,
         aulasEsperadas,
         porcentagemPresenca,
-        statusAssiduidade
+        statusAssiduidade,
+        statusAtividade,
+        diasSemTreinar,
+        semanasSemTreinar,
+        dataUltimoTreino
       };
     });
 
@@ -1050,6 +1217,8 @@ app.get('/api/admin/dashboard', async (req, res) => {
         inadimplentes: inadimplentesCount,
         taxaPresencaMedia,
         alunosEmRisco: alunosEmRiscoCount,
+        alunosAtivos: alunosAtivosCount,
+        alunosInativos: alunosInativosCount,
         presencasHoje
       },
       alunos: alunosFormatados

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { studentApi } from '../services/api';
 import {
   Radar,
   RadarChart,
@@ -23,161 +24,136 @@ export interface FighterRank {
   league: string;
   xp: number;
   streak: number;
+  totalPresencas?: number;
+  conquistasCount?: number;
+  mmr?: number;
   isCurrentUser?: boolean;
 }
 
-const mockAttributes: CombatAttribute[] = [
-  { attribute: 'FORÇA', value: 88, fullMark: 100 },
-  { attribute: 'TÉCNICA', value: 94, fullMark: 100 },
-  { attribute: 'RESISTÊNCIA', value: 82, fullMark: 100 },
-  { attribute: 'FLEXIBILIDADE', value: 76, fullMark: 100 },
-  { attribute: 'DISCIPLINA', value: 98, fullMark: 100 },
-];
-
-const mockCTLeaderboard: FighterRank[] = [
-  {
-    rank: 1,
-    id: 'u-1',
-    name: 'Gabriel "Pitbull" Costa',
-    nickname: 'PITBULL',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    league: 'Prajied Vermelho // Liga Titânio Borü',
-    xp: 5420,
-    streak: 14,
-  },
-  {
-    rank: 2,
-    id: 'u-2',
-    name: 'Lucas "Predador" Siqueira',
-    nickname: 'PREDADOR',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    league: 'Prajied Marrom // Liga Diamante Borü',
-    xp: 4980,
-    streak: 9,
-  },
-  {
-    rank: 3,
-    id: 'u-3',
-    name: 'Matheus "Spartan" Rocha',
-    nickname: 'SPARTAN',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    league: 'Prajied Azul Escuro // Liga Ouro Borü',
-    xp: 4620,
-    streak: 7,
-  },
-  {
-    rank: 4,
-    id: 'u-4',
-    name: 'Renan Barreto',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Azul Claro',
-    xp: 4120,
-    streak: 5,
-  },
-  {
-    rank: 5,
-    id: 'u-5',
-    name: 'Thiago "Demolidor" Martins',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Azul Claro',
-    xp: 3890,
-    streak: 4,
-  },
-  {
-    rank: 6,
-    id: 'u-6',
-    name: 'Rafael "Sombra" Lima',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Verde e Branco',
-    xp: 3640,
-    streak: 6,
-  },
-  {
-    rank: 7,
-    id: 'u-7',
-    name: 'Bruno "Trator" Alencar',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Verde',
-    xp: 3410,
-    streak: 3,
-  },
-  {
-    rank: 8,
-    id: 'u-8',
-    name: 'Felipe Santana',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Branco e Vermelho',
-    xp: 3200,
-    streak: 2,
-  },
-  {
-    rank: 9,
-    id: 'u-9',
-    name: 'Caio "Viper" Silveira',
-    avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Branco',
-    xp: 2950,
-    streak: 1,
-  },
-  {
-    rank: 10,
-    id: 'u-10',
-    name: 'Diego Mendes',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Branco',
-    xp: 2810,
-    streak: 4,
-  },
-  {
-    rank: 14,
-    id: 'u-14',
-    name: 'Rodrigo "Tanque" Neves',
-    nickname: 'TANQUE',
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&auto=format&fit=crop&q=80',
-    league: 'Prajied Azul // Liga Prata Borü',
-    xp: 2540,
-    streak: 3,
-  },
-  {
-    rank: 15,
-    id: 'u-current',
-    name: 'Ítalo Bergamin',
-    nickname: 'GUERREIRO BORÜ',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    league: 'Prajied Azul // Liga Prata Borü',
-    xp: 2420,
-    streak: 8,
-    isCurrentUser: true,
-  },
+const defaultAttributes: CombatAttribute[] = [
+  { attribute: 'FORÇA', value: 0, fullMark: 100 },
+  { attribute: 'TÉCNICA', value: 0, fullMark: 100 },
+  { attribute: 'RESISTÊNCIA', value: 0, fullMark: 100 },
+  { attribute: 'FLEXIBILIDADE', value: 0, fullMark: 100 },
+  { attribute: 'DISCIPLINA', value: 0, fullMark: 100 },
 ];
 
 export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
   const [filterPeriod, setFilterPeriod] = useState<'semanal' | 'mensal' | 'temporada'>('temporada');
+  const [atributos, setAtributos] = useState<CombatAttribute[]>(defaultAttributes);
+  const [evalData, setEvalData] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<FighterRank[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Identifica o usuário logado e o colega de treino imediatamente acima no CT
-  const rawUser = mockCTLeaderboard.find((u) => u.isCurrentUser) || mockCTLeaderboard[mockCTLeaderboard.length - 1];
-  const currentUser = {
-    ...rawUser,
-    name: aluno?.nome || rawUser.name,
-    league: aluno?.prajied || aluno?.plano || rawUser.league,
-    streak: aluno?.diasSeguidos || rawUser.streak,
-  };
-  const rivalAbove = mockCTLeaderboard.find((u) => u.rank === currentUser.rank - 1) || mockCTLeaderboard[mockCTLeaderboard.length - 2];
-  const xpDifference = rivalAbove ? rivalAbove.xp - currentUser.xp : 120;
+  // Carrega avaliação de desempenho dada pelo Mestre Felipe Borü
+  useEffect(() => {
+    if (aluno?.id) {
+      studentApi.getEvaluation(aluno.id)
+        .then((res: any) => {
+          if (res?.data && res.data.avaliado) {
+            setEvalData(res.data);
+            setAtributos([
+              { attribute: 'FORÇA', value: Number(res.data.forca) || 0, fullMark: 100 },
+              { attribute: 'TÉCNICA', value: Number(res.data.tecnica) || 0, fullMark: 100 },
+              { attribute: 'RESISTÊNCIA', value: Number(res.data.resistencia) || 0, fullMark: 100 },
+              { attribute: 'FLEXIBILIDADE', value: Number(res.data.flexibilidade) || 0, fullMark: 100 },
+              { attribute: 'DISCIPLINA', value: Number(res.data.disciplina) || 0, fullMark: 100 },
+            ]);
+          } else {
+            setEvalData({ avaliado: false });
+          }
+        })
+        .catch(() => {
+          setEvalData({ avaliado: false });
+        });
+    }
+  }, [aluno?.id]);
+
+  // Carrega o ranking oficial com os alunos reais filtrados por período
+  useEffect(() => {
+    setLoading(true);
+    studentApi.getLeaderboard(filterPeriod)
+      .then((res: any) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          const list: FighterRank[] = res.data.map((item: any, idx: number) => {
+            const isMe = aluno?.id 
+              ? item.id === aluno.id 
+              : (aluno?.nome ? item.name.toLowerCase() === aluno.nome.toLowerCase() : false);
+            return {
+              rank: idx + 1,
+              id: item.id,
+              name: item.name,
+              nickname: item.nickname || item.name.split(' ')[0].toUpperCase(),
+              avatar: item.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=18181b&color=ef4444&bold=true&size=128`,
+              league: item.league || `Prajied ${item.prajied || 'Branco'} // CT Borü`,
+              xp: Number(item.xp) || 0,
+              streak: Number(item.streak) || 0,
+              totalPresencas: Number(item.totalPresencas) || 0,
+              conquistasCount: Number(item.conquistasCount) || 0,
+              mmr: Number(item.mmr) || 0,
+              isCurrentUser: isMe,
+            };
+          });
+
+          // Se o aluno logado não estiver no ranking, adiciona-o zerado
+          const jaTemEu = list.some(f => f.isCurrentUser);
+          if (!jaTemEu && aluno?.nome) {
+            const meuRank: FighterRank = {
+              rank: list.length + 1,
+              id: aluno.id || 'u-current',
+              name: aluno.nome,
+              nickname: aluno.nome.split(' ')[0].toUpperCase(),
+              avatar: aluno.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno.nome)}&background=18181b&color=ef4444&bold=true&size=128`,
+              league: `Prajied ${aluno.prajied || 'Branco'} // ${aluno.plano || 'CT Borü'}`,
+              xp: 0,
+              streak: 0,
+              totalPresencas: 0,
+              conquistasCount: 0,
+              mmr: 0,
+              isCurrentUser: true,
+            };
+            list.push(meuRank);
+          }
+
+          setLeaderboard(list);
+        }
+      })
+      .catch((err) => {
+        console.error('Erro ao buscar ranking dos alunos:', err);
+      })
+      .finally(() => setLoading(false));
+  }, [filterPeriod, aluno?.id, aluno?.nome]);
+
+  // Identifica o aluno atual no ranking
+  const currentUser: FighterRank = leaderboard.find((u) => u.isCurrentUser) || (leaderboard.length > 0 ? leaderboard[Math.min(14, leaderboard.length - 1)] : {
+    rank: 15,
+    id: aluno?.id || 'u-current',
+    name: aluno?.nome || 'Guerreiro Borü',
+    nickname: (aluno?.nome || 'Guerreiro').split(' ')[0].toUpperCase(),
+    avatar: aluno?.fotoPerfilUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(aluno?.nome || 'Guerreiro')}&background=18181b&color=ef4444&bold=true&size=128`,
+    league: `Prajied ${aluno?.prajied || 'Branco'} // ${aluno?.plano || 'CT Borü'}`,
+    xp: aluno?.xp || 0,
+    streak: aluno?.diasSeguidos || 0,
+    isCurrentUser: true,
+  });
+
+  const currentIndex = leaderboard.findIndex((u) => u.id === currentUser.id);
+  const rivalAbove = currentIndex > 0 ? leaderboard[currentIndex - 1] : null;
+  const xpDifference = rivalAbove ? Math.max(10, rivalAbove.xp - currentUser.xp) : 120;
 
   // Próximo nível e XP
   const currentXP = currentUser.xp;
-  const nextLevelXP = 3000;
-  const currentLevelBaseXP = 2000;
+  const nextLevelXP = Math.ceil((currentXP + 1) / 500) * 500;
+  const currentLevelBaseXP = nextLevelXP - 500;
   const levelProgressPercent = Math.min(
     100,
     Math.max(0, Math.round(((currentXP - currentLevelBaseXP) / (nextLevelXP - currentLevelBaseXP)) * 100))
   );
 
-  const top1 = mockCTLeaderboard[0];
-  const top2 = mockCTLeaderboard[1];
-  const top3 = mockCTLeaderboard[2];
-  const restOfLeaderboard = mockCTLeaderboard.slice(3);
+  const top1 = leaderboard[0] || currentUser;
+  const top2 = leaderboard[1] || leaderboard[0] || currentUser;
+  const top3 = leaderboard[2] || leaderboard[1] || currentUser;
+  const restOfLeaderboard = leaderboard.slice(3);
 
   return (
     <div className="space-y-6 pb-28">
@@ -185,13 +161,13 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
       <div className="p-6 rounded-2xl border border-zinc-800 bg-[#141416] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-950/40 border border-red-500/30">
-            <span>🥋 Ranking Interno // Exclusivo CT Borü</span>
+            <span>🥋 Ranking Oficial // Tatame CT Borü</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
             Classificação Interna dos Guerreiros do CT
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
-            Pontuação consolidada baseada em assiduidade, check-ins no tatame, evolução técnica e desempenho nos sparrings sob supervisão do Mestre Felipe Borü.
+            Critérios Oficiais do Top: 📅 Assiduidade & Check-ins reais (+100 XP/treino) + 🥋 Avaliação Técnica & MMR do Mestre Felipe Borü + 🏅 Conquistas Desbloqueadas na Trilha do Nak Muay.
           </p>
         </div>
 
@@ -222,7 +198,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   />
                 </div>
                 <span className="absolute -bottom-2 -right-1 px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-[10px] tracking-wider italic shadow-md border border-red-400/40">
-                  NVL 18
+                  NVL {Math.max(1, Math.floor(currentUser.xp / 150))}
                 </span>
               </div>
 
@@ -236,7 +212,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                   {currentUser.name}
                 </h3>
                 <p className="text-xs font-mono font-bold text-red-500 tracking-wider">
-                  CARTEL // {currentUser.streak} DIAS SEGUIDOS 🔥
+                  CARTEL // {currentUser.streak > 0 ? `${currentUser.streak} DIAS SEGUIDOS 🔥` : '0 CHECK-INS REGISTRADOS 🥋'}
                 </p>
               </div>
             </div>
@@ -267,54 +243,87 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               <h4 className="text-xs font-mono font-black uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
                 <span>⚡</span> ATRIBUTOS MARCIAIS (TATAME CT BORÜ)
               </h4>
-              <span className="text-[10px] font-mono font-bold text-red-400 uppercase">
-                RADAR
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                {evalData?.avaliado ? `Avaliado por: ${evalData.avaliadoPor || 'Mestre Felipe Borü'}` : 'Aguardando Avaliação'}
               </span>
             </div>
 
-            <div className="w-full h-64 -my-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={mockAttributes}>
-                  <PolarGrid stroke="#27272A" />
-                  <PolarAngleAxis
-                    dataKey="attribute"
-                    tick={{ fill: '#A1A1AA', fontSize: 10, fontWeight: 700 }}
-                  />
-                  <PolarRadiusAxis
-                    angle={90}
-                    domain={[0, 100]}
-                    stroke="#3F3F46"
-                    tick={false}
-                    axisLine={false}
-                  />
-                  <Radar
-                    name="Atributos"
-                    dataKey="value"
-                    stroke="#EF4444"
-                    strokeWidth={2.5}
-                    fill="#DC2626"
-                    fillOpacity={0.35}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-zinc-800/70 text-center">
-              {mockAttributes.map((attr) => (
-                <div key={attr.attribute} className="p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
-                  <span className="block text-[8px] font-mono font-bold text-zinc-400 truncate">
-                    {attr.attribute.slice(0, 4)}
-                  </span>
-                  <span className="text-xs font-black italic text-white">
-                    {attr.value}
-                  </span>
+            {evalData?.avaliado ? (
+              <>
+                <div className="w-full h-64 -my-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={atributos}>
+                      <PolarGrid stroke="#27272A" />
+                      <PolarAngleAxis
+                        dataKey="attribute"
+                        tick={{ fill: '#A1A1AA', fontSize: 10, fontWeight: 700 }}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 100]}
+                        stroke="#3F3F46"
+                        tick={false}
+                        axisLine={false}
+                      />
+                      <Radar
+                        name="Atributos"
+                        dataKey="value"
+                        stroke="#EF4444"
+                        strokeWidth={2.5}
+                        fill="#DC2626"
+                        fillOpacity={0.35}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
 
-            <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
-              Última avaliação de tatame: há 2 dias • Mestre Felipe Borü
-            </p>
+                <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-zinc-800/70 text-center">
+                  {atributos.map((attr) => (
+                    <div key={attr.attribute} className="p-1.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60">
+                      <span className="block text-[8px] font-mono font-bold text-zinc-400 truncate">
+                        {attr.attribute.slice(0, 4)}
+                      </span>
+                      <span className="text-xs font-black italic text-white">
+                        {attr.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-center text-[10px] text-zinc-500 font-mono mt-3">
+                  Última avaliação de tatame: {evalData?.avaliadoEm ? new Date(evalData.avaliadoEm).toLocaleDateString('pt-BR') : 'recente'} • {evalData?.avaliadoPor || 'Mestre Felipe Borü'}
+                </p>
+
+                {evalData?.parecerMestre && (
+                  <div className="mt-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-200/90 italic flex items-start gap-2.5">
+                    <span className="text-base not-italic">🥋</span>
+                    <div>
+                      <span className="font-bold font-mono text-[10px] uppercase text-yellow-400 block not-italic">
+                        Parecer do Professor:
+                      </span>
+                      <span>"{evalData.parecerMestre}"</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-10 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-zinc-900/40 rounded-2xl border border-zinc-800/60 my-2">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-2xl shadow-inner">
+                  🥋
+                </div>
+                <div>
+                  <h5 className="text-xs font-black text-white uppercase italic tracking-wider">Aguardando Avaliação Técnica</h5>
+                  <p className="text-[11px] text-zinc-400 mt-1.5 max-w-xs leading-relaxed">
+                    O Mestre Felipe Borü ainda não avaliou seus atributos no tatame. Conforme seus treinos e sparrings, suas notas e Fight IQ serão lançados aqui!
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-mono text-zinc-400 bg-black/40 border border-zinc-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+                  Status: Pendente no tatame
+                </div>
+              </div>
+            )}
           </section>
         </div>
 
@@ -349,89 +358,123 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 items-end pt-6">
-              {/* 2º LUGAR (PRATA) */}
-              <div className="flex flex-col items-center">
-                <div className="relative mb-2">
-                  <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-tr from-slate-400 to-slate-100 shadow-xl shadow-slate-500/10">
-                    <img
-                      src={top2.avatar}
-                      alt={top2.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
+            {loading ? (
+              <div className="py-12 text-center text-zinc-500 text-sm">
+                Carregando guerreiros do tatame...
+              </div>
+            ) : (
+              <>
+                {top1.xp === 0 && (
+                  <div className="mb-5 p-4 rounded-2xl bg-[#18181b] border-2 border-dashed border-zinc-700/80 text-center shadow-lg">
+                    <span className="text-2xl block mb-1">🥋</span>
+                    <h4 className="text-xs font-black uppercase text-white tracking-widest">
+                      PÓDIO ZERADO // CONTAGEM POR CHECK-IN
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-1 max-w-md mx-auto leading-relaxed">
+                      O pódio está 100% zerado (0 XP). Cada check-in de treino confirmado no tatame gera <strong className="text-amber-400">+100 XP</strong>. O primeiro guerreiro a registrar presença assumirá o topo!
+                    </p>
                   </div>
-                  <span className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-slate-300 text-black font-black text-xs flex items-center justify-center border-2 border-white shadow">
-                    2
+                )}
+              <div className="grid grid-cols-3 gap-2 items-end pt-6">
+                {/* 2º LUGAR (PRATA) */}
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-2">
+                    <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-tr from-slate-400 to-slate-100 shadow-xl shadow-slate-500/10">
+                      <img
+                        src={top2.avatar}
+                        alt={top2.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                    <span className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-slate-300 text-black font-black text-xs flex items-center justify-center border-2 border-white shadow">
+                      2
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-black text-white italic text-center truncate w-full px-1">
+                    {top2.nickname || top2.name.split(' ')[0]}
+                  </p>
+                  <span className="text-[10px] font-mono font-black text-slate-300">
+                    {top2.xp} XP
                   </span>
-                </div>
-                <p className="text-[11px] font-black text-white italic text-center truncate w-full px-1">
-                  {top2.nickname || top2.name.split(' ')[0]}
-                </p>
-                <span className="text-[10px] font-mono font-black text-slate-300">
-                  {top2.xp} XP
-                </span>
+                  <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
+                    📅 {top2.totalPresencas || 0} check-ins • 0 XP
+                  </span>
 
-                <div className="w-full mt-3 h-24 rounded-t-2xl bg-gradient-to-b from-slate-400/25 via-slate-800/60 to-transparent border-t-2 border-x-2 border-slate-300/50 flex flex-col items-center justify-center shadow-lg">
-                  <span className="text-xl font-black italic text-slate-300">#2</span>
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">PRATA</span>
+                  <div className="w-full mt-3 h-24 rounded-t-2xl bg-gradient-to-b from-slate-400/25 via-slate-800/60 to-transparent border-t-2 border-x-2 border-slate-300/50 flex flex-col items-center justify-center shadow-lg">
+                    <span className="text-xl font-black italic text-slate-300">#2</span>
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400">PRATA</span>
+                  </div>
+                </div>
+
+                {/* 1º LUGAR (OURO - MAIOR / COROA) */}
+                <div className="flex flex-col items-center -mt-6">
+                  {top1.xp > 0 ? (
+                    <div className="text-3xl mb-1 animate-bounce">👑</div>
+                  ) : (
+                    <div className="text-xs font-mono font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                      AGUARDANDO CHECK-IN
+                    </div>
+                  )}
+                  <div className="relative mb-2">
+                    <div className="w-20 h-20 rounded-full p-1.5 bg-gradient-to-tr from-yellow-500 via-amber-400 to-yellow-200 shadow-2xl shadow-yellow-500/30 ring-4 ring-yellow-500/20">
+                      <img
+                        src={top1.avatar}
+                        alt={top1.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                    <span className="absolute -top-2 -right-1 w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-300 text-black font-black text-xs flex items-center justify-center border-2 border-yellow-100 shadow-xl">
+                      1
+                    </span>
+                  </div>
+                  <p className="text-xs font-black text-yellow-400 italic text-center truncate w-full px-1">
+                    {top1.nickname || top1.name.split(' ')[0]}
+                  </p>
+                  <span className="text-xs font-mono font-black text-white">
+                    {top1.xp} XP
+                  </span>
+                  <span className="text-[9px] font-mono text-yellow-300/80 mt-0.5 text-center px-1 truncate font-bold">
+                    📅 {top1.totalPresencas || 0} check-ins • 0 XP
+                  </span>
+
+                  <div className="w-full mt-3 h-32 rounded-t-2xl bg-gradient-to-b from-yellow-500/30 via-yellow-950/60 to-transparent border-t-4 border-x-2 border-yellow-500 flex flex-col items-center justify-center shadow-2xl shadow-yellow-500/20">
+                    <span className="text-2xl font-black italic text-yellow-400">#1</span>
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-yellow-500 font-bold">CAMPEÃO</span>
+                  </div>
+                </div>
+
+                {/* 3º LUGAR (BRONZE) */}
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-2">
+                    <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-tr from-amber-700 to-orange-400 shadow-xl shadow-amber-700/10">
+                      <img
+                        src={top3.avatar}
+                        alt={top3.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                    <span className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center border-2 border-amber-400 shadow">
+                      3
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-black text-white italic text-center truncate w-full px-1">
+                    {top3.nickname || top3.name.split(' ')[0]}
+                  </p>
+                  <span className="text-[10px] font-mono font-black text-amber-500">
+                    {top3.xp} XP
+                  </span>
+                  <span className="text-[9px] font-mono text-zinc-400 mt-0.5 text-center px-1 truncate">
+                    📅 {top3.totalPresencas || 0} check-ins • 0 XP
+                  </span>
+
+                  <div className="w-full mt-3 h-20 rounded-t-2xl bg-gradient-to-b from-amber-700/25 via-amber-950/60 to-transparent border-t-2 border-x-2 border-amber-700/50 flex flex-col items-center justify-center shadow-lg">
+                    <span className="text-lg font-black italic text-amber-500">#3</span>
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-amber-600">BRONZE</span>
+                  </div>
                 </div>
               </div>
-
-              {/* 1º LUGAR (OURO - MAIOR / COROA) */}
-              <div className="flex flex-col items-center -mt-6">
-                <div className="text-3xl mb-1 animate-bounce">👑</div>
-                <div className="relative mb-2">
-                  <div className="w-20 h-20 rounded-full p-1.5 bg-gradient-to-tr from-yellow-500 via-amber-400 to-yellow-200 shadow-2xl shadow-yellow-500/30 ring-4 ring-yellow-500/20">
-                    <img
-                      src={top1.avatar}
-                      alt={top1.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <span className="absolute -top-2 -right-1 w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-300 text-black font-black text-xs flex items-center justify-center border-2 border-yellow-100 shadow-xl">
-                    1
-                  </span>
-                </div>
-                <p className="text-xs font-black text-yellow-400 italic text-center truncate w-full px-1">
-                  {top1.nickname || top1.name.split(' ')[0]}
-                </p>
-                <span className="text-xs font-mono font-black text-white">
-                  {top1.xp} XP
-                </span>
-
-                <div className="w-full mt-3 h-32 rounded-t-2xl bg-gradient-to-b from-yellow-500/30 via-yellow-950/60 to-transparent border-t-4 border-x-2 border-yellow-500 flex flex-col items-center justify-center shadow-2xl shadow-yellow-500/20">
-                  <span className="text-2xl font-black italic text-yellow-400">#1</span>
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-yellow-500 font-bold">CAMPEÃO</span>
-                </div>
-              </div>
-
-              {/* 3º LUGAR (BRONZE) */}
-              <div className="flex flex-col items-center">
-                <div className="relative mb-2">
-                  <div className="w-16 h-16 rounded-full p-1 bg-gradient-to-tr from-amber-700 to-orange-400 shadow-xl shadow-amber-700/10">
-                    <img
-                      src={top3.avatar}
-                      alt={top3.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <span className="absolute -top-2 -right-1 w-6 h-6 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center border-2 border-amber-400 shadow">
-                    3
-                  </span>
-                </div>
-                <p className="text-[11px] font-black text-white italic text-center truncate w-full px-1">
-                  {top3.nickname || top3.name.split(' ')[0]}
-                </p>
-                <span className="text-[10px] font-mono font-black text-amber-500">
-                  {top3.xp} XP
-                </span>
-
-                <div className="w-full mt-3 h-20 rounded-t-2xl bg-gradient-to-b from-amber-700/25 via-amber-950/60 to-transparent border-t-2 border-x-2 border-amber-700/50 flex flex-col items-center justify-center shadow-lg">
-                  <span className="text-lg font-black italic text-amber-500">#3</span>
-                  <span className="text-[9px] font-mono uppercase tracking-widest text-amber-600">BRONZE</span>
-                </div>
-              </div>
-            </div>
+            </>
+          )}
           </section>
 
           {/* LISTA DE INTEGRANTES DO CT NA ARENA (4º LUGAR EM DIANTE) */}
@@ -485,6 +528,9 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
                         <span className="text-[10px] font-mono text-zinc-400 block truncate">
                           {fighter.league}
                         </span>
+                        <span className="text-[9px] font-mono text-zinc-500 block truncate mt-0.5">
+                          📅 {fighter.totalPresencas || 0} check-ins registrados
+                        </span>
                       </div>
                     </div>
 
@@ -527,7 +573,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
               <p className="text-xs font-black text-white italic truncate">
                 Faltam <span className="text-yellow-400 font-mono font-bold">{xpDifference} XP</span> para ultrapassar{' '}
                 <span className="text-red-400 underline decoration-red-500/50">
-                  {rivalAbove?.name || 'o colega à frente'}
+                  {rivalAbove?.name || 'o guerreiro à frente'}
                 </span>!
               </p>
             </div>
@@ -535,7 +581,7 @@ export default function StudentCTRanking({ aluno }: { aluno?: any } = {}) {
 
           <div className="flex items-center gap-2 shrink-0">
             <span className="hidden sm:inline-block text-[11px] font-bold text-zinc-400">
-              Faça check-in no tatame para subir no ranking!
+              Presenças (+100 XP), Avaliação do Mestre & Conquistas definem o Top!
             </span>
             <button
               type="button"

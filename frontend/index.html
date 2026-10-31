@@ -258,14 +258,91 @@
       will-change: transform;
     }
 
-    body.react-active > *:not(#root):not(script):not(#global-boru-wallpaper):not(.arena-sparks-bg):not(.ambient-neon-glow) {
+    body.react-active > *:not(#root):not(script):not(#global-boru-wallpaper):not(.wallpaper-light-sweep):not(.combat-bg-animated):not(.arena-sparks-bg):not(.ambient-neon-glow) {
       display: none !important;
     }
+  
+    /* ========================================================
+       COMBAT-FLOW & WALLPAPERS ANIMADOS (BORÜ + COMBAT-HUB)
+       ======================================================== */
+    @keyframes combatFlow {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 0.04; }
+      50% { transform: translate(-30px, -20px) rotate(1deg); opacity: 0.08; }
+      100% { transform: translate(0, 0) rotate(0deg); opacity: 0.04; }
+    }
+    .combat-bg-animated {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.12) 0%, transparent 60%),
+                  repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(220, 38, 38, 0.05) 40px, rgba(220, 38, 38, 0.05) 41px);
+      animation: combatFlow 18s ease-in-out infinite;
+    }
+
+    @keyframes wallpaperSlowZoom {
+      0% { transform: scale(1) translate(0, 0); }
+      50% { transform: scale(1.06) translate(-10px, -6px); }
+      100% { transform: scale(1) translate(0, 0); }
+    }
+
+    @keyframes arenaLightSweep {
+      0% { opacity: 0.12; background-position: 0% 50%; }
+      50% { opacity: 0.22; background-position: 100% 50%; }
+      100% { opacity: 0.12; background-position: 0% 50%; }
+    }
+
+    #global-boru-wallpaper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      opacity: 0.24;
+      filter: contrast(1.18) brightness(0.98);
+      will-change: transform;
+      animation: wallpaperSlowZoom 20s ease-in-out infinite;
+    }
+
+    .wallpaper-light-sweep {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: radial-gradient(circle at 30% 20%, rgba(220, 38, 38, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 50%);
+      background-size: 200% 200%;
+      animation: arenaLightSweep 16s ease-in-out infinite;
+    }
+
+    /* Micro-interação: Fade In + Slide Up */
+    @keyframes cardSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-card-slide-up {
+      animation: cardSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Micro-interação: Glow Pulse no Botão Cadastrar / Ações */
+    @keyframes goldGlowPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(220, 38, 38, 0.3); }
+      50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+    }
+    .btn-glow-pulse:hover {
+      animation: goldGlowPulse 2s infinite ease-in-out;
+      transform: translateY(-1px);
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   </style>
 </head>
 <body class="bg-[#0B0B0C] text-zinc-100 min-h-screen selection:bg-red-600 selection:text-white relative">
 
   <!-- WALLPAPER FIXO DO SITE INTEIRO (LOBO BORÜ) -->
+  <div class="wallpaper-light-sweep" aria-hidden="true"></div>
+  <div class="combat-bg-animated" aria-hidden="true"></div>
   <div class="arena-sparks-bg" aria-hidden="true"></div>
   <div class="ambient-neon-glow" aria-hidden="true"></div>
   <div id="global-boru-wallpaper" aria-hidden="true">
@@ -291,6 +368,7 @@
 
       <!-- Desktop Navigation (Modelo Portfólio / CT Completo) -->
       <nav class="hidden xl:flex items-center gap-4 text-sm font-medium text-zinc-300 whitespace-nowrap">
+        <a href="#app-celular-3d" class="hover:text-amber-400 transition text-red-400 font-bold inline-flex items-center gap-1">📱 App Mobile</a>
         <a href="#planos" class="hover:text-red-500 transition">Planos</a>
         <a href="#horarios" class="hover:text-red-500 transition">Horários</a>
         <a href="#o-que-e-o-ct" class="hover:text-red-500 transition">O Que É o CT</a>
@@ -330,6 +408,7 @@
     <!-- Mobile Dropdown Menu -->
     <div id="mobile-menu" class="hidden xl:hidden bg-[#141416] border-b border-zinc-800 px-6 py-6 space-y-4 max-h-[85vh] overflow-y-auto">
       <nav class="flex flex-col space-y-3 text-base font-semibold">
+        <a href="#app-celular-3d" class="text-red-400 font-bold hover:text-amber-400 py-1" onclick="closeMobileMenu()">📱 App para Celular (Novidade!)</a>
         <a href="#planos" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Planos & Parcerias</a>
         <a href="#horarios" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Grade de Horários</a>
         <a href="#o-que-e-o-ct" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">O Que É o CT BORÜ</a>
@@ -509,7 +588,737 @@
     </div>
   </section>
 
-  <!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
+  
+  <!-- ========================================================
+       SEÇÃO: VITRINE INTERATIVA 3D - APP PARA CELULAR EM BREVE
+       Baseado no conceito 3D Devices Showcase (DesignsCode)
+       Mostra os 3 celulares: Portal do Aluno, Site Oficial e Portal do Professor
+       ======================================================== -->
+  <!-- ========================================================
+       SEÇÃO: VITRINE 3D INTERATIVA - FUTURO APP PARA CELULAR
+       Conceito: 3 Celulares Abertos Lado a Lado (Sem Sobreposição)
+       1. Portal do Aluno (Esquerda)
+       2. Site Oficial do CT (Centro / Destaque)
+       3. Portal do Professor (Direita)
+       ======================================================== -->
+  <!-- ========================================================
+       SEÇÃO: VITRINE 3D EM ROTAÇÃO 360° - FUTURO APP PARA CELULAR
+       Efeito: Rotação Cilíndrica 360° com Lançamento para Trás
+       1. Portal do Aluno
+       2. Site Oficial do CT (Centro / Inicial)
+       3. Portal do Professor
+       ======================================================== -->
+  <section id="app-celular-3d" class="py-16 sm:py-28 bg-[#0B0B0C] relative z-10 overflow-hidden border-t border-zinc-800/80">
+    <!-- Efeitos de iluminação de fundo (Glow Vermelho / Âmbar do CT Borü) -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[500px] bg-red-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-10 right-1/4 w-[400px] h-[400px] bg-red-900/15 rounded-full blur-[130px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <!-- CABEÇALHO DA SEÇÃO DE IMPACTO -->
+      <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-12 space-y-3">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-950/70 border border-red-500/40 text-red-400 font-mono font-bold uppercase tracking-widest text-xs shadow-lg shadow-red-950/50">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>PROJETO EM DESENVOLVIMENTO // PLANO MOBILE CT BORÜ</span>
+        </div>
+
+        <h2 class="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight leading-tight">
+          NOVIDADE! Aplicativo para Celular <br class="hidden sm:inline" />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400">
+            Em Breve!
+          </span>
+        </h2>
+
+        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+          Gire os aparelhos em <strong>360°</strong> para explorar os 3 ambientes do nosso ecossistema: o <strong>Portal do Aluno</strong>, o <strong>Site Oficial</strong> e o <strong>Portal do Professor</strong>. Clique nos celulares ou nas setas para alternar!
+        </p>
+
+        <!-- SELETOR DE ABAS SUPERIORES -->
+        <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
+          <button 
+            type="button" 
+            onclick="rotateToPhone(0)" 
+            id="tab-btn-aluno"
+            class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
+          >
+            📱 1. Portal do Aluno
+          </button>
+          <button 
+            type="button" 
+            onclick="rotateToPhone(1)" 
+            id="tab-btn-site"
+            class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 font-black scale-105"
+          >
+            ⚡ 2. Site Oficial (Centro)
+          </button>
+          <button 
+            type="button" 
+            onclick="rotateToPhone(2)" 
+            id="tab-btn-professor"
+            class="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
+          >
+            🥋 3. Portal do Professor
+          </button>
+        </div>
+      </div>
+
+      <!-- ========================================================
+           PALCO 3D COM ROTAÇÃO 360° E LANÇAMENTO PARA TRÁS
+           ======================================================== -->
+      <div class="relative w-full py-4 sm:py-8 flex items-center justify-center">
+        
+        <!-- Seta de Navegação Esquerda (❮) -->
+        <button 
+          type="button" 
+          onclick="rotateCarousel(-1)"
+          aria-label="Celular Anterior"
+          class="absolute left-2 sm:left-6 lg:left-12 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-zinc-900/90 hover:bg-red-600 border border-zinc-700/80 hover:border-red-500 text-white flex items-center justify-center text-lg sm:text-xl font-black shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 group"
+        >
+          <span class="group-hover:-translate-x-0.5 transition-transform">❮</span>
+        </button>
+
+        <!-- Seta de Navegação Direita (❯) -->
+        <button 
+          type="button" 
+          onclick="rotateCarousel(1)"
+          aria-label="Próximo Celular"
+          class="absolute right-2 sm:right-6 lg:right-12 z-40 w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-zinc-900/90 hover:bg-red-600 border border-zinc-700/80 hover:border-red-500 text-white flex items-center justify-center text-lg sm:text-xl font-black shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 group"
+        >
+          <span class="group-hover:translate-x-0.5 transition-transform">❯</span>
+        </button>
+
+        <!-- Container do Palco 3D -->
+        <div 
+          id="carousel-3d-stage" 
+          class="carousel-3d-stage relative w-full max-w-4xl h-[580px] sm:h-[660px] flex items-center justify-center select-none"
+        >
+          
+          <!-- ====================================================
+               CELULAR 0: PORTAL DO ALUNO
+               ==================================================== -->
+          <div 
+            id="phone-item-0" 
+            onclick="handlePhoneClick(0)"
+            class="phone-3d-slot phone-slot-left absolute flex flex-col items-center cursor-pointer"
+          >
+            <div class="w-[270px] sm:w-[310px] h-[530px] sm:h-[590px] rounded-[44px] bg-[#121214] border-[5px] border-zinc-700 shadow-2xl p-2 relative overflow-hidden ring-1 ring-white/10 group">
+              <!-- Dynamic Island -->
+              <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+                <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
+              </div>
+
+              <!-- Barra Superior de Status -->
+              <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-400 z-30 pointer-events-none">
+                <span class="font-bold">19:30</span>
+                <div class="flex items-center gap-1">
+                  <span>5G</span>
+                  <span>📶</span>
+                  <span>🔋 98%</span>
+                </div>
+              </div>
+
+              <!-- TELA INTERNA DO PORTAL DO ALUNO -->
+              <div class="h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-9 pb-5 px-3 space-y-2.5 border border-zinc-800">
+                <div class="p-1 rounded-lg bg-red-950/60 border border-red-500/30 text-center">
+                  <span class="text-[8px] font-mono font-bold uppercase tracking-widest text-red-300">
+                    PREVIEW // PORTAL DO ALUNO
+                  </span>
+                </div>
+
+                <!-- Header do Aluno -->
+                <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shrink-0">
+                      <img src="/felipe-boru.jpg" alt="Aluno" class="w-full h-full rounded-full object-cover">
+                    </div>
+                    <div class="min-w-0">
+                      <span class="block text-[11px] font-black text-white italic truncate">Ítalo Bergamin</span>
+                      <span class="text-[8px] font-mono text-red-400 font-bold uppercase tracking-wider block truncate">Prajied Branco</span>
+                    </div>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-[8px] font-mono font-bold text-emerald-400 shrink-0">
+                    ● ATIVO
+                  </span>
+                </div>
+
+                <!-- BOTÃO CTA DE CHECK-IN NO TATAME -->
+                <div class="p-2.5 rounded-2xl bg-gradient-to-r from-red-950/90 via-red-900/60 to-zinc-900 border border-red-500/50 shadow text-center space-y-1">
+                  <span class="text-[8px] font-mono uppercase tracking-widest text-red-300 block font-bold">Treino das 19:00</span>
+                  <div class="py-2 rounded-xl bg-red-600 text-white font-black text-[11px] uppercase tracking-wider shadow">
+                    ⚡ BATER CHECK-IN
+                  </div>
+                  <span class="text-[8px] font-mono text-zinc-400 block">+100 XP por presença confirmada</span>
+                </div>
+
+                <!-- Status de Treinos & Cartel -->
+                <div class="grid grid-cols-2 gap-1.5">
+                  <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                    <span class="block text-[8px] font-mono uppercase text-zinc-400">Cartel de Dias</span>
+                    <span class="text-xs font-black text-emerald-400 font-mono">12 DIAS 🔥</span>
+                  </div>
+                  <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                    <span class="block text-[8px] font-mono uppercase text-zinc-400">XP no CT</span>
+                    <span class="text-xs font-black text-yellow-400 font-mono">1.200 XP</span>
+                  </div>
+                </div>
+
+                <!-- Pódio do CT em Miniatura -->
+                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 space-y-1.5">
+                  <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
+                    <span>🏆 TOP GUERREIROS</span>
+                    <span class="text-red-400">LIGA ELITE</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[9px] bg-zinc-900/80 p-1.5 rounded-lg border border-zinc-800">
+                    <span class="text-amber-400 font-bold">👑 #1 Ariel Amaral</span>
+                    <span class="font-mono text-zinc-300 font-bold">1.800 XP</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[9px] bg-zinc-900/80 p-1.5 rounded-lg border border-zinc-800">
+                    <span class="text-zinc-400 font-bold">🥈 #2 Francisco M.</span>
+                    <span class="font-mono text-zinc-300 font-bold">1.500 XP</span>
+                  </div>
+                </div>
+
+                <!-- Mini Radar Fight IQ -->
+                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                  <span class="text-[8px] font-mono text-zinc-400 block font-bold mb-1">⚡ FIGHT IQ & ATRIBUTOS</span>
+                  <div class="grid grid-cols-3 gap-1 text-[8px] font-mono font-bold">
+                    <div class="p-1 rounded bg-zinc-900 text-zinc-300">FORÇA 88</div>
+                    <div class="p-1 rounded bg-zinc-900 text-red-400">TÉCN 94</div>
+                    <div class="p-1 rounded bg-zinc-900 text-yellow-400">DISC 98</div>
+                  </div>
+                </div>
+
+                <!-- Bottom Bar Simulado -->
+                <div class="pt-1 flex items-center justify-around border-t border-zinc-800 text-zinc-500 text-[8px] font-mono">
+                  <span class="text-red-400 font-bold">🏠 Início</span>
+                  <span>🥋 Check-in</span>
+                  <span>🏆 Ranking</span>
+                  <span>👤 Perfil</span>
+                </div>
+              </div>
+
+              <!-- Home Bar Inferior -->
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
+            </div>
+
+            <div class="mt-3 text-center">
+              <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-red-950/80 text-red-400 border border-red-500/30">
+                1. Portal do Aluno
+              </span>
+            </div>
+          </div>
+
+          <!-- ====================================================
+               CELULAR 1: SITE OFICIAL CT BORÜ (INICIAL NO CENTRO)
+               ==================================================== -->
+          <div 
+            id="phone-item-1" 
+            onclick="handlePhoneClick(1)"
+            class="phone-3d-slot phone-slot-center absolute flex flex-col items-center cursor-pointer"
+          >
+            <div class="w-[280px] sm:w-[320px] h-[540px] sm:h-[610px] rounded-[48px] bg-[#141417] border-[6px] border-red-600/90 shadow-[0_25px_80px_rgba(220,38,38,0.45),0_0_35px_rgba(245,158,11,0.2)] p-2.5 relative overflow-hidden ring-2 ring-red-500/40 group">
+              <!-- Dynamic Island -->
+              <div class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+                <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
+              </div>
+
+              <!-- Barra Superior de Status -->
+              <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-300 z-30 pointer-events-none">
+                <span class="font-bold">19:30</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-red-400 font-bold">● BORÜ LIVE</span>
+                  <span>🔋 100%</span>
+                </div>
+              </div>
+
+              <!-- TELA INTERNA DO SITE OFICIAL CT BORÜ -->
+              <div class="h-full rounded-[38px] bg-[#0B0B0C] overflow-y-auto no-scrollbar pt-9 pb-5 px-3.5 space-y-3 border border-zinc-800">
+                <!-- Navbar do Site -->
+                <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                  <div class="flex items-center gap-2">
+                    <img src="/logo-boru.jpg" alt="Logo CT Borü" class="w-7 h-7 rounded-lg object-contain bg-black border border-zinc-700">
+                    <div>
+                      <span class="font-black text-xs text-white uppercase tracking-tighter block leading-none">CT BORÜ</span>
+                      <span class="text-[7px] font-mono text-zinc-400 uppercase tracking-widest">Centro de Combate</span>
+                    </div>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full bg-red-600 text-white font-mono font-black text-[8px] uppercase tracking-wider shadow">
+                    SITE OFICIAL
+                  </span>
+                </div>
+
+                <!-- Hero Banner do Site -->
+                <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow group/hero">
+                  <img src="/hero-ct-combat.jpg" alt="Treino CT Borü" class="w-full h-32 object-cover brightness-75 group-hover/hero:scale-105 transition duration-500">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2.5">
+                    <span class="text-[8px] font-mono uppercase tracking-widest text-red-400 font-bold">MUAY THAI TRADICIONAL</span>
+                    <h4 class="font-display text-xs font-black text-white uppercase tracking-tight leading-tight">
+                      Forjando Guerreiros no Tatame
+                    </h4>
+                  </div>
+                </div>
+
+                <!-- Botão de Ação do Site -->
+                <div class="w-full py-2.5 rounded-xl bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/40 text-center">
+                  AGENDAR AULA EXPERIMENTAL 🔥
+                </div>
+
+                <!-- Modalidades Oficiais -->
+                <div class="space-y-1">
+                  <span class="text-[8px] font-mono uppercase tracking-widest text-zinc-400 block font-bold">MODALIDADES NO CT</span>
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                      <span class="block text-xs">🥊</span>
+                      <span class="text-[9px] font-black text-white uppercase block">Muay Thai</span>
+                      <span class="text-[7px] font-mono text-zinc-500">Tradicional</span>
+                    </div>
+                    <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 text-center">
+                      <span class="block text-xs">🥋</span>
+                      <span class="text-[9px] font-black text-white uppercase block">Jiu-Jitsu</span>
+                      <span class="text-[7px] font-mono text-zinc-500">Gi & No-Gi</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Planos em Destaque -->
+                <div class="p-2.5 rounded-2xl bg-gradient-to-b from-zinc-900 to-[#141416] border border-zinc-800 text-center space-y-0.5">
+                  <span class="text-[8px] font-mono text-amber-400 uppercase font-bold">PLANO RECOMENDADO</span>
+                  <h5 class="text-xs font-black text-white uppercase">3x na Semana // R$ 130/mês</h5>
+                  <span class="text-[8px] text-zinc-400 block">Wellhub & TotalPass Aceitos</span>
+                </div>
+
+                <!-- Rodapé Simulado -->
+                <div class="text-center pt-1 border-t border-zinc-800 text-[8px] font-mono text-zinc-500">
+                  <span>📍 Ji-Paraná - Rondônia • CT BORÜ</span>
+                </div>
+              </div>
+
+              <!-- Home Bar Inferior -->
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
+            </div>
+
+            <div class="mt-3 text-center">
+              <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-red-600 text-white shadow-lg shadow-red-600/30">
+                2. Site Oficial (Centro)
+              </span>
+            </div>
+          </div>
+
+          <!-- ====================================================
+               CELULAR 2: PORTAL DO PROFESSOR
+               ==================================================== -->
+          <div 
+            id="phone-item-2" 
+            onclick="handlePhoneClick(2)"
+            class="phone-3d-slot phone-slot-right absolute flex flex-col items-center cursor-pointer"
+          >
+            <div class="w-[270px] sm:w-[310px] h-[530px] sm:h-[590px] rounded-[44px] bg-[#121214] border-[5px] border-zinc-700 shadow-2xl p-2 relative overflow-hidden ring-1 ring-white/10 group">
+              <!-- Dynamic Island -->
+              <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-full z-40 flex items-center justify-end pr-2 shadow-md">
+                <span class="w-2 h-2 rounded-full bg-zinc-900"></span>
+              </div>
+
+              <!-- Barra Superior de Status -->
+              <div class="absolute top-3.5 left-5 right-5 flex items-center justify-between text-[9px] font-mono text-zinc-400 z-30 pointer-events-none">
+                <span class="font-bold">19:30</span>
+                <div class="flex items-center gap-1 text-amber-400 font-bold">
+                  <span>PROFESSOR</span>
+                  <span>🔋 92%</span>
+                </div>
+              </div>
+
+              <!-- TELA INTERNA DO PORTAL DO PROFESSOR -->
+              <div class="h-full rounded-[36px] bg-[#0E0E10] overflow-y-auto no-scrollbar pt-9 pb-5 px-3 space-y-2.5 border border-zinc-800">
+                <div class="p-1 rounded-lg bg-amber-950/60 border border-amber-500/30 text-center">
+                  <span class="text-[8px] font-mono font-bold uppercase tracking-widest text-amber-300">
+                    PREVIEW // PORTAL DO PROFESSOR
+                  </span>
+                </div>
+
+                <!-- Header do Mestre Felipe Borü -->
+                <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shrink-0">
+                      <img src="/felipe-boru.jpg" alt="Mestre Felipe Borü" class="w-full h-full rounded-full object-cover">
+                    </div>
+                    <div class="min-w-0">
+                      <span class="block text-[11px] font-black text-white italic truncate">Mestre Felipe Borü</span>
+                      <span class="text-[8px] font-mono text-amber-400 font-bold uppercase tracking-wider block truncate">Kru Chefe // Tatame 1</span>
+                    </div>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-500/40 text-[8px] font-mono font-bold text-amber-300 shrink-0">
+                    ADMIN
+                  </span>
+                </div>
+
+                <!-- Métrica do Tatame Hoje -->
+                <div class="p-2 rounded-xl bg-gradient-to-r from-amber-950/60 via-zinc-900 to-zinc-900 border border-amber-500/40">
+                  <span class="text-[8px] font-mono uppercase text-amber-300 tracking-wider font-bold block">AULA EM ANDAMENTO (19:00)</span>
+                  <div class="flex items-baseline justify-between mt-0.5">
+                    <span class="text-sm font-black text-white font-mono">24 PRESENTES</span>
+                    <span class="text-[8px] font-mono text-emerald-400 font-bold">● Tatame Ativo</span>
+                  </div>
+                </div>
+
+                <!-- Chamada Rápida (1 Toque) -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
+                    <span>CHAMADA RÁPIDA (1 TOQUE)</span>
+                    <span class="text-emerald-400">TODOS</span>
+                  </div>
+
+                  <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
+                    <div>
+                      <span class="font-bold text-white text-[9px] block">Ariel Amaral</span>
+                      <span class="text-[7px] font-mono text-zinc-400">Prajied Vermelho</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[8px] uppercase">
+                      PRESENTE ✓
+                    </span>
+                  </div>
+
+                  <div class="p-1.5 rounded-xl bg-[#161619] border border-zinc-800 flex items-center justify-between">
+                    <div>
+                      <span class="font-bold text-white text-[9px] block">Ítalo Bergamin</span>
+                      <span class="text-[7px] font-mono text-zinc-400">Prajied Branco</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[8px] uppercase">
+                      PRESENTE ✓
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Avaliação Técnica & Alertas -->
+                <div class="p-2 rounded-xl bg-[#161619] border border-zinc-800 space-y-1">
+                  <div class="flex items-center justify-between text-[8px] font-mono font-bold text-zinc-400">
+                    <span>⚡ AVALIAÇÃO DE SPARRING</span>
+                    <span class="text-yellow-400">SALVA</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[8px] text-zinc-300">
+                    <span>Força: <strong class="text-white">90</strong></span>
+                    <span>Técnica: <strong class="text-red-400">95</strong></span>
+                    <span>Disc: <strong class="text-amber-400">100</strong></span>
+                  </div>
+                </div>
+
+                <!-- Alunos Inativos (Chamada WhatsApp) -->
+                <div class="p-1.5 rounded-xl bg-red-950/40 border border-red-500/30 flex items-center justify-between">
+                  <div>
+                    <span class="text-[8px] font-black text-red-300 block">3 Alunos Inativos</span>
+                    <span class="text-[7px] font-mono text-zinc-400">Sem vir há 2 sem.</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[7px]">
+                    WhatsApp 💬
+                  </span>
+                </div>
+
+                <!-- Bottom Bar Simulado -->
+                <div class="pt-1 flex items-center justify-around border-t border-zinc-800 text-zinc-500 text-[8px] font-mono">
+                  <span class="text-amber-400 font-bold">🥋 Turmas</span>
+                  <span>📋 Chamada</span>
+                  <span>⭐ Avaliar</span>
+                  <span>⚙️ Ajustes</span>
+                </div>
+              </div>
+
+              <!-- Home Bar Inferior -->
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/40 rounded-full z-40 pointer-events-none"></div>
+            </div>
+
+            <div class="mt-3 text-center">
+              <span class="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-950/80 text-amber-400 border border-amber-500/30">
+                3. Portal do Professor
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Indicadores de Pontos (Dots) -->
+      <div class="flex items-center justify-center gap-2.5 mt-4">
+        <button type="button" onclick="rotateToPhone(0)" id="dot-0" class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300" aria-label="Ir para Portal do Aluno"></button>
+        <button type="button" onclick="rotateToPhone(1)" id="dot-1" class="w-8 h-3 rounded-full bg-red-600 transition-all duration-300 shadow-md shadow-red-600/50" aria-label="Ir para Site Oficial"></button>
+        <button type="button" onclick="rotateToPhone(2)" id="dot-2" class="w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300" aria-label="Ir para Portal do Professor"></button>
+      </div>
+
+      <!-- ==============================================
+           STATUS REAL DO PROJETO & LISTA VIP DE INTERESSE
+           ============================================== -->
+      <div class="mt-12 sm:mt-16 max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-zinc-900/80 via-[#141416] to-zinc-900/80 p-6 sm:p-8 rounded-3xl border border-zinc-800">
+        
+        <div class="text-center md:text-left space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-mono text-[10px] font-bold">
+            <span>⚙️</span> FASE DE DESENVOLVIMENTO
+          </div>
+          <h4 class="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+            Quer ser avisado no lançamento oficial do App?
+          </h4>
+          <p class="text-xs text-zinc-400 max-w-md leading-relaxed">
+            Deixe seu contato para receber o link de teste e novidades assim que o aplicativo estiver pronto para download.
+          </p>
+        </div>
+
+        <!-- Formulário da Lista VIP Beta -->
+        <form id="app-vip-form" onsubmit="handleAppVipSubmit(event)" class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2">
+          <input 
+            type="text" 
+            id="app-vip-contact" 
+            required 
+            placeholder="Seu WhatsApp ou E-mail..." 
+            class="w-full sm:w-64 px-4 py-3 rounded-xl bg-zinc-950 border border-zinc-700 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-red-500"
+          >
+          <button 
+            type="submit" 
+            class="w-full sm:w-auto px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-red-900/30 transition shrink-0 flex items-center justify-center gap-1.5"
+          >
+            <span>SER AVISADO</span>
+            <span>🚀</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Informação Transparente de Plataformas Planejadas (Sem afirmar que já está nas lojas) -->
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-zinc-500">
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <span class="text-zinc-400">🍎</span>
+          <span>Planejado para lançamento futuro no <strong>iOS (iPhone)</strong></span>
+        </div>
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+          <span class="text-zinc-400">🤖</span>
+          <span>Planejado para lançamento futuro no <strong>Android</strong></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <style>
+    /* ========================================================
+       ESTILOS DE ROTAÇÃO 360° E LANÇAMENTO EM PROFUNDIDADE 3D
+       ======================================================== */
+    .carousel-3d-stage {
+      perspective: 1400px;
+      perspective-origin: 50% 50%;
+      transform-style: preserve-3d;
+    }
+
+    .phone-3d-slot {
+      transition: transform 0.85s cubic-bezier(0.2, 0.95, 0.3, 1), 
+                  opacity 0.65s ease, 
+                  filter 0.65s ease;
+      will-change: transform, opacity, filter;
+      transform-style: preserve-3d;
+    }
+
+    /* POSIÇÃO: CENTRO (DESTAQUE NA FRENTE) */
+    .phone-slot-center {
+      transform: translate3d(0px, 0px, 90px) rotateY(0deg) scale(1.05);
+      z-index: 30;
+      opacity: 1;
+      filter: brightness(1.02);
+      pointer-events: auto;
+    }
+
+    /* POSIÇÃO: ESQUERDA (LANÇADO PARA TRÁS NA PROFUNDIDADE) */
+    .phone-slot-left {
+      transform: translate3d(-340px, 0px, -140px) rotateY(28deg) scale(0.86);
+      z-index: 10;
+      opacity: 0.75;
+      filter: brightness(0.75) contrast(0.95);
+      pointer-events: auto;
+    }
+    .phone-slot-left:hover {
+      opacity: 0.92;
+      filter: brightness(0.9);
+      transform: translate3d(-330px, 0px, -100px) rotateY(22deg) scale(0.89);
+    }
+
+    /* POSIÇÃO: DIREITA (LANÇADO PARA TRÁS NA PROFUNDIDADE) */
+    .phone-slot-right {
+      transform: translate3d(340px, 0px, -140px) rotateY(-28deg) scale(0.86);
+      z-index: 10;
+      opacity: 0.75;
+      filter: brightness(0.75) contrast(0.95);
+      pointer-events: auto;
+    }
+    .phone-slot-right:hover {
+      opacity: 0.92;
+      filter: brightness(0.9);
+      transform: translate3d(330px, 0px, -100px) rotateY(-22deg) scale(0.89);
+    }
+
+    /* RESPONSIVIDADE PARA TABLETS E TELAS MÉDIAS (1024px) */
+    @media (max-width: 1024px) {
+      .phone-slot-left {
+        transform: translate3d(-240px, 0px, -120px) rotateY(24deg) scale(0.80);
+      }
+      .phone-slot-right {
+        transform: translate3d(240px, 0px, -120px) rotateY(-24deg) scale(0.80);
+      }
+      .phone-slot-center {
+        transform: translate3d(0px, 0px, 60px) rotateY(0deg) scale(0.98);
+      }
+    }
+
+    /* RESPONSIVIDADE PARA CELULARES (MOBILE < 768px) */
+    @media (max-width: 768px) {
+      .carousel-3d-stage {
+        perspective: 950px;
+        height: 580px;
+      }
+      .phone-slot-left {
+        transform: translate3d(-150px, 0px, -120px) rotateY(22deg) scale(0.68);
+      }
+      .phone-slot-right {
+        transform: translate3d(150px, 0px, -120px) rotateY(-22deg) scale(0.68);
+      }
+      .phone-slot-center {
+        transform: translate3d(0px, 0px, 40px) rotateY(0deg) scale(0.88);
+      }
+    }
+  </style>
+
+  <script>
+    // ========================================================
+    // MOTOR DE ROTAÇÃO 360° E LANÇAMENTO EM PROFUNDIDADE 3D
+    // ========================================================
+    // currentIndex: 0 = Aluno no centro, 1 = Site no centro, 2 = Professor no centro
+    let currentPhoneCenter = 1; // Default inicial: Site Oficial no centro
+
+    function updateCarouselPositions() {
+      const phones = [
+        document.getElementById('phone-item-0'),
+        document.getElementById('phone-item-1'),
+        document.getElementById('phone-item-2')
+      ];
+
+      const tabs = [
+        document.getElementById('tab-btn-aluno'),
+        document.getElementById('tab-btn-site'),
+        document.getElementById('tab-btn-professor')
+      ];
+
+      const dots = [
+        document.getElementById('dot-0'),
+        document.getElementById('dot-1'),
+        document.getElementById('dot-2')
+      ];
+
+      if (!phones[0] || !phones[1] || !phones[2]) return;
+
+      phones.forEach((phone, idx) => {
+        // Calcula a posição relativa em relação ao centro (0 = centro, 1 = direita, 2 = esquerda)
+        const relPos = (idx - currentPhoneCenter + 3) % 3;
+
+        phone.classList.remove('phone-slot-center', 'phone-slot-left', 'phone-slot-right');
+
+        if (relPos === 0) {
+          // No centro (frente)
+          phone.classList.add('phone-slot-center');
+        } else if (relPos === 1) {
+          // Lançado para trás na DIREITA
+          phone.classList.add('phone-slot-right');
+        } else {
+          // Lançado para trás na ESQUERDA
+          phone.classList.add('phone-slot-left');
+        }
+      });
+
+      // Atualiza estilos das abas superiores
+      tabs.forEach((tab, idx) => {
+        if (!tab) return;
+        if (idx === currentPhoneCenter) {
+          tab.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-red-600 text-white border-red-500 shadow-lg shadow-red-600/30 font-black scale-105";
+        } else {
+          tab.className = "px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all duration-300 border bg-zinc-900/90 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700";
+        }
+      });
+
+      // Atualiza indicadores (dots)
+      dots.forEach((dot, idx) => {
+        if (!dot) return;
+        if (idx === currentPhoneCenter) {
+          dot.className = "w-8 h-3 rounded-full bg-red-600 transition-all duration-300 shadow-md shadow-red-600/50";
+        } else {
+          dot.className = "w-3 h-3 rounded-full bg-zinc-700 transition-all duration-300";
+        }
+      });
+    }
+
+    // Gira o carrossel na direção dada (-1 = anterior, 1 = próximo)
+    function rotateCarousel(direction) {
+      currentPhoneCenter = (currentPhoneCenter + direction + 3) % 3;
+      updateCarouselPositions();
+    }
+
+    // Vai direto para o celular de índice específico (0, 1 ou 2)
+    function rotateToPhone(index) {
+      if (index === currentPhoneCenter) return;
+      currentPhoneCenter = index;
+      updateCarouselPositions();
+    }
+
+    // Ao clicar em qualquer celular: se estiver atrás, ele é trazido pra frente e o atual é lançado pra trás!
+    function handlePhoneClick(index) {
+      if (index !== currentPhoneCenter) {
+        rotateToPhone(index);
+      }
+    }
+
+    // SUPORTE A SWIPE TOUCH / DRAG COM MOUSE
+    (function initSwipe3D() {
+      const stage = document.getElementById('carousel-3d-stage');
+      if (!stage) return;
+
+      let startX = 0;
+      let isDragging = false;
+
+      stage.addEventListener('mousedown', (e) => {
+        startX = e.clientX;
+        isDragging = true;
+      });
+
+      stage.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        const diffX = e.clientX - startX;
+        if (Math.abs(diffX) > 40) {
+          rotateCarousel(diffX < 0 ? 1 : -1);
+        }
+      });
+
+      stage.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+          startX = e.touches[0].clientX;
+        }
+      }, { passive: true });
+
+      stage.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length > 0) {
+          const diffX = e.changedTouches[0].clientX - startX;
+          if (Math.abs(diffX) > 40) {
+            rotateCarousel(diffX < 0 ? 1 : -1);
+          }
+        }
+      }, { passive: true });
+    })();
+
+    // SUBMIT DO FORMULÁRIO DE LISTA VIP DO APP
+    function handleAppVipSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('app-vip-contact');
+      if (!input || !input.value.trim()) return;
+
+      const valor = input.value.trim();
+      input.value = '';
+
+      alert('🥋 CADASTRO REALIZADO COM SUCESSO!\n\nSeu contato (' + valor + ') foi registrado na lista de espera. Assim que o aplicativo oficial do CT BORÜ for liberado para testes, você receberá a notificação em primeira mão!');
+    }
+  </script>
+
+<!-- ================= SEÇÃO: PLANOS & CONVÊNIOS ================= -->
   <section id="planos" class="py-14 sm:py-24 bg-[#141416]/90 backdrop-blur-[2px] border-y border-zinc-800/80 relative z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
@@ -934,7 +1743,20 @@
       </div>
 
       <!-- Grid Detalhado de Professores -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="instructors-portfolio-grid">
+      <!-- Controles de Navegação do Carrossel e Header Flex -->
+      <div class="flex items-center justify-end mb-4">
+        <div class="flex items-center gap-2">
+          <button id="prof-carousel-prev" class="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-700/80 text-white hover:text-red-500 hover:border-red-500/50 flex items-center justify-center transition shadow-lg active:scale-95 group" aria-label="Professor Anterior">
+            <span class="text-lg font-bold group-hover:-translate-x-0.5 transition-transform">←</span>
+          </button>
+          <button id="prof-carousel-next" class="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-700/80 text-white hover:text-red-500 hover:border-red-500/50 flex items-center justify-center transition shadow-lg active:scale-95 group" aria-label="Próximo Professor">
+            <span class="text-lg font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Carrossel Horizontal Dinâmico de Professores (Auto-play 5s + Hover Pause) -->
+      <div class="flex overflow-x-auto gap-6 scroll-smooth pb-4 no-scrollbar" id="instructors-portfolio-grid">
         <!-- Renderizado dinamicamente via app.js com bio rica, conquistas e especialidades -->
       </div>
 
@@ -949,39 +1771,39 @@
         <div>
           <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Artes Marciais & Condicionamento</h2>
           <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase mt-1">
-            Modalidades Oferecidas
+            Modalidade Oferecida
           </h3>
         </div>
         <p class="text-zinc-400 max-w-md text-sm">
-          Escolha a arte que melhor se adapta aos seus objetivos ou treine todas com o nosso <strong>Passaporte Livre</strong>.
+          Aprenda o autêntico <strong>Muay Thai Tradicional</strong> com metodologia tailandesa, condicionamento de alta performance e evolução técnica no tatame.
         </p>
       </div>
 
-      <!-- Grid de Modalidades -->
-      <div class="grid grid-cols-1 max-w-xl mx-auto gap-6">
+      <!-- Grid de Modalidades (CT BORÜ) -->
+      <div class="grid grid-cols-1 max-w-2xl mx-auto gap-6">
         
         <!-- Muay Thai -->
-        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat">
-          <div class="relative h-56 overflow-hidden">
+        <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat shadow-2xl spotlight-card tilt-card">
+          <div class="relative h-64 overflow-hidden">
             <img src="/modalidade-muaythai.jpg" 
                  alt="Muay Thai Tradicional no CT BORÜ" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent"></div>
-            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-red-600 text-white text-xs font-bold uppercase">
+                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/40 to-transparent"></div>
+            <span class="absolute top-4 left-4 px-3 py-1 rounded bg-red-600 text-white text-xs font-bold uppercase shadow">
               Arte das 8 Armas
             </span>
           </div>
-          <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+          <div class="p-6 md:p-8 flex-1 flex flex-col justify-between space-y-4">
             <div>
               <h4 class="font-heading text-2xl font-bold text-white uppercase group-hover:text-red-500 transition">Muay Thai Tradicional</h4>
               <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                Socos, chutes, joelhadas, cotoveladas e clinch tailandês. Excelente para queima de gordura (+800 kcal/aula), reflexo e autodefesa.
+                Socos, chutes com canela, joelhadas, cotoveladas e clinch tailandês. O treino mais completo para queima calórica (+800 kcal/aula), reflexos afiados, autodefesa e condicionamento físico de combate sob supervisão do Mestre Felipe Borü.
               </p>
             </div>
             <div class="pt-4 border-t border-zinc-800 flex items-center justify-between">
               <span class="text-xs text-zinc-400 font-medium">Turmas: Manhã, Tarde e Noite</span>
-              <a href="/agendar" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
-                Agendar Aula <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              <a href="/agendar" class="text-xs font-bold text-red-500 hover:text-red-400 flex items-center gap-1 transition">
+                Agendar Aula Experimental <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
               </a>
             </div>
           </div>
@@ -993,67 +1815,172 @@
   </section>
 
   <!-- ================= SEÇÃO: GALERIA DO CT (ATMOSFERA) ================= -->
-  <section id="galeria" class="py-24 bg-[#141416]/85 backdrop-blur-[2px] border-y border-zinc-800/80 relative z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <!-- ========================================================
+       SEÇÃO: GALERIA DO CT (PORTAL SCANNER DE FOTOS)
+       Inspirado no conceito "Scanner de Cartões / Scanner de Logotipo" (DesignsCode)
+       2 Fileiras (1 em cima e 1 embaixo) de 3 fotos em loop contínuo
+       Feixe de Scanner Laser Vertical Neon no centro
+       Permite puxar com o mouse/touch para acelerar a velocidade
+       ======================================================== -->
+  <!-- ========================================================
+       SEÇÃO: GALERIA DO CT (CARROSSEL INFINITO EM 2 FILEIRAS)
+       2 Fileiras (1 em cima e 1 embaixo) de fotos em loop contínuo suave
+       Layout limpo, sem linha laser e com velocidade suave constante
+       ======================================================== -->
+  <section id="galeria" class="py-20 sm:py-28 bg-[#0B0B0C] relative z-10 overflow-hidden border-y border-zinc-800/80 select-none">
+    
+    <!-- Luzes de Atmosfera de Fundo -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[160px] pointer-events-none"></div>
+    <div class="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[130px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       
-      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-        <h2 class="text-red-500 font-bold uppercase tracking-widest text-xs sm:text-sm">Dia a Dia no Tatame</h2>
-        <h3 class="font-display text-4xl sm:text-5xl font-extrabold text-white uppercase">
+      <!-- CABEÇALHO DA GALERIA -->
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14 space-y-3">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/70 border border-red-500/40 text-red-400 font-mono font-bold uppercase tracking-widest text-xs shadow-lg shadow-red-950/40">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>ATMOSFERA & DIA A DIA // TATAME CT BORÜ</span>
+        </div>
+
+        <h2 class="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
           Galeria de Fotos do CT
-        </h3>
-        <p class="text-zinc-400 text-sm">
-          Veja a energia, a infraestrutura e a união da nossa equipe nos treinos e graduações.
+        </h2>
+
+        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mx-auto">
+          Veja a energia, a disciplina e a evolução dos nossos guerreiros no tatame em treinos técnicos e graduações.
         </p>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      <!-- ========================================================
+           CARROSSEL INFINITO EM 2 FILEIRAS (LIMPO E SEM LINHA)
+           ======================================================== -->
+      <div id="gallery-carousel-wrapper" class="relative w-full max-w-6xl mx-auto py-2 overflow-hidden rounded-3xl bg-[#0E0E11]/80 border border-zinc-800/80 shadow-[0_20px_70px_rgba(0,0,0,0.9)]">
         
-        <!-- Foto 1: Chute & Manopla -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/galeria-treino-chute.jpg" alt="Treino de Chute e Manopla no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-600/90 px-3 py-1 rounded shadow">Chute & Manopla</span>
-          </div>
-        </div>
+        <!-- Gradientes suaves de fade nas laterais para entrada/saída elegante -->
+        <div class="absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-[#0E0E11] to-transparent z-20 pointer-events-none"></div>
+        <div class="absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-[#0E0E11] to-transparent z-20 pointer-events-none"></div>
 
-        <!-- Foto 2: Sparring Técnico -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/hero-ct-combat.jpg" alt="Sparring e Disciplina no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-amber-500/90 text-black px-3 py-1 rounded shadow">Sparring Técnico</span>
-          </div>
-        </div>
+        <!-- ================= AS 2 FILEIRAS DE FOTOS (1 EM CIMA E 1 EMBAIXO) ================= -->
+        <div class="py-6 sm:py-8 space-y-4 sm:space-y-6">
+          
+          <!-- FILEIRA 1 (SUPERIOR) - 3 FOTOS DUPLICADAS EM LOOP CONTÍNUO -->
+          <div class="overflow-hidden w-full relative">
+            <div id="gallery-row-top" class="flex gap-4 sm:gap-6 will-change-transform">
+              
+              <!-- FOTO 1: CHUTE & MANOPLA -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
+                  <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
+                </div>
+              </div>
 
-        <!-- Foto 3: Tatame & Saúde -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-700/90 px-3 py-1 rounded shadow">Tatame & Saúde</span>
-          </div>
-        </div>
+              <!-- FOTO 2: SPARRING TÉCNICO -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
+                </div>
+              </div>
 
-        <!-- Foto 4: Mestre & Aluno -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/galeria-mestre-aluno.jpg" alt="Mestre Felipe Borü e Aluno no CT BORÜ" class="w-full h-full object-cover object-top group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-red-600/90 px-3 py-1 rounded shadow">Irmandade & Treino</span>
-          </div>
-        </div>
+              <!-- FOTO 3: ESTRUTURA DO CT -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
+                </div>
+              </div>
 
-        <!-- Foto 5: Canto de Ringue -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/modalidade-muaythai.jpg" alt="Canto de Ringue e Orientação no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-zinc-800 px-3 py-1 rounded shadow">Canto de Ringue</span>
-          </div>
-        </div>
+              <!-- CLONES PARA LOOP CONTÍNUO ININTERRUPTO -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
+                  <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
+                </div>
+              </div>
 
-        <!-- Foto 6: Treino de Manoplas & Técnica -->
-        <div class="relative rounded-2xl overflow-hidden group h-64 sm:h-72 bg-zinc-900 border border-zinc-800 shadow-lg">
-          <img src="/oque-e-ct-boru.jpg" alt="Treino Técnico de Manopla no CT BORÜ" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <span class="text-xs font-bold text-white uppercase tracking-wider bg-amber-600/90 text-white px-3 py-1 rounded shadow">Treino de Manoplas</span>
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
+                </div>
+              </div>
+
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
+                </div>
+              </div>
+
+            </div>
           </div>
+
+          <!-- FILEIRA 2 (INFERIOR) - 3 FOTOS DUPLICADAS EM LOOP CONTÍNUO -->
+          <div class="overflow-hidden w-full relative">
+            <div id="gallery-row-bottom" class="flex gap-4 sm:gap-6 will-change-transform">
+              
+              <!-- FOTO 4: MESTRE & ALUNO -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
+                </div>
+              </div>
+
+              <!-- FOTO 5: CANTO DE RINGUE -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
+                </div>
+              </div>
+
+              <!-- FOTO 6: TREINO DE MANOPLAS -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
+                </div>
+              </div>
+
+              <!-- CLONES PARA LOOP CONTÍNUO ININTERRUPTO -->
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
+                  <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
+                </div>
+              </div>
+
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
+                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
+                </div>
+              </div>
+
+              <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
+                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                  <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
+                  <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -1061,7 +1988,86 @@
     </div>
   </section>
 
-  <!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
+  <script>
+    // ========================================================
+    // MOTOR DE LOOP CONTÍNUO CONSTANTE E SUAVE COM DADOS DINÂMICOS DA API
+    // ========================================================
+    (function initGalleryLoop() {
+      const rowTop = document.getElementById('gallery-row-top');
+      const rowBottom = document.getElementById('gallery-row-bottom');
+
+      if (!rowTop || !rowBottom) return;
+
+      function createCardHtml(foto, index) {
+        const borderHover = index % 2 === 0 ? 'hover:border-red-600/70' : 'hover:border-amber-500/70';
+        const tagColor = index % 2 === 0 ? 'text-red-400' : 'text-amber-400';
+        return `
+          <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 ${borderHover} shadow-xl relative group transition duration-300">
+            <img src="${foto.url}" alt="${foto.titulo || 'CT BORÜ'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='/galeria-treino-chute.jpg'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
+              <span class="text-[9px] font-mono uppercase tracking-widest ${tagColor} font-bold">${foto.titulo || 'CT BORÜ MUAY THAI'}</span>
+              <span class="text-xs font-black text-white uppercase italic">${foto.subtitulo || 'Treinamento & Disciplina'}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function populateRow(container, fotos) {
+        if (!fotos || fotos.length === 0) return;
+        let baseList = [...fotos];
+        while (baseList.length < 3) {
+          baseList = baseList.concat(fotos);
+        }
+        // Clona a lista completa para o loop contínuo suave
+        const fullList = [...baseList, ...baseList];
+        container.innerHTML = fullList.map((foto, idx) => createCardHtml(foto, idx)).join('');
+      }
+
+      // Sincroniza dinamicamente com o backend da galeria gerenciado pelo Admin
+      fetch('/api/galeria')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.galeria && Array.isArray(data.galeria) && data.galeria.length > 0) {
+            const fotosTop = data.galeria.filter(f => f.fileira === 'superior');
+            const fotosBottom = data.galeria.filter(f => f.fileira === 'inferior');
+
+            if (fotosTop.length > 0) populateRow(rowTop, fotosTop);
+            if (fotosBottom.length > 0) populateRow(rowBottom, fotosBottom);
+          }
+        })
+        .catch(() => {
+          // Mantém as fotos padrão estáticas já presentes no HTML caso ocorra erro
+        });
+
+      let posTop = 0;
+      let posBottom = 0;
+      const speed = 0.85; // Velocidade suave e constante
+
+      function step() {
+        const halfWidthTop = (rowTop.scrollWidth / 2) || 1000;
+        const halfWidthBottom = (rowBottom.scrollWidth / 2) || 1000;
+
+        posTop -= speed;
+        if (posTop <= -halfWidthTop) {
+          posTop += halfWidthTop;
+        }
+
+        posBottom -= speed * 1.05;
+        if (posBottom <= -halfWidthBottom) {
+          posBottom += halfWidthBottom;
+        }
+
+        rowTop.style.transform = 'translate3d(' + posTop + 'px, 0, 0)';
+        rowBottom.style.transform = 'translate3d(' + posBottom + 'px, 0, 0)';
+
+        requestAnimationFrame(step);
+      }
+
+      requestAnimationFrame(step);
+    })();
+  </script>
+
+<!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
   <section id="faq" class="py-24 bg-[#0B0B0C]/80 backdrop-blur-[2px] relative z-10">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       

@@ -18,6 +18,7 @@ export const publicApi = {
   createAppointment: (data: unknown) => api.post('/agendamentos', data),
   checkout: (data: unknown) => api.post('/checkout', data),
   getNotices: () => api.get('/avisos'),
+  getGallery: () => api.get('/galeria'),
   getProducts: () => api.get('/produtos'),
   getTeacherSchedules: () => api.get('/professores/horarios'),
   quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string }) =>
@@ -38,6 +39,10 @@ export const adminApi = {
   deleteTeacher: (id: string) => api.delete(`/admin/professores/${id}`),
   createNotice: (data: unknown) => api.post('/admin/avisos', data),
   deleteNotice: (id: string) => api.delete(`/admin/avisos/${id}`),
+  getGallery: () => api.get('/galeria'),
+  addGalleryPhoto: (data: { url: string; titulo?: string; subtitulo?: string; fileira?: string }) => api.post('/admin/galeria', data),
+  deleteGalleryPhoto: (id: string) => api.delete(`/admin/galeria/${id}`),
+  restoreGalleryDefault: () => api.post('/admin/galeria/restaurar'),
   createProduct: (data: unknown) => api.post('/admin/produtos', data),
   updateProduct: (id: string, data: unknown) => api.put(`/admin/produtos/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/admin/produtos/${id}`),
@@ -125,6 +130,7 @@ export const adminApi = {
   deleteGamificationAchievement: (id: string) => api.delete(`/admin/gamificacao/conquistas/${id}`),
   resetGamificationDefault: () => api.post('/admin/gamificacao/reset-padrao'),
   exportGamificationJson: () => api.get('/admin/gamificacao/export-json'),
+<<<<<<< HEAD
 
   // Módulo Next-Gen Fase 1: Loja & Resgates na Recepção
   getStoreRedemptions: (status?: string) =>
@@ -164,6 +170,10 @@ export const adminApi = {
   // Módulo Next-Gen Fase 1: Dashboard de Ocupação & Visão 360 do Aluno
   getOccupancyDashboard: () => api.get('/admin/dashboard/ocupacao'),
   getStudent360: (alunoId: string) => api.get(`/admin/alunos/${alunoId}/visao360`),
+=======
+  getStudentEvaluation: (studentId: string) => api.get(`/admin/alunos/${studentId}/avaliacao`),
+  saveStudentEvaluation: (studentId: string, data: any) => api.post(`/admin/alunos/${studentId}/avaliacao`, data),
+>>>>>>> 547efd5a7748348208fb6552c77d1256a7d0a39f
 };
 
 export const studentApi = {
@@ -184,6 +194,7 @@ export const studentApi = {
   getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
   signContract: (studentId: string, data: { aceitoTermos: boolean; dataDeAdesaoCustom?: string }) =>
     api.post(`/alunos/${studentId}/assinar-contrato`, data),
+<<<<<<< HEAD
 
   // Módulo Next-Gen Fase 1: Carteira de Points, Loja de Recompensas & Graduações
   getPointsWallet: (studentId: string) => api.get(`/alunos/${studentId}/carteira-pontos`),
@@ -191,4 +202,8 @@ export const studentApi = {
   redeemStoreItem: (studentId: string, itemId: string) =>
     api.post(`/alunos/${studentId}/loja/resgatar`, { itemId }),
   getGraduations: (studentId: string) => api.get(`/alunos/${studentId}/graduacoes`),
+=======
+  getEvaluation: (studentId: string) => api.get(`/alunos/${studentId}/avaliacao`),
+  getLeaderboard: (periodo?: string) => api.get(`/alunos/ranking${periodo ? `?periodo=${periodo}` : ''}`),
+>>>>>>> 547efd5a7748348208fb6552c77d1256a7d0a39f
 };
