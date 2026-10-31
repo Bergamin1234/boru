@@ -21,7 +21,8 @@ export const publicApi = {
   getGallery: () => api.get('/galeria'),
   getProducts: () => api.get('/produtos'),
   getTeacherSchedules: () => api.get('/professores/horarios'),
-  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string }) =>
+  getTodayClasses: (params?: { alunoId?: string }) => api.get('/aulas/hoje', { params }),
+  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string; eventoId?: string; horario?: string }) =>
     api.post('/quick-checkin', data),
   uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
     api.post('/upload', data)
@@ -197,7 +198,8 @@ export const studentApi = {
   markGamificationNotified: (studentId: string, achievementIds?: string[]) =>
     api.post(`/alunos/${studentId}/gamificacao/notificar`, { achievementIds }),
   checkIn: (data: unknown) => api.post('/checkin', data),
-  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string }) =>
+  getTodayClasses: (params?: { alunoId?: string }) => api.get('/aulas/hoje', { params }),
+  quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string; eventoId?: string; horario?: string }) =>
     api.post('/quick-checkin', data),
   justifyAbsence: (data: unknown) => api.post('/alunos/justificar-ausencia', data),
   getContract: (studentId: string) => api.get(`/alunos/${studentId}/contrato`),
@@ -219,6 +221,6 @@ export const studentApi = {
     api.get('/calendario/aulas-mes', { params }),
   checkInBySchedule: (data: { alunoId: string; eventoId: string; shift?: string }) =>
     api.post('/checkin/horario', data),
-  cancelCheckIn: (data: { checkinId: string; alunoId: string }) =>
+  cancelCheckIn: (data: { checkinId?: string; alunoId: string; eventoId?: string }) =>
     api.post('/checkin/cancelar', data),
 };

@@ -206,6 +206,83 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
   });
 
   // ========================================================
+  // 1.1 AULAS DE HOJE (PARA CHECK-IN EXPRESSO E AÇÃO RÁPIDA)
+  // ========================================================
+  app.get('/api/aulas/hoje', async (req: Request, res: Response) => {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = agora.getMonth() + 1;
+    const dia = agora.getDate();
+    const alunoId = req.query.alunoId as string;
+
+    try {
+      await ensureMonthClassesCreated(prisma, ano, mes);
+
+      const inicioDia = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
+      const fimDia = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
+
+      const eventos = await prisma.eventoDeAula.findMany({
+        where: {
+          dataInicio: { gte: inicioDia, lte: fimDia }
+        },
+        include: {
+          agendamentos: {
+            where: {
+              status: { in: ['AGENDADO', 'PRESENTE'] }
+            }
+          }
+        },
+        orderBy: { dataInicio: 'asc' }
+      });
+
+      const aulasFormatadas = eventos.map(ev => {
+        const d = new Date(ev.dataInicio);
+        const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const horaCurta = `${d.getHours()}h`;
+        const profCurto = ev.professorNome ? ev.professorNome.split(' ')[0] : 'Felipe';
+        const horarioFormatado = `${horaCurta} ${profCurto}`;
+
+        const totalAgendados = ev.agendamentos.length;
+        const capacidade = ev.capacidade || 25;
+        const lotado = totalAgendados >= capacidade;
+        const haVagas = !lotado && !ev.cancelada;
+
+        const meuCheckin = alunoId ? ev.agendamentos.find(a => a.alunoId === alunoId) : null;
+
+        return {
+          id: ev.id,
+          horario: horaStr,
+          horarioCurto: horaCurta,
+          horarioFormatado,
+          titulo: ev.titulo,
+          professorNome: ev.professorNome || 'Felipe Borü',
+          modalidade: ev.modalidade || 'Muay Thai',
+          cancelada: ev.cancelada,
+          motivoCancelamento: ev.motivoCancelamento,
+          capacidade,
+          totalAgendados,
+          haVagas,
+          lotado,
+          meuCheckin: meuCheckin ? {
+            id: meuCheckin.id,
+            status: meuCheckin.status,
+            data: meuCheckin.data
+          } : null
+        };
+      });
+
+      res.json({
+        dataIso: agora.toISOString().split('T')[0],
+        aulas: aulasFormatadas
+      });
+    } catch (error) {
+      console.error('Erro ao buscar aulas de hoje:', error);
+      res.status(500).json({ erro: 'Erro ao buscar aulas de hoje.' });
+    }
+  });
+
+
+  // ========================================================
   // 2. CHECK-IN COM ESCOLHA DE HORÁRIO ESPECÍFICO
   // ========================================================
   app.post('/api/checkin/horario', async (req: Request, res: Response) => {
@@ -280,16 +357,23 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
   // 3. CANCELAMENTO DE CHECK-IN PELO ALUNO (SE AINDA NÃO ACEITO)
   // ========================================================
   app.post('/api/checkin/cancelar', async (req: Request, res: Response) => {
-    const { checkinId, alunoId } = req.body;
+    const { checkinId, alunoId, eventoId } = req.body;
 
-    if (!checkinId || !alunoId) {
-      return res.status(400).json({ erro: 'ID do check-in e do aluno são obrigatórios.' });
+    if (!alunoId) {
+      return res.status(400).json({ erro: 'ID do aluno é obrigatório.' });
     }
 
     try {
-      const checkin = await prisma.agendamentoPresenca.findUnique({
-        where: { id: checkinId }
-      });
+      let checkin = null;
+      if (checkinId) {
+        checkin = await prisma.agendamentoPresenca.findUnique({
+          where: { id: String(checkinId) }
+        });
+      } else if (eventoId) {
+        checkin = await prisma.agendamentoPresenca.findFirst({
+          where: { eventoId: String(eventoId), alunoId: String(alunoId) }
+        });
+      }
 
       if (!checkin || checkin.alunoId !== alunoId) {
         return res.status(404).json({ erro: 'Check-in não encontrado para este aluno.' });
@@ -304,10 +388,10 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
 
       // Deleta o registro de checkin pendente
       await prisma.agendamentoPresenca.delete({
-        where: { id: checkinId }
+        where: { id: checkin.id }
       });
 
-      res.json({
+      return res.json({
         sucesso: true,
         mensagem: 'Check-in cancelado com sucesso! Sua vaga foi liberada para outros alunos.'
       });

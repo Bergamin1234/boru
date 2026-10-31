@@ -558,7 +558,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
   // MÓDULO 3: CHECK-IN RÁPIDO (HOME PÚBLICA E PORTAL INTERNO)
   // =========================================================
   app.post('/api/quick-checkin', async (req: Request, res: Response) => {
-    const { cpf, senha, alunoId, shift } = req.body;
+    const { cpf, senha, alunoId, shift, eventoId } = req.body;
 
     try {
       let aluno: any = null;
@@ -598,47 +598,95 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         }
       }
 
-      // Verificar se existe presença registrada no dia de hoje
+      // Verificar se foi passado um evento/horário específico ou fluxo padrão
       const agora = new Date();
-      const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
-      const fimDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
-
       const horaAtual = agora.getHours();
       const turnoInferido = shift || (horaAtual < 12 ? 'MANHA' : horaAtual < 18 ? 'TARDE' : 'NOITE');
-
-      let presencaHoje = await prisma.agendamentoPresenca.findFirst({
-        where: {
-          alunoId: aluno.id,
-          data: { gte: inicioDia, lte: fimDia },
-        },
-      });
-
+      let presencaHoje: any = null;
       let jaEstavaPresente = false;
+      let horarioNomeFormatado = 'Treino de Hoje';
 
-      if (presencaHoje) {
-        if (presencaHoje.status === 'PRESENTE') {
-          jaEstavaPresente = true;
+      if (eventoId) {
+        const evento = await prisma.eventoDeAula.findUnique({
+          where: { id: String(eventoId) }
+        });
+
+        if (!evento) {
+          return res.status(404).json({ erro: 'Horário de treino não encontrado.' });
+        }
+
+        if (evento.cancelada) {
+          return res.status(400).json({
+            erro: `Esta aula foi cancelada pelo professor${evento.motivoCancelamento ? ` (${evento.motivoCancelamento})` : ''}. Escolha outro horário!`
+          });
+        }
+
+        const totalAgendados = await prisma.agendamentoPresenca.count({
+          where: { eventoId: evento.id, status: { in: ['AGENDADO', 'PRESENTE'] } }
+        });
+
+        if (totalAgendados >= (evento.capacidade || 25)) {
+          return res.status(400).json({
+            erro: `A turma de ${evento.titulo} atingiu a capacidade máxima (Lotado)! Escolha outro horário.`
+          });
+        }
+
+        horarioNomeFormatado = evento.titulo;
+
+        const checkinExistente = await prisma.agendamentoPresenca.findFirst({
+          where: { alunoId: aluno.id, eventoId: evento.id }
+        });
+
+        if (checkinExistente) {
+          jaEstavaPresente = checkinExistente.status === 'PRESENTE';
+          presencaHoje = checkinExistente;
         } else {
-          presencaHoje = await prisma.agendamentoPresenca.update({
-            where: { id: presencaHoje.id },
+          presencaHoje = await prisma.agendamentoPresenca.create({
             data: {
-              status: 'PRESENTE',
+              alunoId: aluno.id,
+              eventoId: evento.id,
+              data: new Date(evento.dataInicio),
+              status: 'AGENDADO',
+              shift: turnoInferido,
+            }
+          });
+        }
+      } else {
+        // Fallback legado sem eventoId específico
+        const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
+        const fimDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
+
+        presencaHoje = await prisma.agendamentoPresenca.findFirst({
+          where: {
+            alunoId: aluno.id,
+            data: { gte: inicioDia, lte: fimDia },
+          },
+        });
+
+        if (presencaHoje) {
+          if (presencaHoje.status === 'PRESENTE') {
+            jaEstavaPresente = true;
+          } else {
+            presencaHoje = await prisma.agendamentoPresenca.update({
+              where: { id: presencaHoje.id },
+              data: {
+                status: 'AGENDADO',
+                shift: turnoInferido,
+              },
+            });
+          }
+        } else {
+          presencaHoje = await prisma.agendamentoPresenca.create({
+            data: {
+              alunoId: aluno.id,
+              data: agora,
+              status: 'AGENDADO',
               shift: turnoInferido,
             },
           });
         }
-      } else {
-        presencaHoje = await prisma.agendamentoPresenca.create({
-          data: {
-            alunoId: aluno.id,
-            data: agora,
-            status: 'PRESENTE',
-            shift: turnoInferido,
-          },
-        });
       }
 
-      // Avalia motor de gamificação ("Trilha do Nak Muay") para disparar Level Up! se houver conquista nova
       const gamificacao = await evaluateStudentGamification(prisma, aluno.id).catch(() => null);
       const novasConquistas = gamificacao?.recemDesbloqueadas || [];
 

@@ -345,7 +345,24 @@ export default function PortalAluno() {
   };
 
   // CHECK-IN ESTIMULANTE / GAMIFICADO
-  const fazerCheckin = async (id: string) => {
+  
+  const cancelarCheckin = async (checkinId?: string, eventoId?: string) => {
+    if (!alunoLogado?.id) return;
+    if (!confirm('Deseja realmente cancelar seu check-in neste treino? Sua vaga será liberada.')) return;
+    try {
+      await studentApi.cancelCheckIn({
+        checkinId: checkinId || '',
+        alunoId: alunoLogado.id,
+        eventoId: eventoId || undefined
+      });
+      alert('Check-in cancelado com sucesso e vaga liberada!');
+      carregarAulas(alunoLogado.id);
+      carregarFrequencia(alunoLogado.id, mesAtual, anoAtual);
+    } catch (error: any) {
+      alert(error.response?.data?.erro || 'Erro ao cancelar check-in.');
+    }
+  };
+const fazerCheckin = async (id: string) => {
     try {
       await studentApi.checkIn({
         alunoId: alunoLogado.id,
@@ -1086,8 +1103,18 @@ export default function PortalAluno() {
                               🩺 Ausência por Doença
                             </div>
                           ) : (
-                            <div className="w-full py-2 rounded-lg bg-amber-500/20 text-amber-400 font-bold text-xs text-center border border-amber-500/30">
-                              ⏳ Check-in Feito (Aguardando Professor)
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex-1 py-2 rounded-lg bg-amber-500/20 text-amber-400 font-bold text-xs text-center border border-amber-500/30">
+                                ⏳ Check-in Feito (Pendente)
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => cancelarCheckin(aula.checkinId, aula.id)}
+                                className="px-2.5 py-2 rounded-lg bg-zinc-800 hover:bg-red-950 text-zinc-300 hover:text-red-400 border border-zinc-700 hover:border-red-500 text-xs font-bold transition shrink-0"
+                                title="Cancelar check-in neste treino e liberar vaga"
+                              >
+                                ❌ Cancelar
+                              </button>
                             </div>
                           )
                         ) : (
