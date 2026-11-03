@@ -1340,35 +1340,24 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* NAVEGAÇÃO DE ABAS (IDENTIDADE VISUAL BORÜ + BARRA DE ROLAGEM CUSTOMIZADA) */}
-        <div className="relative flex items-center gap-1.5 bg-[#111114]/90 border border-zinc-800/90 rounded-2xl p-2 shadow-xl">
-          <button
-            type="button"
-            onClick={() => scrollTabs('left')}
-            title="Deslizar abas para a esquerda"
-            className="shrink-0 w-8 h-9 rounded-xl bg-[#1A1A1E] hover:bg-red-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-red-500 flex items-center justify-center font-black text-base transition shadow-sm"
-          >
-            ‹
-          </button>
-
-          <div
-            ref={tabsScrollRef}
-            className="flex gap-2 sm:gap-2.5 pb-2 pt-0.5 px-1 overflow-x-auto boru-scrollbar scroll-smooth flex-1"
-          >
+        {/* NAVEGAÇÃO DE ABAS EXPANDIDA EM 2 LINHAS (VISIBILIDADE TOTAL NO PC E NO CELULAR SEM ROLAGEM HORIZONTAL) */}
+        <div className="bg-[#111114]/95 border border-zinc-800/90 rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-2">
+          {/* LINHA 1: Operação Diária, Presença, Frequência & Gestão Financeira */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button 
               onClick={() => setAbaAtiva('alunos')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'alunos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'alunos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               👥 Alunos ({alunos.length})
             </button>
             <button 
               onClick={() => setAbaAtiva('chamada_diaria')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
                 ['chamada_diaria', 'calendario_geral', 'presencas'].includes(abaAtiva)
                   ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
-                  : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40'
+                  : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
               }`}
             >
               ✅ Chamada & Frequência
@@ -1376,8 +1365,8 @@ export default function AdminDashboard() {
             {usuarioLogado?.cargo === 'ADMIN' && (
               <button 
                 onClick={() => setAbaAtiva('financeiro_gestao')}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                  abaAtiva === 'financeiro_gestao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40'
+                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                  abaAtiva === 'financeiro_gestao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
                 }`}
               >
                 💰 Gestão Financeira & Baixa
@@ -1386,8 +1375,8 @@ export default function AdminDashboard() {
             {usuarioLogado?.cargo === 'ADMIN' && (
               <button 
                 onClick={() => setAbaAtiva('caixa_diario')}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                  abaAtiva === 'caixa_diario' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40'
+                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                  abaAtiva === 'caixa_diario' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
                 }`}
               >
                 💵 Caixa Diário (Fechamento)
@@ -1396,8 +1385,8 @@ export default function AdminDashboard() {
             {usuarioLogado?.cargo === 'ADMIN' && (
               <button 
                 onClick={() => setAbaAtiva('comissoes')}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                  abaAtiva === 'comissoes' ? 'bg-amber-600 text-white' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50'
+                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                  abaAtiva === 'comissoes' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50 hover:border-amber-700/60'
                 }`}
               >
                 🥋 Comissões Professores
@@ -1405,48 +1394,52 @@ export default function AdminDashboard() {
             )}
             <button 
               onClick={() => setAbaAtiva('ocupacao')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'ocupacao' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'ocupacao' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               🔥 Ocupação de Turmas
             </button>
+          </div>
+
+          {/* LINHA 2: Vouchers, Avisos, Loja, Agendamentos, Gamificação & Equipe */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1.5 border-t border-zinc-800/60">
             <button 
               onClick={() => setAbaAtiva('resgates_loja')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'resgates_loja' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'resgates_loja' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40 hover:border-amber-500/70'
               }`}
             >
               🎟️ Vouchers & Retiradas
-              </button>
+            </button>
             <button 
               onClick={() => setAbaAtiva('avisos')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'avisos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'avisos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               📢 Mural de Avisos ({avisos.length})
             </button>
             <button 
               onClick={() => setAbaAtiva('loja')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'loja' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'loja' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               🛍️ Loja & Mercado (Beta)
             </button>
             <button 
               onClick={() => setAbaAtiva('agendamentos')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'agendamentos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'agendamentos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               🎯 Leads & Aulas Exp.
             </button>
             <button 
               onClick={() => setAbaAtiva('gamificacao')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                abaAtiva === 'gamificacao' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                abaAtiva === 'gamificacao' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40 hover:border-amber-500/70'
               }`}
             >
               🏆 Gestão de Gamificação
@@ -1454,8 +1447,8 @@ export default function AdminDashboard() {
             {usuarioLogado?.cargo === 'ADMIN' && (
               <button 
                 onClick={() => setAbaAtiva('professores')}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-                  abaAtiva === 'professores' ? 'bg-amber-600 text-white' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50'
+                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
+                  abaAtiva === 'professores' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50 hover:border-amber-700/60'
                 }`}
               >
                 👑 Professores & Equipe
@@ -1464,23 +1457,14 @@ export default function AdminDashboard() {
             {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
               <button 
                 onClick={() => setAbaAtiva('dev_dashboard')}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-black transition whitespace-nowrap flex items-center gap-1.5 ${
-                  abaAtiva === 'dev_dashboard' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-red-950/40 text-red-400 hover:text-white border border-red-500/50'
+                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition flex items-center gap-1.5 ${
+                  abaAtiva === 'dev_dashboard' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-red-950/40 text-red-400 hover:text-white border border-red-500/50 hover:border-red-500/80'
                 }`}
               >
                 💻 Dev Dashboard
               </button>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => scrollTabs('right')}
-            title="Deslizar abas para a direita"
-            className="shrink-0 w-8 h-9 rounded-xl bg-[#1A1A1E] hover:bg-red-600 text-zinc-400 hover:text-white border border-zinc-700/80 hover:border-red-500 flex items-center justify-center font-black text-base transition shadow-sm"
-          >
-            ›
-          </button>
         </div>
 
         {/* SUB-BARRA UNIFICADA DE CHAMADA & FREQUÊNCIA (ELIMINA REDUNDÂNCIAS) */}
