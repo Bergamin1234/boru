@@ -17,13 +17,29 @@ const CATEGORIAS_ENTRADA = [
 ];
 
 const CATEGORIAS_SAIDA = [
-  { value: 'ALUGUEL_CONTAS', label: '🏢 Aluguel, Energia, Água e Internet' },
-  { value: 'PAGAMENTO_PROFESSORES', label: '🥋 Pagamento / Repasse de Professores e Equipe' },
-  { value: 'ESTOQUE_MERCADO', label: '📦 Compra de Estoque p/ Mercado (Luvas, Bebidas, etc.)' },
-  { value: 'EQUIPAMENTOS_MANUTENCAO', label: '🥊 Manutenção de Tatame, Sacos, Aparadores e Limpeza' },
-  { value: 'MARKETING_SISTEMA', label: '📢 Marketing, Tráfego Pago, Placas e Sistema' },
-  { value: 'IMPOSTOS_TAXAS', label: '🏛️ Impostos, Contabilidade e Taxas Bancárias/Maquininha' },
-  { value: 'OUTROS_GASTOS', label: '📉 Outras Despesas / Gastos Diversos' },
+  // --- GRUPO 2.2: DESPESAS OPERACIONAIS (OPEX) / SERVIÇOS & APOIO ADMINISTRATIVO ---
+  { value: 'SERVICOS_CONTABEIS', label: '📊 [2.2.1.01.002] Contabilidade - Serviço de Terceiro (PJ)' },
+  { value: 'ASSESSORIA_JURIDICA', label: '⚖️ [2.2.1.01.001] Assessoria Jurídica e Contratual' },
+  { value: 'AUDITORIA_LAUDOS', label: '📑 [2.2.1.01.003] Laudos, Certificações e Auditoria Externa' },
+  { value: 'ALUGUEL_CONTAS', label: '🏢 [2.2.2.01.001] Aluguel, Energia, Água e Internet' },
+  { value: 'MARKETING_SISTEMA', label: '📢 [2.2.2.01.002] Marketing, Tráfego Pago, Placas e Sistema' },
+  { value: 'IMPOSTOS_TAXAS', label: '🏛️ [2.2.2.01.003] Impostos, Tributos e Taxas Bancárias' },
+  { value: 'VIAGENS_LOGISTICA', label: '✈️ [2.2.2.01.004] Passagens, Diárias e Deslocamento' },
+
+  // --- GRUPO 2.1: CUSTOS DIRETOS DO PROJETO (CDP) ---
+  { value: 'PAGAMENTO_PROFESSORES', label: '🥋 [2.1.1.01.001] Pagamento / Repasse de Professores e Equipe' },
+  { value: 'SERVICOS_TECNICOS_PROJETO', label: '🛠️ [2.1.2.01.001] Consultoria e Serviços Técnicos do Projeto' },
+  { value: 'DESENVOLVIMENTO_TERCEIRIZADO', label: '⚙️ [2.1.2.01.002] Desenvolvimento e Engenharia Terceirizada' },
+  { value: 'LICENCAS_SOFTWARE_PROJETO', label: '💻 [2.1.3.01.001] Licenças e Softwares Dedicados ao Projeto' },
+  { value: 'EQUIPAMENTOS_MANUTENCAO', label: '🥊 [2.1.3.01.002] Manutenção de Tatame, Sacos e Limpeza' },
+  { value: 'ESTOQUE_MERCADO', label: '📦 [2.1.3.01.003] Compra de Estoque p/ Mercado (Luvas, Bebidas)' },
+
+  // --- GRUPO 2.3: INVESTIMENTOS DE CAPITAL (CAPEX) ---
+  { value: 'CAPEX_IMOBILIZADO', label: '🏗️ [2.3.1.01.001] Ativo Imobilizado / Equipamentos e Obras (CAPEX)' },
+  { value: 'CAPEX_INTANGIVEL', label: '💡 [2.3.2.01.001] Desenvolvimento de Software / Intangível (CAPEX)' },
+
+  // --- OUTROS GASTOS ---
+  { value: 'OUTROS_GASTOS', label: '📉 [2.2.2.99.999] Outras Despesas / Gastos Diversos' },
 ];
 
 const METODOS_PAGAMENTO = [
