@@ -1857,33 +1857,99 @@ app.patch('/api/admin/agendamentos/:id', async (req, res) => {
 // Converter experimental em Aluno Matriculado
 app.post('/api/admin/agendamentos/:id/converter', async (req, res) => {
   const { id } = req.params;
-  const { plano, valorMensalidade, cpf, email, is_bolsista } = req.body;
+  const {
+    nome,
+    telefone,
+    cpf,
+    email,
+    modalidade,
+    graduacao,
+    prajied,
+    plano,
+    valorMensalidade,
+    dataVencimento,
+    data_de_adesao,
+    is_bolsista,
+    senha,
+    observacao
+  } = req.body;
 
   try {
     const agendamento = await prisma.agendamentoExperimental.findUnique({ where: { id } });
     if (!agendamento) return res.status(404).json({ erro: 'Agendamento não encontrado.' });
 
-    const cpfFinal = cpf ? cpf.replace(/[^\d]+/g, '') : Math.floor(10000000000 + Math.random() * 90000000000).toString();
-    const senhaTemporaria = Math.floor(100000 + Math.random() * 900000).toString();
+    const nomeFinal = (nome || agendamento.nome || '').trim();
+    const telefoneFinal = (telefone || agendamento.telefone || '').trim();
+
+    // Se CPF não veio no body, tentar extrair da observação do agendamento
+    let cpfInformado = cpf;
+    if (!cpfInformado && agendamento.observacao) {
+      const matchCpf = agendamento.observacao.match(/CPF:\s*([\d\.-]+)/i);
+      if (matchCpf) {
+        cpfInformado = matchCpf[1];
+      }
+    }
+
+    const cpfLimpo = cpfInformado ? cpfInformado.replace(/[^\d]+/g, '') : null;
+    if (cpfLimpo) {
+      const alunoCpfExistente = await prisma.aluno.findFirst({ where: { cpf: cpfLimpo } });
+      if (alunoCpfExistente) {
+        return res.status(400).json({ erro: `Já existe um aluno cadastrado com este CPF (${cpfLimpo}).` });
+      }
+    }
+
+    const emailSanitizado = email && typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
+    if (emailSanitizado) {
+      const alunoEmailExistente = await prisma.aluno.findFirst({ where: { email: emailSanitizado } });
+      if (alunoEmailExistente) {
+        return res.status(400).json({ erro: `Já existe um aluno cadastrado com este e-mail (${emailSanitizado}).` });
+      }
+    }
+
+    const cpfFinal = cpfLimpo || Math.floor(10000000000 + Math.random() * 90000000000).toString();
+    const senhaFinal = (senha && String(senha).trim())
+      ? String(senha).trim()
+      : (cpfLimpo && cpfLimpo.length >= 6 ? cpfLimpo.slice(0, 6) : Math.floor(100000 + Math.random() * 900000).toString());
+
     const flagBolsista = Boolean(is_bolsista);
-    const agora = new Date();
+    const dataAdesao = data_de_adesao ? new Date(data_de_adesao + (String(data_de_adesao).includes('T') ? '' : 'T12:00:00')) : new Date();
+
+    const modalidadeFinal = modalidade || 'Muay Thai';
+    const graduacaoFinal = graduacao || 'Branco';
+    const prajiedFinal = prajied || graduacaoFinal || 'Branco';
+    const planoFinal = plano || '2x na semana';
+
+    const planoLower = planoFinal.toLowerCase();
+    const isDiariaOuConvenio = planoLower.includes('diária') || planoLower.includes('diaria') || planoLower.includes('wellhub') || planoLower.includes('totalpass') || planoLower.includes('gympass');
+
+    let vencimentoCalculado: Date;
+    if (dataVencimento) {
+      vencimentoCalculado = new Date(dataVencimento + (String(dataVencimento).includes('T') ? '' : 'T12:00:00'));
+    } else {
+      vencimentoCalculado = calcularProximoVencimentoPorAdesao(dataAdesao, dataAdesao);
+    }
+
+    const valorFinal = parseFloat(valorMensalidade) || 160.00;
 
     const novoAluno = await prisma.aluno.create({
       data: {
-        nome: agendamento.nome,
-        telefone: agendamento.telefone,
+        nome: nomeFinal,
+        telefone: telefoneFinal || null,
         cpf: cpfFinal,
-        email: email || null,
-        plano: plano || '2x na semana',
-        senha: senhaTemporaria,
+        email: emailSanitizado,
+        modalidade: modalidadeFinal,
+        graduacao: graduacaoFinal,
+        prajied: prajiedFinal,
+        plano: planoFinal,
+        senha: senhaFinal,
         primeiroAcesso: true,
         is_bolsista: flagBolsista,
-        data_de_adesao: agora,
-        ...(!flagBolsista ? {
+        data_de_adesao: dataAdesao,
+        ...(!flagBolsista && !isDiariaOuConvenio ? {
           mensalidades: {
             create: {
-              valor: parseFloat(valorMensalidade) || 160.00,
-              dataVencimento: calcularProximoVencimentoPorAdesao(agora, agora),
+              valor: valorFinal,
+              dataVencimento: vencimentoCalculado,
               status: 'PENDENTE'
             }
           }
@@ -1893,16 +1959,20 @@ app.post('/api/admin/agendamentos/:id/converter', async (req, res) => {
 
     await prisma.agendamentoExperimental.update({
       where: { id },
-      data: { status: 'FECHOU_CONTRATO' }
+      data: {
+        status: 'FECHOU_CONTRATO',
+        ...(observacao ? { observacao: `${agendamento.observacao || ''} | Matrícula: ${observacao}`.trim() } : {})
+      }
     });
 
     res.json({
-      mensagem: `Parabéns! ${agendamento.nome} agora é um aluno matriculado!`,
+      mensagem: `Parabéns! ${nomeFinal} agora é um aluno matriculado!`,
       aluno: novoAluno,
-      senhaTemporaria
+      senhaTemporaria: senhaFinal
     });
   } catch (error: any) {
-    res.status(500).json({ erro: 'Erro ao converter lead em aluno.' });
+    console.error('Erro ao converter lead em aluno:', error);
+    res.status(500).json({ erro: error.message || 'Erro ao converter lead em aluno.' });
   }
 });
 

@@ -250,10 +250,96 @@ export default function AdminDashboard() {
   const [tipoJustificativaInput, setTipoJustificativaInput] = useState('DOENCA');
   const [modalAcaoDia, setModalAcaoDia] = useState(false);
 
-  // Modal Converter Experimental em Aluno
+  // Modal Efetivar Matrícula do Aluno (Fez a Matrícula)
   const [leadParaConverter, setLeadParaConverter] = useState<any>(null);
-  const [planoConversao, setPlanoConversao] = useState('2x na semana');
-  const [valorConversao, setValorConversao] = useState('130');
+  const [salvandoMatricula, setSalvandoMatricula] = useState(false);
+  const [formMatricula, setFormMatricula] = useState({
+    nome: '',
+    telefone: '',
+    cpf: '',
+    email: '',
+    modalidade: 'Muay Thai',
+    graduacao: 'Branco',
+    prajied: 'Branco',
+    plano: '2x na semana',
+    valorMensalidade: '130',
+    dataAdesao: new Date().toISOString().split('T')[0],
+    dataVencimento: '',
+    isBolsista: false,
+    senha: '',
+    observacao: ''
+  });
+
+  const parseObsExperimental = (obs?: string) => {
+    if (!obs) return { cpf: '', modalidade: 'Muay Thai', professor: '' };
+    const matchCpf = obs.match(/CPF:\s*([0-9\.\-]+)/i);
+    const cpf = matchCpf ? matchCpf[1].trim() : '';
+
+    let modalidade = 'Muay Thai';
+    const obsLower = obs.toLowerCase();
+    if (obsLower.includes('jiu-jitsu') || obsLower.includes('jiu jitsu')) modalidade = 'Jiu-Jitsu';
+    else if (obsLower.includes('boxe')) modalidade = 'Boxe';
+    else if (obsLower.includes('judô') || obsLower.includes('judo')) modalidade = 'Judô';
+    else if (obsLower.includes('mma')) modalidade = 'MMA';
+    else if (obsLower.includes('cross')) modalidade = 'Cross Fight';
+    else if (obsLower.includes('taekwondo')) modalidade = 'Taekwondo';
+    else if (obsLower.includes('muay thai')) modalidade = 'Muay Thai';
+
+    const matchProf = obs.match(/Professor:\s*([^|]+)/i);
+    const professor = matchProf ? matchProf[1].trim() : '';
+
+    return { cpf, modalidade, professor };
+  };
+
+  const formatarCpfInput = (val: string) => {
+    const raw = val.replace(/\D/g, '').slice(0, 11);
+    if (raw.length <= 3) return raw;
+    if (raw.length <= 6) return `${raw.slice(0, 3)}.${raw.slice(3)}`;
+    if (raw.length <= 9) return `${raw.slice(0, 3)}.${raw.slice(3, 6)}.${raw.slice(6)}`;
+    return `${raw.slice(0, 3)}.${raw.slice(3, 6)}.${raw.slice(6, 9)}-${raw.slice(9, 11)}`;
+  };
+
+  const handlePlanoMatriculaChange = (novoPlano: string) => {
+    let valorSugerido = '130';
+    if (novoPlano === '3x na semana') valorSugerido = '160';
+    else if (novoPlano === 'Todos os Horários') valorSugerido = '280';
+    else if (novoPlano === 'Diária') valorSugerido = '40';
+    else if (novoPlano === 'Wellhub' || novoPlano === 'TotalPass') valorSugerido = '0';
+
+    setFormMatricula(prev => ({
+      ...prev,
+      plano: novoPlano,
+      valorMensalidade: valorSugerido
+    }));
+  };
+
+  const abrirModalMatricula = (ag: any) => {
+    const parsed = parseObsExperimental(ag.observacao);
+    const cpfLimpo = parsed.cpf ? parsed.cpf.replace(/\D/g, '') : '';
+    const hojeStr = new Date().toISOString().split('T')[0];
+
+    const dataVenc = new Date();
+    dataVenc.setDate(dataVenc.getDate() + 30);
+    const vencStr = dataVenc.toISOString().split('T')[0];
+
+    setFormMatricula({
+      nome: ag.nome || '',
+      telefone: ag.telefone || '',
+      cpf: parsed.cpf || '',
+      email: '',
+      modalidade: parsed.modalidade || 'Muay Thai',
+      graduacao: 'Branco',
+      prajied: 'Branco',
+      plano: '2x na semana',
+      valorMensalidade: '130',
+      dataAdesao: hojeStr,
+      dataVencimento: vencStr,
+      isBolsista: false,
+      senha: cpfLimpo.length >= 6 ? cpfLimpo.slice(0, 6) : '123456',
+      observacao: ag.observacao || ''
+    });
+    setLeadParaConverter(ag);
+  };
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -1060,17 +1146,48 @@ export default function AdminDashboard() {
   const converterLeadEmAluno = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadParaConverter) return;
+    if (!formMatricula.nome.trim()) {
+      alert('Por favor, informe o nome do aluno.');
+      return;
+    }
+    setSalvandoMatricula(true);
     try {
       const response = await adminApi.convertAppointment(leadParaConverter.id, {
-        plano: planoConversao,
-        valorMensalidade: valorConversao
+        nome: formMatricula.nome.trim(),
+        telefone: formMatricula.telefone.trim(),
+        cpf: formMatricula.cpf.trim(),
+        email: formMatricula.email.trim() || null,
+        modalidade: formMatricula.modalidade,
+        graduacao: formMatricula.graduacao,
+        prajied: formMatricula.prajied,
+        plano: formMatricula.plano,
+        valorMensalidade: formMatricula.valorMensalidade,
+        data_de_adesao: formMatricula.dataAdesao,
+        dataVencimento: formMatricula.dataVencimento,
+        is_bolsista: formMatricula.isBolsista,
+        senha: formMatricula.senha,
+        observacao: formMatricula.observacao
       });
-      alert(`Parabéns! ${leadParaConverter.nome} agora é um aluno matriculado!\n\nSenha temporária: ${response.data.senhaTemporaria}`);
+
+      // Atualizar estado local imediatamente para sumir da lista de experimentais
+      setAgendamentos((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          pendentes: prev.pendentes ? prev.pendentes.filter((a: any) => a.id !== leadParaConverter.id) : [],
+          posAula: prev.posAula ? prev.posAula.filter((a: any) => a.id !== leadParaConverter.id) : []
+        };
+      });
+
+      alert(`🎓 Parabéns! ${formMatricula.nome} agora é um aluno matriculado com sucesso!\n\nDados de Acesso:\n• Login/CPF: ${formMatricula.cpf || 'Cadastrado'}\n• Senha Provisória: ${response.data.senhaTemporaria || formMatricula.senha}\n\nO aluno já foi transferido para a tabela de Alunos Matriculados e removido dos experimentais.`);
       setLeadParaConverter(null);
-      carregarDashboard();
+      await carregarDashboard();
       setAbaAtiva('alunos');
-    } catch (error) {
-      alert('Erro ao converter lead em aluno.');
+    } catch (error: any) {
+      const msg = error.response?.data?.erro || 'Erro ao converter lead em aluno.';
+      alert(msg);
+    } finally {
+      setSalvandoMatricula(false);
     }
   };
 
@@ -1340,138 +1457,206 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* NAVEGAÇÃO DE ABAS EXPANDIDA EM 2 LINHAS (VISIBILIDADE TOTAL NO PC E NO CELULAR SEM ROLAGEM HORIZONTAL) */}
-        <div className="bg-[#111114]/95 border border-zinc-800/90 rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-2">
-          {/* LINHA 1: Operação Diária, Presença, Frequência & Gestão Financeira */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        {/* NAVEGAÇÃO MATRICIAL EM GRADE 4x2 RETO E ORGANIZADO (LAYOUT OFICIAL DO GUARDANAPO CT BORÜ) */}
+        <div className="bg-[#111114]/95 border border-zinc-800/90 rounded-2xl p-2.5 sm:p-3.5 shadow-xl space-y-3">
+          {/* GRADE 4 COLUNAS X 2 LINHAS RETO E UNIFORME */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5">
+            {/* COLUNA 1 - LINHA 1: LEADS & AULAS EXP. */}
             <button 
+              type="button"
+              onClick={() => setAbaAtiva('agendamentos')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'agendamentos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Acompanhar agendamentos e leads de aula experimental"
+            >
+              <span className="text-base sm:text-lg">🎯</span>
+              <span className="truncate">Leads & Aulas Exp.</span>
+              {agendamentos?.posAula?.length > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black border border-emerald-500/30">
+                  {agendamentos.posAula.length}
+                </span>
+              )}
+            </button>
+
+            {/* COLUNA 2 - LINHA 1: ALUNOS */}
+            <button 
+              type="button"
               onClick={() => setAbaAtiva('alunos')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'alunos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'alunos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
               }`}
+              title="Gestão de alunos matriculados"
             >
-              👥 Alunos ({alunos.length})
+              <span className="text-base sm:text-lg">👥</span>
+              <span className="truncate">Alunos ({alunos.length})</span>
             </button>
+
+            {/* COLUNA 3 - LINHA 1: PROFESSORES */}
             <button 
+              type="button"
+              onClick={() => setAbaAtiva('professores')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'professores'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Professores, equipe e horários das turmas"
+            >
+              <span className="text-base sm:text-lg">👑</span>
+              <span className="truncate">Professores</span>
+            </button>
+
+            {/* COLUNA 4 - LINHA 1: GESTÃO */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('financeiro_gestao')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                ['financeiro_gestao', 'caixa_diario', 'comissoes'].includes(abaAtiva)
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Gestão Financeira, Caixa Diário e Comissões"
+            >
+              <span className="text-base sm:text-lg">💰</span>
+              <span className="truncate">Gestão</span>
+            </button>
+
+            {/* COLUNA 1 - LINHA 2: CHAMADA */}
+            <button 
+              type="button"
               onClick={() => setAbaAtiva('chamada_diaria')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                ['chamada_diaria', 'calendario_geral', 'presencas'].includes(abaAtiva)
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
-                  : 'bg-[#141416] text-emerald-400 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                ['chamada_diaria', 'calendario_geral', 'presencas', 'ocupacao'].includes(abaAtiva)
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
               }`}
+              title="Chamada diária, frequência e ocupação de turmas"
             >
-              ✅ Chamada & Frequência
+              <span className="text-base sm:text-lg">✅</span>
+              <span className="truncate">Chamada</span>
             </button>
-            {usuarioLogado?.cargo === 'ADMIN' && (
-              <button 
-                onClick={() => setAbaAtiva('financeiro_gestao')}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                  abaAtiva === 'financeiro_gestao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
-                }`}
-              >
-                💰 Gestão Financeira & Baixa
-              </button>
-            )}
-            {usuarioLogado?.cargo === 'ADMIN' && (
-              <button 
-                onClick={() => setAbaAtiva('caixa_diario')}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                  abaAtiva === 'caixa_diario' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' : 'bg-[#141416] text-emerald-300 hover:text-white border border-emerald-500/40 hover:border-emerald-500/70'
-                }`}
-              >
-                💵 Caixa Diário (Fechamento)
-              </button>
-            )}
-            {usuarioLogado?.cargo === 'ADMIN' && (
-              <button 
-                onClick={() => setAbaAtiva('comissoes')}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                  abaAtiva === 'comissoes' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50 hover:border-amber-700/60'
-                }`}
-              >
-                🥋 Comissões Professores
-              </button>
-            )}
+
+            {/* COLUNA 2 - LINHA 2: GAME (GAMIFICAÇÃO) */}
             <button 
-              onClick={() => setAbaAtiva('ocupacao')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'ocupacao' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
+              type="button"
+              onClick={() => setAbaAtiva('gamificacao')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'gamificacao'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
               }`}
+              title="Trilha do Nak Muay, Conquistas e Graduações"
             >
-              🔥 Ocupação de Turmas
+              <span className="text-base sm:text-lg">🏆</span>
+              <span className="truncate">Game</span>
+            </button>
+
+            {/* COLUNA 3 - LINHA 2: AVISOS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('avisos')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'avisos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Mural de avisos para recepção e alunos"
+            >
+              <span className="text-base sm:text-lg">📢</span>
+              <span className="truncate">Avisos ({avisos.length})</span>
+            </button>
+
+            {/* COLUNA 4 - LINHA 2: LOJA */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('loja')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                ['loja', 'resgates_loja'].includes(abaAtiva)
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Loja Borü, equipamentos e vouchers de resgate"
+            >
+              <span className="text-base sm:text-lg">🛍️</span>
+              <span className="truncate">Loja</span>
             </button>
           </div>
 
-          {/* LINHA 2: Vouchers, Avisos, Loja, Agendamentos, Gamificação & Equipe */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1.5 border-t border-zinc-800/60">
-            <button 
-              onClick={() => setAbaAtiva('resgates_loja')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'resgates_loja' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40 hover:border-amber-500/70'
-              }`}
-            >
-              🎟️ Vouchers & Retiradas
-            </button>
-            <button 
-              onClick={() => setAbaAtiva('avisos')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'avisos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              📢 Mural de Avisos ({avisos.length})
-            </button>
-            <button 
-              onClick={() => setAbaAtiva('loja')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'loja' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              🛍️ Loja & Mercado (Beta)
-            </button>
-            <button 
-              onClick={() => setAbaAtiva('agendamentos')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'agendamentos' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              🎯 Leads & Aulas Exp.
-            </button>
-            <button 
-              onClick={() => setAbaAtiva('gamificacao')}
-              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                abaAtiva === 'gamificacao' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40 hover:border-amber-500/70'
-              }`}
-            >
-              🏆 Gestão de Gamificação
-            </button>
-            {usuarioLogado?.cargo === 'ADMIN' && (
+          {/* ATALHO DISCRETO PARA DEV DASHBOARD (SE FOR DEV) */}
+          {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+            <div className="flex justify-end pt-1 border-t border-zinc-800/60">
               <button 
-                onClick={() => setAbaAtiva('professores')}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 ${
-                  abaAtiva === 'professores' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-900/50 hover:border-amber-700/60'
-                }`}
-              >
-                👑 Professores & Equipe
-              </button>
-            )}
-            {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
-              <button 
+                type="button"
                 onClick={() => setAbaAtiva('dev_dashboard')}
-                className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition flex items-center gap-1.5 ${
-                  abaAtiva === 'dev_dashboard' ? 'bg-red-600 text-white shadow-lg shadow-red-600/30' : 'bg-red-950/40 text-red-400 hover:text-white border border-red-500/50 hover:border-red-500/80'
+                className={`px-3 py-1 rounded-lg text-[11px] font-mono font-bold transition flex items-center gap-1.5 ${
+                  abaAtiva === 'dev_dashboard' 
+                    ? 'bg-red-600 text-white shadow-md' 
+                    : 'bg-red-950/20 text-red-400 hover:text-white border border-red-900/40 hover:border-red-600/60'
                 }`}
               >
-                💻 Dev Dashboard
+                <span>💻 Dev Dashboard (Painel Engenharia)</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* SUB-BARRA UNIFICADA DE CHAMADA & FREQUÊNCIA (ELIMINA REDUNDÂNCIAS) */}
-        {['chamada_diaria', 'calendario_geral', 'presencas'].includes(abaAtiva) && (
-          <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        {/* SUB-BARRA RETRÁTIL: MÓDULO DE GESTÃO (FINANCEIRO, CAIXA & COMISSÕES) */}
+        {['financeiro_gestao', 'caixa_diario', 'comissoes'].includes(abaAtiva) && usuarioLogado?.cargo === 'ADMIN' && (
+          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
-              <span className="text-xs font-black text-zinc-300 hidden sm:inline mr-1">Visão:</span>
+              <span className="text-xs font-black text-zinc-400 uppercase tracking-wider mr-1 hidden sm:inline">Sub-módulo Gestão:</span>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('financeiro_gestao')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'financeiro_gestao'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40'
+                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>💰 Gestão Financeira & Baixa</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('caixa_diario')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'caixa_diario'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40'
+                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>💵 Caixa Diário (Fechamento)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('comissoes')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'comissoes'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-950/40'
+                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>🥋 Comissões Professores</span>
+              </button>
+            </div>
+            <span className="text-[11px] text-zinc-500 font-medium hidden md:inline">
+              {abaAtiva === 'financeiro_gestao' && 'Controle de mensalidades, saídas e conciliação'}
+              {abaAtiva === 'caixa_diario' && 'Abertura, sangrias e fechamento com conferência'}
+              {abaAtiva === 'comissoes' && 'Cálculo de repasse aos professores por aula e aluno'}
+            </span>
+          </div>
+        )}
+
+        {/* SUB-BARRA RETRÁTIL: MÓDULO DE CHAMADA & FREQUÊNCIA */}
+        {['chamada_diaria', 'calendario_geral', 'presencas', 'ocupacao'].includes(abaAtiva) && (
+          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+              <span className="text-xs font-black text-zinc-400 uppercase tracking-wider mr-1 hidden sm:inline">Visão:</span>
               <button
                 type="button"
                 onClick={() => setAbaAtiva('chamada_diaria')}
@@ -1510,7 +1695,19 @@ export default function AdminDashboard() {
                     : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
                 }`}
               >
-                <span>📋 Histórico de Check-ins ({presencas.length})</span>
+                <span>📋 Histórico Check-ins ({presencas.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('ocupacao')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'ocupacao'
+                    ? 'bg-red-600 text-white shadow-md shadow-red-900/30'
+                    : 'bg-[#1A1A1E] text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>🔥 Ocupação de Turmas</span>
               </button>
             </div>
 
@@ -1518,10 +1715,45 @@ export default function AdminDashboard() {
               {abaAtiva === 'chamada_diaria' && 'Lista rápida: quem já treinou hoje e quem falta'}
               {abaAtiva === 'calendario_geral' && 'Frequência da academia dia a dia com roster completo'}
               {abaAtiva === 'presencas' && 'Tabela detalhada com filtros e ações em lote'}
+              {abaAtiva === 'ocupacao' && 'Lotação máxima e capacidade das turmas por horário'}
             </span>
           </div>
         )}
 
+        {/* SUB-BARRA RETRÁTIL: MÓDULO LOJA & MERCADO */}
+        {['loja', 'resgates_loja'].includes(abaAtiva) && (
+          <div className="bg-[#141416] border border-zinc-800 rounded-xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
+              <span className="text-xs font-black text-zinc-400 uppercase tracking-wider mr-1 hidden sm:inline">Sub-módulo Loja:</span>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('loja')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'loja'
+                    ? 'bg-red-600 text-white shadow-md shadow-red-950/40'
+                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>🛍️ Produtos & Estoque</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAbaAtiva('resgates_loja')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  abaAtiva === 'resgates_loja'
+                    ? 'bg-amber-500 text-black shadow-md font-black'
+                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                }`}
+              >
+                <span>🎟️ Vouchers & Retiradas de Pontos</span>
+              </button>
+            </div>
+            <span className="text-[11px] text-zinc-500 font-medium hidden md:inline">
+              Gerencie catálogo de produtos físicos e resgates de pontos dos alunos
+            </span>
+          </div>
+        )}
+        
         {/* MÓDULO 6: CHAMADA DIÁRIA SPLIT-LIST */}
         {abaAtiva === 'chamada_diaria' && (
           <SplitRollCallTab onRefreshDashboard={carregarDashboard} />
@@ -2951,10 +3183,20 @@ export default function AdminDashboard() {
                               <span>📲 Avisar no WhatsApp</span>
                             </button>
                             <button 
+                              type="button"
                               onClick={() => marcarAulaRealizada(ag.id)}
-                              className="px-2.5 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition"
+                              className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-bold transition"
+                              title="Marcar que o lead realizou a aula experimental"
                             >
                               ✓ Fez a Aula
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => abrirModalMatricula(ag)}
+                              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                              title="Efetivar matrícula completa do aluno com todos os dados"
+                            >
+                              <span>🎓 Fez a Matrícula</span>
                             </button>
                           </div>
                         </td>
@@ -2997,10 +3239,12 @@ export default function AdminDashboard() {
                         <td className="p-3 text-zinc-400 text-xs italic">{ag.observacao || 'Sem observação'}</td>
                         <td className="p-3 text-right">
                           <button 
-                            onClick={() => setLeadParaConverter(ag)}
-                            className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition"
+                            type="button"
+                            onClick={() => abrirModalMatricula(ag)}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 ml-auto shadow-md shadow-emerald-950/40"
+                            title="Efetivar matrícula completa do aluno com todos os dados preenchidos"
                           >
-                            Matricular Aluno
+                            <span>🎓 Fez a Matrícula</span>
                           </button>
                         </td>
                       </tr>
@@ -4228,29 +4472,249 @@ export default function AdminDashboard() {
 
       {/* MODAL CONVERTER LEAD EM ALUNO */}
       {leadParaConverter && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[99999]">
-          <div className="bg-[#141416] border border-zinc-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Matricular {leadParaConverter.nome}</h3>
-            <p className="text-zinc-400 text-xs mb-4">A pessoa já fez a aula experimental e agora será inserida como aluno ativo.</p>
-            <form onSubmit={converterLeadEmAluno} className="space-y-3">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-[99999] overflow-y-auto">
+          <div className="bg-[#141416] border border-zinc-800 p-5 sm:p-7 rounded-2xl w-full max-w-2xl shadow-2xl my-auto text-left relative max-h-[92vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-zinc-800 shrink-0">
               <div>
-                <label className="block text-zinc-400 text-xs font-semibold mb-1">Plano Escolhido</label>
-                <select value={planoConversao} onChange={(e) => setPlanoConversao(e.target.value)} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-xs text-white">
-                  <option value="2x na semana">2x na semana (R$ 130/mês)</option>
-                  <option value="3x na semana">3x na semana (R$ 160/mês)</option>
-                  <option value="Todos os Horários">Todos os Horários (R$ 280/mês)</option>
-                  <option value="Diária">Diária Avulsa (R$ 40/treino)</option>
-                  <option value="Wellhub">Wellhub / Gympass (Individual)</option>
-                  <option value="TotalPass">TotalPass (Individual)</option>
-                </select>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                  🎓 Efetivar Matrícula Oficial
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white">Matricular {leadParaConverter.nome}</h3>
+                <p className="text-zinc-400 text-xs mt-0.5">
+                  Aula Experimental agendada em: <strong className="text-zinc-300">{leadParaConverter.data} às {leadParaConverter.horario}</strong>. Preencha todos os dados cadastrais para transferir o lead para a lista oficial de alunos ativos.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setLeadParaConverter(null)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={converterLeadEmAluno} className="space-y-4 pt-4 overflow-y-auto pr-1 flex-1">
+              {/* Seção 1: Dados Pessoais */}
               <div>
-                <label className="block text-zinc-400 text-xs font-semibold mb-1">Valor da Mensalidade (R$)</label>
-                <input type="number" value={valorConversao} onChange={(e) => setValorConversao(e.target.value)} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-xs text-white" />
+                <h4 className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span>👤 Dados Pessoais & Contato</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Nome Completo *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formMatricula.nome}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, nome: e.target.value })}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">WhatsApp / Telefone *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formMatricula.telefone}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, telefone: e.target.value })}
+                      placeholder="(69) 99999-9999"
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">CPF *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formMatricula.cpf}
+                      onChange={(e) => {
+                        const formatted = formatarCpfInput(e.target.value);
+                        setFormMatricula(prev => ({
+                          ...prev,
+                          cpf: formatted,
+                          senha: prev.senha === prev.cpf.replace(/\D/g, '').slice(0, 6) ? formatted.replace(/\D/g, '').slice(0, 6) : prev.senha
+                        }));
+                      }}
+                      placeholder="000.000.000-00"
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">E-mail (Opcional)</label>
+                    <input
+                      type="email"
+                      value={formMatricula.email}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, email: e.target.value })}
+                      placeholder="aluno@email.com"
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-end gap-2 pt-3">
-                <button type="button" onClick={() => setLeadParaConverter(null)} className="px-3 py-1.5 bg-zinc-800 text-zinc-300 rounded-lg text-xs font-bold">Cancelar</button>
-                <button type="submit" className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold">Concluir Matrícula</button>
+
+              {/* Seção 2: Modalidade & Graduação */}
+              <div className="pt-2 border-t border-zinc-800/80">
+                <h4 className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span>🥊 Modalidade & Nível / Graduação</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Modalidade *</label>
+                    <select
+                      value={formMatricula.modalidade}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, modalidade: e.target.value })}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    >
+                      <option value="Muay Thai">Muay Thai</option>
+                      <option value="Jiu-Jitsu">Jiu-Jitsu</option>
+                      <option value="Boxe">Boxe</option>
+                      <option value="MMA">MMA</option>
+                      <option value="Judô">Judô</option>
+                      <option value="Taekwondo">Taekwondo</option>
+                      <option value="Cross Fight">Cross Fight</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Graduação / Faixa / Prajied</label>
+                    <input
+                      type="text"
+                      value={formMatricula.graduacao}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, graduacao: e.target.value, prajied: e.target.value })}
+                      placeholder="Ex: Branco, Ponta Vermelha, Azul..."
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção 3: Plano & Financeiro */}
+              <div className="pt-2 border-t border-zinc-800/80">
+                <h4 className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span>💳 Plano, Valores & Vencimento</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Plano Escolhido *</label>
+                    <select
+                      value={formMatricula.plano}
+                      onChange={(e) => handlePlanoMatriculaChange(e.target.value)}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    >
+                      <option value="2x na semana">2x na semana (R$ 130/mês)</option>
+                      <option value="3x na semana">3x na semana (R$ 160/mês)</option>
+                      <option value="Todos os Horários">Todos os Horários (R$ 280/mês)</option>
+                      <option value="Diária">Diária Avulsa (R$ 40/treino)</option>
+                      <option value="Wellhub">Wellhub / Gympass</option>
+                      <option value="TotalPass">TotalPass</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Valor da Mensalidade (R$) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={formMatricula.valorMensalidade}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, valorMensalidade: e.target.value })}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Data de Adesão / Início *</label>
+                    <input
+                      type="date"
+                      required
+                      value={formMatricula.dataAdesao}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, dataAdesao: e.target.value })}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">1º Vencimento da Fatura</label>
+                    <input
+                      type="date"
+                      value={formMatricula.dataVencimento}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, dataVencimento: e.target.value })}
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 bg-zinc-900/60 border border-zinc-800 rounded-lg p-3">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formMatricula.isBolsista}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, isBolsista: e.target.checked })}
+                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-zinc-800 border-zinc-700"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-white block">Aluno Bolsista / Atleta</span>
+                      <span className="text-[11px] text-zinc-400 block">Isenta de faturas automáticas e notificações de inadimplência.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Seção 4: Acesso ao Portal & Observação */}
+              <div className="pt-2 border-t border-zinc-800/80">
+                <h4 className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span>🔐 Acesso ao Portal do Aluno & Notas</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Senha Inicial do Aluno *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formMatricula.senha}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, senha: e.target.value })}
+                      placeholder="Ex: 123456"
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none font-mono"
+                    />
+                    <span className="text-[10px] text-zinc-500 mt-1 block">O aluno poderá alterar a senha após o primeiro login no app.</span>
+                  </div>
+                  <div>
+                    <label className="block text-zinc-300 text-xs font-semibold mb-1">Observações Adicionais</label>
+                    <input
+                      type="text"
+                      value={formMatricula.observacao}
+                      onChange={(e) => setFormMatricula({ ...formMatricula, observacao: e.target.value })}
+                      placeholder="Ex: Restrições médicas, professor responsável..."
+                      className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-emerald-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setLeadParaConverter(null)}
+                  disabled={salvandoMatricula}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-bold transition disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvandoMatricula}
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-950/50 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {salvandoMatricula ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block"></span>
+                      <span>Salvando Matrícula...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🎓 Concluir Matrícula</span>
+                    </>
+                  )}
+                </button>
               </div>
             </form>
           </div>
