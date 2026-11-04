@@ -1367,93 +1367,107 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* CARDS DE MÉTRICAS (INTERATIVOS COM ATALHO DIRETO) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {/* CARDS DE MÉTRICAS (7 EM LINHA UNIFORME - SEM QUADRADINHO ISOLADO EMBAIXO) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+          {/* 1. TOTAL DE ALUNOS */}
           <div 
             onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('TODOS'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-zinc-700 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-zinc-700 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Ver todos os alunos matriculados"
           >
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-white transition">Total de Alunos</p>
-            <p className="text-2xl sm:text-3xl font-black text-white">{metricas.totalAlunos}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-zinc-400 transition">Matriculados ativos →</span>
+            <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-white transition truncate">Total de Alunos</p>
+            <p className="text-xl sm:text-2xl font-black text-white">{metricas.totalAlunos}</p>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-zinc-400 transition truncate">Matriculados →</span>
           </div>
 
-          {/* CARD ALUNOS ATIVOS */}
+          {/* 2. ALUNOS ATIVOS */}
           <div 
             onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('ATIVO'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-emerald-500/60 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-emerald-500/60 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Ver alunos ativos nos treinos"
           >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-emerald-400 transition">Alunos Ativos</p>
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-emerald-400 transition truncate">Alunos Ativos</p>
               <span className="text-xs">🟢</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-emerald-400">
+            <p className="text-xl sm:text-2xl font-black text-emerald-400">
               {metricas.alunosAtivos || alunos.filter(a => a.statusAtividade === 'ATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar < 14)).length}
             </p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-emerald-400/70 transition">Treinando regularmente →</span>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-emerald-400/70 transition truncate">Treinando freq. →</span>
           </div>
 
-          {/* CARD ALUNOS INATIVOS (2 A 3 SEMANAS SEM TREINAR) */}
+          {/* 3. ALUNOS INATIVOS (2 A 3 SEMANAS SEM TREINAR) */}
           <div 
             onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('INATIVO'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-amber-500/60 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-amber-500/60 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Filtrar alunos inativos há 2 a 3 semanas sem treinar"
           >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-amber-400 transition">Inativos (2-3 sem)</p>
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-amber-400 transition truncate">Inativos (2-3 sem)</p>
               <span className="text-xs">⚠️</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-amber-400">
+            <p className="text-xl sm:text-2xl font-black text-amber-400">
               {metricas.alunosInativos || alunos.filter(a => a.statusAtividade === 'INATIVO' || (a.diasSemTreinar !== undefined && a.diasSemTreinar >= 14)).length}
             </p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition">Chamar de volta 📲 →</span>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition truncate">Chamar Whats →</span>
           </div>
 
+          {/* 4. EM DIA */}
           <div 
             onClick={() => { if (usuarioLogado?.cargo === 'ADMIN') setAbaAtiva('financeiro_gestao'); else setAbaAtiva('alunos'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-green-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-green-600/50 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Ver assinaturas e mensalidades em dia"
           >
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-green-400 transition">Em Dia</p>
-            <p className="text-2xl sm:text-3xl font-black text-green-500">{metricas.assinaturasAtivas}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-green-400/70 transition">Mensalidade vigente →</span>
+            <div className="flex items-center justify-between">
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-green-400 transition truncate">Em Dia</p>
+              <span className="text-xs">✅</span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-green-500">{metricas.assinaturasAtivas}</p>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-green-400/70 transition truncate">Mensalidade ok →</span>
           </div>
+
+          {/* 5. ATRASADOS / PENDENTES */}
           <div 
             onClick={() => { if (usuarioLogado?.cargo === 'ADMIN') setAbaAtiva('financeiro_gestao'); else setAbaAtiva('alunos'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-red-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-red-600/50 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Ver inadimplências e pendências"
           >
-            <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-red-400 transition">Atrasados / Pendentes</p>
-            <p className="text-2xl sm:text-3xl font-black text-red-500">{metricas.inadimplentes}</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-red-400/70 transition">Vencidas ou sem plano →</span>
+            <div className="flex items-center justify-between">
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-red-400 transition truncate">Atrasados / Pend.</p>
+              <span className="text-xs">🚨</span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-red-500">{metricas.inadimplentes}</p>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-red-400/70 transition truncate">Vencidas →</span>
           </div>
+
+          {/* 6. ASSIDUIDADE GERAL */}
           <div 
             onClick={() => setAbaAtiva('chamada_diaria')}
-            className="bg-[#141416] border border-zinc-800 hover:border-cyan-600/50 rounded-xl p-3 sm:p-4 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-cyan-600/50 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Abrir Chamada & Frequência de hoje"
           >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-cyan-400 transition">Assiduidade Geral</p>
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-cyan-400 transition truncate">Assiduidade</p>
               <span className="text-xs">📊</span>
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-cyan-400">{metricas.taxaPresencaMedia ?? 100}%</p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-cyan-400/70 transition">Chamada & Frequência →</span>
+            <p className="text-xl sm:text-2xl font-black text-cyan-400">{metricas.taxaPresencaMedia ?? 100}%</p>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-cyan-400/70 transition truncate">Freq. geral →</span>
           </div>
+
+          {/* 7. ALUNOS EM RISCO (ALINHADO JUNTO AOS OUTROS 6 NA MESMA LINHA) */}
           <div 
             onClick={() => { setAbaAtiva('alunos'); setFiltroAssiduidade('RISCO'); }}
-            className="bg-[#141416] border border-zinc-800 hover:border-amber-600/50 rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1 cursor-pointer transition group"
+            className="bg-[#141416] border border-zinc-800 hover:border-amber-600/50 rounded-xl p-2.5 sm:p-3 cursor-pointer transition group min-w-0"
             title="Filtrar alunos em risco de evasão"
           >
             <div className="flex items-center justify-between">
-              <p className="text-zinc-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-1 group-hover:text-amber-400 transition">Alunos em Risco</p>
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider mb-0.5 group-hover:text-amber-400 transition truncate">Alunos em Risco</p>
               <span className="text-xs">⚠️</span>
             </div>
-            <p className={`text-2xl sm:text-3xl font-black ${(metricas.alunosEmRisco || 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            <p className={`text-xl sm:text-2xl font-black ${(metricas.alunosEmRisco || 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               {metricas.alunosEmRisco || 0}
             </p>
-            <span className="text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition">Frequência &lt; 50% (Filtrar) →</span>
+            <span className="text-[9px] sm:text-[10px] text-zinc-500 block mt-0.5 group-hover:text-amber-400/70 transition truncate">Freq &lt; 50% →</span>
           </div>
         </div>
 
