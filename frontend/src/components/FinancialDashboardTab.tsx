@@ -16,7 +16,7 @@ const CATEGORIAS_ENTRADA = [
   { value: 'OUTROS_ENTRADA', label: '➕ Outra Receita / Patrocínio' },
 ];
 
-const CATEGORIAS_SAIDA = [
+export const CATEGORIAS_DESPESAS = [
   // --- GRUPO 2.2: DESPESAS OPERACIONAIS (OPEX) / SERVIÇOS & APOIO ADMINISTRATIVO ---
   { value: 'SERVICOS_CONTABEIS', label: '📊 [2.2.1.01.002] Contabilidade - Serviço de Terceiro (PJ)' },
   { value: 'ASSESSORIA_JURIDICA', label: '⚖️ [2.2.1.01.001] Assessoria Jurídica e Contratual' },
@@ -26,21 +26,37 @@ const CATEGORIAS_SAIDA = [
   { value: 'IMPOSTOS_TAXAS', label: '🏛️ [2.2.2.01.003] Impostos, Tributos e Taxas Bancárias' },
   { value: 'VIAGENS_LOGISTICA', label: '✈️ [2.2.2.01.004] Passagens, Diárias e Deslocamento' },
 
-  // --- GRUPO 2.1: CUSTOS DIRETOS DO PROJETO (CDP) ---
+  // --- GRUPO 2.1: CUSTOS OPERACIONAIS DIRETOS (OPEX) ---
   { value: 'PAGAMENTO_PROFESSORES', label: '🥋 [2.1.1.01.001] Pagamento / Repasse de Professores e Equipe' },
-  { value: 'SERVICOS_TECNICOS_PROJETO', label: '🛠️ [2.1.2.01.001] Consultoria e Serviços Técnicos do Projeto' },
-  { value: 'DESENVOLVIMENTO_TERCEIRIZADO', label: '⚙️ [2.1.2.01.002] Desenvolvimento e Engenharia Terceirizada' },
-  { value: 'LICENCAS_SOFTWARE_PROJETO', label: '💻 [2.1.3.01.001] Licenças e Softwares Dedicados ao Projeto' },
+  { value: 'SERVICOS_TECNICOS_PROJETO', label: '🛠️ [2.1.2.01.001] Consultoria e Serviços Técnicos Operacionais' },
+  { value: 'DESENVOLVIMENTO_TERCEIRIZADO', label: '⚙️ [2.1.2.01.002] Manutenção de Sistemas e TI Terceirizada' },
+  { value: 'LICENCAS_SOFTWARE_PROJETO', label: '💻 [2.1.3.01.001] Assinaturas de Softwares e Serviços Digitais' },
   { value: 'EQUIPAMENTOS_MANUTENCAO', label: '🥊 [2.1.3.01.002] Manutenção de Tatame, Sacos e Limpeza' },
   { value: 'ESTOQUE_MERCADO', label: '📦 [2.1.3.01.003] Compra de Estoque p/ Mercado (Luvas, Bebidas)' },
-
-  // --- GRUPO 2.3: INVESTIMENTOS DE CAPITAL (CAPEX) ---
-  { value: 'CAPEX_IMOBILIZADO', label: '🏗️ [2.3.1.01.001] Ativo Imobilizado / Equipamentos e Obras (CAPEX)' },
-  { value: 'CAPEX_INTANGIVEL', label: '💡 [2.3.2.01.001] Desenvolvimento de Software / Intangível (CAPEX)' },
-
-  // --- OUTROS GASTOS ---
-  { value: 'OUTROS_GASTOS', label: '📉 [2.2.2.99.999] Outras Despesas / Gastos Diversos' },
+  { value: 'OUTRAS_DESPESAS', label: '🔴 [2.2.2.99.999] Outras Despesas Operacionais' },
+  { value: 'OUTROS_GASTOS', label: '🔴 [2.2.2.99.999] Outras Despesas Operacionais' }, // Retrocompatibilidade com registros legados
 ];
+
+export const CATEGORIAS_INVESTIMENTOS = [
+  // --- GRUPO 2.3: INVESTIMENTOS DE CAPITAL (CAPEX) ---
+  { value: 'CAPEX_IMOBILIZADO', label: '🏗️ [2.3.1.01.001] Obras, Reformas e Benfeitorias na Unidade (CAPEX)' },
+  { value: 'INVESTIMENTO_EQUIPAMENTOS', label: '🥊 [2.3.1.01.002] Aquisição de Novos Tatames e Equipamentos' },
+  { value: 'CAPEX_INTANGIVEL', label: '💡 [2.3.2.01.001] Tecnologia, Desenvolvimento de Software e App (CAPEX)' },
+  { value: 'INVESTIMENTO_EXPANSAO', label: '🏢 [2.3.1.01.003] Expansão de Unidade e Infraestrutura' },
+  { value: 'OUTROS_INVESTIMENTOS', label: '💎 [2.3.3.01.001] Outros Investimentos de Capital (CAPEX)' },
+];
+
+export const CATEGORIAS_SAIDA = [...CATEGORIAS_DESPESAS, ...CATEGORIAS_INVESTIMENTOS];
+
+export const isInvestimento = (categoria: string) => {
+  return [
+    'CAPEX_IMOBILIZADO',
+    'INVESTIMENTO_EQUIPAMENTOS',
+    'CAPEX_INTANGIVEL',
+    'INVESTIMENTO_EXPANSAO',
+    'OUTROS_INVESTIMENTOS',
+  ].includes(categoria);
+};
 
 const METODOS_PAGAMENTO = [
   { value: 'PIX', label: '💠 PIX' },
@@ -81,6 +97,11 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
     'graficos_bi' | 'livro_caixa' | 'mercado_pdv' | 'controle_gastos' | 'assinaturas_alunos'
   >('graficos_bi');
 
+  // Filtro da Aba Despesas & Investimentos
+  const [filtroClassificacaoSaida, setFiltroClassificacaoSaida] = useState<
+    'TODAS' | 'DESPESAS' | 'INVESTIMENTOS'
+  >('TODAS');
+
   // Filtros da Aba Assinaturas de Alunos
   const [buscaAluno, setBuscaAluno] = useState('');
   const [filtroStatusAluno, setFiltroStatusAluno] = useState<
@@ -107,7 +128,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
   const [metodoBaixa, setMetodoBaixa] = useState<string>('PIX');
   const [salvandoBaixa, setSalvandoBaixa] = useState(false);
 
-  // Modal Universal de Lançamento Financeiro (Entrada, Venda do Mercado, Assinatura ou Gasto)
+  // Modal Universal de Lançamento Financeiro (Entrada, Venda do Mercado, Assinatura, Despesa ou Investimento)
   const [modalTransacao, setModalTransacao] = useState(false);
   const [buscaAlunoTransacao, setBuscaAlunoTransacao] = useState('');
   const [editandoTransacaoId, setEditandoTransacaoId] = useState<string | null>(null);
@@ -167,7 +188,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
   // ABERTURA RÁPIDA DE MODAIS DE LANÇAMENTO
   // =========================================================
   const abrirModalNovoLancamento = (
-    preset: 'ASSINATURA' | 'MERCADO' | 'GASTO' | 'LIVRE',
+    preset: 'ASSINATURA' | 'MERCADO' | 'DESPESA' | 'INVESTIMENTO' | 'GASTO' | 'LIVRE',
     produtoPreSelecionado?: any
   ) => {
     setEditandoTransacaoId(null);
@@ -206,10 +227,27 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
         renovarAssinaturaAluno: false,
         atualizarEstoqueProduto: true,
       });
-    } else if (preset === 'GASTO') {
+    } else if (preset === 'DESPESA' || preset === 'GASTO') {
       setFormTransacao({
         tipo: 'SAIDA',
         categoria: 'ALUGUEL_CONTAS',
+        descricao: '',
+        valor: '',
+        data: hojeIso,
+        metodoPagamento: 'PIX',
+        status: 'CONFIRMADO',
+        alunoId: '',
+        produtoId: '',
+        quantidade: '1',
+        registradoPor: usuarioLogadoNome,
+        observacao: '',
+        renovarAssinaturaAluno: false,
+        atualizarEstoqueProduto: false,
+      });
+    } else if (preset === 'INVESTIMENTO') {
+      setFormTransacao({
+        tipo: 'SAIDA',
+        categoria: 'CAPEX_IMOBILIZADO',
         descricao: '',
         valor: '',
         data: hojeIso,
@@ -455,7 +493,15 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
     (t) => t.tipo === 'ENTRADA' && t.categoria === 'MERCADO_LOJA' && t.status !== 'CANCELADO'
   );
 
-  const gastosMes = transacoesDoMes.filter((t) => t.tipo === 'SAIDA');
+  const saidasMes = transacoesDoMes.filter((t) => t.tipo === 'SAIDA');
+  const despesasMes = saidasMes.filter((t) => !isInvestimento(t.categoria));
+  const investimentosMes = saidasMes.filter((t) => isInvestimento(t.categoria));
+
+  const totalSaidasMes = saidasMes.reduce((acc, t) => acc + (t.valor || 0), 0);
+  const totalDespesasMes = despesasMes.reduce((acc, t) => acc + (t.valor || 0), 0);
+  const totalInvestimentosMes = investimentosMes.reduce((acc, t) => acc + (t.valor || 0), 0);
+
+  const gastosMes = saidasMes; // Alias retrocompatível
 
   const registrosFiltrados = registros.filter((r) => {
     const termo = buscaAluno.trim().toLowerCase();
@@ -495,10 +541,10 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
-              💰 Central Financeira, Mercado, Gastos & Lucro Real
+              💰 Central Financeira, Mercado, Despesas & Investimentos
             </h2>
             <p className="text-xs text-zinc-400">
-              Registre todas as assinaturas, vendas de produtos do Mercado Borü, despesas operacionais e acompanhe gráficos de lucro e alunos.
+              Registre todas as assinaturas, vendas do Mercado Borü, despesas operacionais (OPEX) e investimentos de capital (CAPEX) com demonstrativos contábeis em tempo real.
             </p>
           </div>
 
@@ -536,7 +582,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
         </div>
 
         {/* BARRA DE AÇÕES RÁPIDAS DA ADMINISTRADORA (REGISTRAR TUDO) */}
-        <div className="pt-3 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div className="pt-3 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
           <button
             type="button"
             onClick={() => abrirModalNovoLancamento('ASSINATURA')}
@@ -545,10 +591,10 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
             <span className="text-2xl">💳</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                + Registrar Assinatura / Mensalidade
+                + Registrar Assinatura
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-emerald-100">
-                Com escolha de Aluno, Data e Renovação +30d
+                Aluno, Data e Renovação +30d
               </span>
             </div>
           </button>
@@ -561,26 +607,42 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
             <span className="text-2xl">🛍️</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                + Venda do Mercado / Loja (PDV)
+                + Venda Mercado (PDV)
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-zinc-900">
-                Luvas, Bandagens, Bebidas + Baixa de Estoque
+                Luvas, Bebidas e Baixa de Estoque
               </span>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => abrirModalNovoLancamento('GASTO')}
+            onClick={() => abrirModalNovoLancamento('DESPESA')}
             className="p-3 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 transition flex items-center gap-2.5 text-left group shadow-sm"
           >
-            <span className="text-2xl">📉</span>
+            <span className="text-2xl">🔴</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                + Registrar Gasto / Despesa
+                + Registrar Despesa
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-red-100">
-                Aluguel, Luz, Professores, Compra de Estoque
+                Aluguel, Luz, Equipe, Contas (OPEX)
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => abrirModalNovoLancamento('INVESTIMENTO')}
+            className="p-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 transition flex items-center gap-2.5 text-left group shadow-sm"
+          >
+            <span className="text-2xl">💎</span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider block">
+                + Registrar Investimento
+              </span>
+              <span className="text-[10px] text-zinc-400 group-hover:text-indigo-100">
+                Tatames, Obras, Equipamentos (CAPEX)
               </span>
             </div>
           </button>
@@ -593,17 +655,17 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
             <span className="text-2xl">⚡</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                + Diária / Exame / Outra Entrada
+                + Diária / Exame / Entrada
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-cyan-100">
-                Diárias avulsas, Wellhub, TotalPass, Seminários
+                Diárias avulsas, Wellhub, Seminários
               </span>
             </div>
           </button>
         </div>
       </div>
 
-      {/* 6 CARDS DE KPI EXECUTIVOS (RECEITA BRUTA, GASTOS, LUCRO LÍQUIDO, MERCADO, PREVISÃO E INADIMPLÊNCIA) */}
+      {/* 6 CARDS DE KPI EXECUTIVOS (RECEITA BRUTA, SAÍDAS/DESPESAS/INVESTIMENTOS, LUCRO LÍQUIDO, MERCADO, PREVISÃO E INADIMPLÊNCIA) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
         <div className="bg-[#141416] border border-emerald-500/30 rounded-xl p-4">
           <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
@@ -619,13 +681,13 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
         <div className="bg-[#141416] border border-red-500/30 rounded-xl p-4">
           <span className="text-[10px] uppercase font-bold text-red-400 tracking-wider block">
-            🔻 Gastos & Despesas (Mês)
+            🔻 Despesas & Investimentos (Mês)
           </span>
           <p className="text-xl sm:text-2xl font-black text-red-400 mt-1">
-            {formatarMoeda(resumo?.gastosTotaisMes || 0)}
+            {formatarMoeda(resumo?.saidasTotaisMes || resumo?.gastosTotaisMes || totalSaidasMes)}
           </p>
           <span className="text-[10px] text-zinc-400 mt-1 block">
-            {gastosMes.length} despesa(s) lançada(s) no mês
+            Despesas: <strong className="text-zinc-200">{formatarMoeda(resumo?.despesasTotaisMes ?? totalDespesasMes)}</strong> • Invest.: <strong className="text-indigo-300">{formatarMoeda(resumo?.investimentosTotaisMes ?? totalInvestimentosMes)}</strong>
           </span>
         </div>
 
@@ -734,7 +796,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               : 'bg-[#141416] text-red-400 hover:text-white border border-red-500/30'
           }`}
         >
-          📉 Controle de Gastos & Despesas ({gastosMes.length})
+          📉 Despesas & Investimentos ({saidasMes.length})
         </button>
 
         <button
@@ -755,7 +817,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       ========================================================= */}
       {subAba === 'graficos_bi' && (
         <div className="space-y-6">
-          {/* LINHA 1 DE GRÁFICOS: EVOLUÇÃO SEMESTRAL (RECEITA x GASTOS x LUCRO) + COMPOSIÇÃO DE RECEITAS/GASTOS */}
+          {/* LINHA 1 DE GRÁFICOS: EVOLUÇÃO SEMESTRAL (RECEITA x SAÍDAS x LUCRO) + COMPOSIÇÃO DE RECEITAS/SAÍDAS */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* GRÁFICO 1: EVOLUÇÃO MENSAL DE CAIXA E LUCRO (BARRAS AGRUPADAS) */}
             <div className="lg:col-span-2 bg-[#141416] border border-zinc-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
@@ -763,10 +825,10 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3 mb-4">
                   <div>
                     <h3 className="text-base font-black text-white flex items-center gap-2">
-                      📈 Evolução Financeira Semestral (Receitas vs Gastos vs Lucro)
+                      📈 Evolução Financeira Semestral (Receitas vs Despesas & Invest. vs Lucro)
                     </h3>
                     <p className="text-xs text-zinc-400">
-                      Comparativo mensal de entradas (Assinaturas + Mercado), despesas e resultado líquido.
+                      Comparativo mensal de receitas totais, despesas operacionais, investimentos e resultado líquido.
                     </p>
                   </div>
                   <div className="flex items-center gap-3 text-[11px] font-bold">
@@ -774,7 +836,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                       <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block"></span> Entradas
                     </span>
                     <span className="flex items-center gap-1 text-red-400">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block"></span> Gastos
+                      <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block"></span> Despesas & Invest.
                     </span>
                     <span className="flex items-center gap-1 text-amber-400">
                       <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"></span> Lucro
@@ -787,7 +849,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                   const serie: any[] = graficos?.fluxoPorMes || [];
                   const maiorValor = Math.max(
                     100,
-                    ...serie.map((s) => Math.max(s.entradas || 0, s.gastos || 0, Math.abs(s.lucro || 0)))
+                    ...serie.map((s) => Math.max(s.entradas || 0, s.gastos || s.saidas || 0, Math.abs(s.lucro || 0)))
                   );
 
                   return (
@@ -795,7 +857,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                       <div className="grid grid-cols-6 gap-2 sm:gap-4 items-end h-56 pt-6 px-2 bg-[#0B0B0C]/60 rounded-xl border border-zinc-800/80">
                         {serie.map((item, idx) => {
                           const hEntrada = Math.max(4, Math.round(((item.entradas || 0) / maiorValor) * 160));
-                          const hGasto = Math.max(4, Math.round(((item.gastos || 0) / maiorValor) * 160));
+                          const hSaida = Math.max(4, Math.round(((item.saidas || item.gastos || 0) / maiorValor) * 160));
                           const hLucro = Math.max(
                             4,
                             Math.round((Math.abs(item.lucro || 0) / maiorValor) * 160)
@@ -813,9 +875,9 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                                   title={`${item.mesLabel} • Receita Total: ${formatarMoeda(item.entradas)} (Planos: ${formatarMoeda(item.mensalidades)} | Mercado: ${formatarMoeda(item.mercado)})`}
                                 />
                                 <div
-                                  style={{ height: `${hGasto}px` }}
+                                  style={{ height: `${hSaida}px` }}
                                   className="w-3 sm:w-4 bg-gradient-to-t from-red-800 to-red-500 rounded-t transition-all duration-500"
-                                  title={`${item.mesLabel} • Gastos: ${formatarMoeda(item.gastos)}`}
+                                  title={`${item.mesLabel} • Saídas Totais (Despesas & Invest.): ${formatarMoeda(item.saidas || item.gastos)}`}
                                 />
                                 <div
                                   style={{ height: `${hLucro}px` }}
@@ -845,7 +907,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                               <th className="p-2.5">Mercado Borü</th>
                               <th className="p-2.5">Outras Entradas</th>
                               <th className="p-2.5">Receita Bruta</th>
-                              <th className="p-2.5">Gastos</th>
+                              <th className="p-2.5">Despesas & Invest.</th>
                               <th className="p-2.5 text-right">Lucro Líquido</th>
                             </tr>
                           </thead>
@@ -857,7 +919,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                                 <td className="p-2.5 text-amber-300">{formatarMoeda(item.mercado)}</td>
                                 <td className="p-2.5 text-cyan-300">{formatarMoeda(item.outros)}</td>
                                 <td className="p-2.5 font-bold text-white">{formatarMoeda(item.entradas)}</td>
-                                <td className="p-2.5 text-red-400">{formatarMoeda(item.gastos)}</td>
+                                <td className="p-2.5 text-red-400">{formatarMoeda(item.saidas || item.gastos)}</td>
                                 <td
                                   className={`p-2.5 text-right font-black ${
                                     item.lucro >= 0 ? 'text-emerald-400' : 'text-red-500'
@@ -876,7 +938,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               </div>
             </div>
 
-            {/* COLUNA DIREITA: DRE MENSAL SIMPLIFICADO & DIVISÃO DE RECEITAS E GASTOS */}
+            {/* COLUNA DIREITA: DRE MENSAL SIMPLIFICADO & DEMONSTRATIVO DE RECEITAS, DESPESAS E INVESTIMENTOS */}
             <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 shadow-xl space-y-5">
               <div className="border-b border-zinc-800 pb-3">
                 <h3 className="text-base font-black text-white">
@@ -919,9 +981,29 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center p-2.5 rounded-lg bg-red-950/20 border border-red-500/20">
-                  <span className="text-zinc-300 font-semibold">(-) Despesas & Gastos do Mês</span>
+                  <div>
+                    <span className="text-zinc-300 font-semibold block">(-) Despesas Operacionais (OPEX)</span>
+                    <span className="text-[10px] text-zinc-500">Aluguel, contas, salários, manutenção, impostos</span>
+                  </div>
                   <strong className="text-red-400">
-                    - {formatarMoeda(resumo?.gastosTotaisMes || 0)}
+                    - {formatarMoeda(resumo?.despesasTotaisMes ?? totalDespesasMes)}
+                  </strong>
+                </div>
+
+                <div className="flex justify-between items-center p-2.5 rounded-lg bg-indigo-950/20 border border-indigo-500/20">
+                  <div>
+                    <span className="text-zinc-300 font-semibold block">(-) Investimentos de Capital (CAPEX)</span>
+                    <span className="text-[10px] text-zinc-500">Obras, reformas, tatames, novos equipamentos, app</span>
+                  </div>
+                  <strong className="text-indigo-400">
+                    - {formatarMoeda(resumo?.investimentosTotaisMes ?? totalInvestimentosMes)}
+                  </strong>
+                </div>
+
+                <div className="flex justify-between items-center p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px]">
+                  <span className="text-zinc-400 font-bold uppercase text-[10px]">(=) Total Saídas / Desembolsos</span>
+                  <strong className="text-red-400 font-black">
+                    - {formatarMoeda(resumo?.saidasTotaisMes || resumo?.gastosTotaisMes || totalSaidasMes)}
                   </strong>
                 </div>
 
@@ -1051,7 +1133,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               </div>
             </div>
 
-            {/* DISTRIBUIÇÃO DE ALUNOS POR GRADUAÇÃO (PRAJIED) + RAIO-X DE GASTOS */}
+            {/* DISTRIBUIÇÃO DE ALUNOS POR GRADUAÇÃO (PRAJIED) + RAIO-X DE DESPESAS & INVESTIMENTOS */}
             <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 shadow-xl space-y-5">
               <div>
                 <h3 className="text-base font-black text-white border-b border-zinc-800 pb-2 mb-3">
@@ -1083,30 +1165,31 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
               <div className="pt-3 border-t border-zinc-800">
                 <h3 className="text-sm font-black text-red-400 uppercase tracking-wider mb-2">
-                  📉 Gastos do Mês por Categoria
+                  📉 Saídas por Categoria (Despesas & Investimentos)
                 </h3>
                 {Object.entries(graficos?.gastosPorCategoria || {}).length === 0 ? (
                   <p className="text-xs text-zinc-500 italic">
-                    Nenhum gasto registrado neste mês até o momento.
+                    Nenhuma despesa ou investimento registrado neste mês até o momento.
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {Object.entries(graficos?.gastosPorCategoria || {}).map(([cat, val]: any) => {
-                      const totalG = Math.max(1, resumo?.gastosTotaisMes || 1);
+                      const totalG = Math.max(1, resumo?.saidasTotaisMes || resumo?.gastosTotaisMes || 1);
                       const pct = Math.min(100, Math.round((Number(val) / totalG) * 100));
+                      const ehInvest = isInvestimento(cat);
                       return (
                         <div key={cat} className="space-y-1">
                           <div className="flex justify-between text-[11px] font-bold">
                             <span className="text-zinc-300 truncate max-w-[180px]">
                               {traduzirCategoria(cat)}
                             </span>
-                            <span className="text-red-400">
+                            <span className={ehInvest ? 'text-indigo-400' : 'text-red-400'}>
                               {formatarMoeda(Number(val))} ({pct}%)
                             </span>
                           </div>
                           <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                             <div
-                              className="bg-red-500 h-full rounded-full"
+                              className={`h-full rounded-full ${ehInvest ? 'bg-indigo-500' : 'bg-red-500'}`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -1122,7 +1205,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       )}
 
       {/* =========================================================
-          SUB-ABA 2: LIVRO-CAIXA COMPLETO (TODAS AS ENTRADAS, MERCADO E GASTOS)
+          SUB-ABA 2: LIVRO-CAIXA COMPLETO (RECEITAS, MERCADO, DESPESAS E INVESTIMENTOS)
       ========================================================= */}
       {subAba === 'livro_caixa' && (
         <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 shadow-xl space-y-4">
@@ -1132,7 +1215,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                 📒 Livro-Caixa Geral ({nomeMesFormatado})
               </h3>
               <p className="text-xs text-zinc-400">
-                Histórico auditável de todas as mensalidades, vendas de produtos da loja, diárias e despesas registradas.
+                Histórico auditável de todas as mensalidades, vendas de produtos da loja, diárias, despesas operacionais e investimentos.
               </p>
             </div>
 
@@ -1151,7 +1234,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               >
                 <option value="TODOS">Todos (Entradas e Saídas)</option>
                 <option value="ENTRADA">🟢 Apenas Entradas (Receitas)</option>
-                <option value="SAIDA">🔴 Apenas Saídas (Gastos)</option>
+                <option value="SAIDA">🔴 Apenas Saídas (Despesas & Investimentos)</option>
               </select>
               <select
                 value={filtroCategoriaCaixa}
@@ -1211,10 +1294,16 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                           className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${
                             t.tipo === 'ENTRADA'
                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              : isInvestimento(t.categoria)
+                              ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
                               : 'bg-red-500/20 text-red-400 border-red-500/30'
                           }`}
                         >
-                          {t.tipo === 'ENTRADA' ? '▲ ENTRADA' : '▼ GASTO'}
+                          {t.tipo === 'ENTRADA'
+                            ? '▲ RECEITA'
+                            : isInvestimento(t.categoria)
+                            ? '💎 INVESTIMENTO'
+                            : '▼ DESPESA'}
                         </span>
                         <span className="block text-[10px] text-zinc-400 mt-1">
                           {traduzirCategoria(t.categoria)}
@@ -1412,25 +1501,108 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       )}
 
       {/* =========================================================
-          SUB-ABA 4: CONTROLE DE GASTOS E DESPESAS DO CT
+          SUB-ABA 4: CONTROLE DE DESPESAS & INVESTIMENTOS DO CT
       ========================================================= */}
       {subAba === 'controle_gastos' && (
         <div className="bg-[#141416] border border-red-500/30 rounded-2xl p-5 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
             <div>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                📉 Controle de Gastos, Contas Fixas & Despesas ({nomeMesFormatado})
+                📉 Controle de Despesas & Investimentos ({nomeMesFormatado})
               </h3>
               <p className="text-xs text-zinc-400">
-                Registre aluguel, energia, água, internet, pagamento de professores, reposição de estoque da loja e manutenção.
+                Gestão contábil e controladoria: diferencie despesas correntes operacionais (OPEX) de investimentos patrimoniais de longo prazo (CAPEX).
               </p>
             </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => abrirModalNovoLancamento('DESPESA')}
+                className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-red-900/30 flex items-center gap-1.5"
+              >
+                <span>🔴</span> + Registrar Despesa
+              </button>
+              <button
+                type="button"
+                onClick={() => abrirModalNovoLancamento('INVESTIMENTO')}
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-indigo-900/30 flex items-center gap-1.5"
+              >
+                <span>💎</span> + Registrar Investimento
+              </button>
+            </div>
+          </div>
+
+          {/* Cards de Resumo Rápido Contábil */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-[#1A1A1E] border border-zinc-800 rounded-xl p-3">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 block">
+                Total de Saídas / Desembolsos
+              </span>
+              <p className="text-lg font-black text-white mt-0.5">
+                {formatarMoeda(totalSaidasMes)}
+              </p>
+              <span className="text-[10px] text-zinc-500">
+                {saidasMes.length} lançamento(s) no mês
+              </span>
+            </div>
+            <div className="bg-red-950/20 border border-red-500/30 rounded-xl p-3">
+              <span className="text-[10px] uppercase font-bold text-red-400 block">
+                🔴 Despesas Operacionais (OPEX)
+              </span>
+              <p className="text-lg font-black text-red-400 mt-0.5">
+                {formatarMoeda(totalDespesasMes)}
+              </p>
+              <span className="text-[10px] text-zinc-400">
+                {despesasMes.length} despesa(s) de rotina
+              </span>
+            </div>
+            <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-3">
+              <span className="text-[10px] uppercase font-bold text-indigo-400 block">
+                💎 Investimentos de Capital (CAPEX)
+              </span>
+              <p className="text-lg font-black text-indigo-300 mt-0.5">
+                {formatarMoeda(totalInvestimentosMes)}
+              </p>
+              <span className="text-[10px] text-zinc-400">
+                {investimentosMes.length} investimento(s) estrutural(is)
+              </span>
+            </div>
+          </div>
+
+          {/* Filtros em Abas/Pills */}
+          <div className="flex gap-2 border-b border-zinc-800 pb-2">
             <button
               type="button"
-              onClick={() => abrirModalNovoLancamento('GASTO')}
-              className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-red-900/30"
+              onClick={() => setFiltroClassificacaoSaida('TODAS')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                filtroClassificacaoSaida === 'TODAS'
+                  ? 'bg-zinc-700 text-white'
+                  : 'bg-[#1A1A1E] text-zinc-400 hover:text-white'
+              }`}
             >
-              ➕ Lançar Novo Gasto / Despesa
+              Todas as Saídas ({saidasMes.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltroClassificacaoSaida('DESPESAS')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                filtroClassificacaoSaida === 'DESPESAS'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-[#1A1A1E] text-red-400 hover:text-white border border-red-500/30'
+              }`}
+            >
+              🔴 Despesas Operacionais ({despesasMes.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltroClassificacaoSaida('INVESTIMENTOS')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                filtroClassificacaoSaida === 'INVESTIMENTOS'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-[#1A1A1E] text-indigo-400 hover:text-white border border-indigo-500/30'
+              }`}
+            >
+              💎 Investimentos ({investimentosMes.length})
             </button>
           </div>
 
@@ -1439,70 +1611,97 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-[10px]">
                 <tr>
                   <th className="p-3">Data</th>
-                  <th className="p-3">Categoria de Custo</th>
-                  <th className="p-3">Descrição da Despesa</th>
+                  <th className="p-3">Classificação</th>
+                  <th className="p-3">Rubrica / Categoria</th>
+                  <th className="p-3">Descrição da Saída</th>
                   <th className="p-3">Meio Pagto.</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Registrado Por</th>
-                  <th className="p-3">Valor Gasto</th>
+                  <th className="p-3">Valor Saída</th>
                   <th className="p-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
-                {gastosMes.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="p-8 text-center text-zinc-500">
-                      Nenhum gasto ou despesa cadastrado neste mês. Clique em "➕ Lançar Novo Gasto / Despesa" acima.
-                    </td>
-                  </tr>
-                ) : (
-                  gastosMes.map((g) => (
-                    <tr key={g.id} className="hover:bg-zinc-900/40">
-                      <td className="p-3 font-bold text-white">
-                        {new Date(g.data).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="p-3 text-red-300 font-semibold">
-                        {traduzirCategoria(g.categoria)}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-bold text-white">{g.descricao}</div>
-                        {g.observacao && (
-                          <div className="text-[10px] text-zinc-400">{g.observacao}</div>
-                        )}
-                      </td>
-                      <td className="p-3">{g.metodoPagamento}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            g.status === 'CONFIRMADO'
-                              ? 'bg-emerald-500/20 text-emerald-400'
-                              : 'bg-amber-500/20 text-amber-400'
-                          }`}
-                        >
-                          {g.status === 'CONFIRMADO' ? 'PAGO / QUITADO' : 'PENDENTE A PAGAR'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-zinc-400">{g.registradoPor}</td>
-                      <td className="p-3 font-black text-red-400">- {formatarMoeda(g.valor)}</td>
-                      <td className="p-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => abrirEdicaoTransacao(g)}
-                          className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-bold mr-1"
-                        >
-                          ✏️ Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleExcluirTransacao(g)}
-                          className="px-2 py-1 rounded bg-red-950/50 hover:bg-red-700 text-red-300 text-[11px] font-bold"
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                {(() => {
+                  const lista = saidasMes.filter((g) => {
+                    if (filtroClassificacaoSaida === 'DESPESAS') return !isInvestimento(g.categoria);
+                    if (filtroClassificacaoSaida === 'INVESTIMENTOS') return isInvestimento(g.categoria);
+                    return true;
+                  });
+
+                  if (lista.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={9} className="p-8 text-center text-zinc-500">
+                          Nenhuma saída encontrada para este filtro no mês selecionado.
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return lista.map((g) => {
+                    const ehInvest = isInvestimento(g.categoria);
+                    return (
+                      <tr key={g.id} className="hover:bg-zinc-900/40">
+                        <td className="p-3 font-bold text-white whitespace-nowrap">
+                          {new Date(g.data).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${
+                              ehInvest
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                : 'bg-red-500/20 text-red-300 border-red-500/40'
+                            }`}
+                          >
+                            {ehInvest ? '💎 INVESTIMENTO' : '🔴 DESPESA'}
+                          </span>
+                        </td>
+                        <td className="p-3 font-semibold text-zinc-300">
+                          {traduzirCategoria(g.categoria)}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-bold text-white">{g.descricao}</div>
+                          {g.observacao && (
+                            <div className="text-[10px] text-zinc-400">{g.observacao}</div>
+                          )}
+                        </td>
+                        <td className="p-3">{g.metodoPagamento}</td>
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              g.status === 'CONFIRMADO'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-amber-500/20 text-amber-400'
+                            }`}
+                          >
+                            {g.status === 'CONFIRMADO' ? 'PAGO / QUITADO' : 'PENDENTE A PAGAR'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-zinc-400">{g.registradoPor}</td>
+                        <td className={`p-3 font-black whitespace-nowrap ${ehInvest ? 'text-indigo-400' : 'text-red-400'}`}>
+                          - {formatarMoeda(g.valor)}
+                        </td>
+                        <td className="p-3 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => abrirEdicaoTransacao(g)}
+                            className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-bold mr-1"
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleExcluirTransacao(g)}
+                            className="px-2 py-1 rounded bg-red-950/50 hover:bg-red-700 text-red-300 text-[11px] font-bold"
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
@@ -1781,7 +1980,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       )}
 
       {/* =========================================================
-          MODAL UNIVERSAL: REGISTRAR / EDITAR QUALQUER TRANSAÇÃO (ASSINATURA, MERCADO OU GASTO)
+          MODAL UNIVERSAL: REGISTRAR / EDITAR QUALQUER TRANSAÇÃO (ASSINATURA, MERCADO, DESPESA OU INVESTIMENTO)
       ========================================================= */}
       {modalTransacao && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[999999] overflow-y-auto">
@@ -1793,7 +1992,9 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                 </span>
                 <h3 className="text-lg font-black text-white">
                   {formTransacao.tipo === 'SAIDA'
-                    ? '📉 Registrar Gasto / Despesa do CT'
+                    ? isInvestimento(formTransacao.categoria)
+                      ? '💎 Registrar Investimento de Capital (CAPEX)'
+                      : '🔴 Registrar Despesa Operacional (OPEX)'
                     : formTransacao.categoria === 'MERCADO_LOJA'
                     ? '🛍️ Registrar Pagamento do Mercado Borü'
                     : '💳 Registrar Receita / Assinatura'}
@@ -1809,8 +2010,8 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
             </div>
 
             <form onSubmit={handleSalvarTransacao} className="space-y-3.5">
-              {/* Seletor Entrada vs Saída */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Seletor 3 Vias: Receita vs Despesa vs Investimento */}
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() =>
@@ -1820,13 +2021,13 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                       categoria: 'MENSALIDADE',
                     })
                   }
-                  className={`py-2.5 rounded-xl font-black text-xs uppercase border transition ${
+                  className={`py-2.5 px-1 rounded-xl font-black text-xs uppercase border transition flex items-center justify-center gap-1 ${
                     formTransacao.tipo === 'ENTRADA'
                       ? 'bg-emerald-600 text-white border-emerald-400 shadow-lg shadow-emerald-900/30'
-                      : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800'
+                      : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800 hover:text-white'
                   }`}
                 >
-                  🟢 Entrada / Receita (+)
+                  🟢 Receita (+)
                 </button>
                 <button
                   type="button"
@@ -1834,23 +2035,48 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                     setFormTransacao({
                       ...formTransacao,
                       tipo: 'SAIDA',
-                      categoria: 'ALUGUEL_CONTAS',
+                      categoria: isInvestimento(formTransacao.categoria)
+                        ? 'ALUGUEL_CONTAS'
+                        : formTransacao.categoria,
                     })
                   }
-                  className={`py-2.5 rounded-xl font-black text-xs uppercase border transition ${
-                    formTransacao.tipo === 'SAIDA'
+                  className={`py-2.5 px-1 rounded-xl font-black text-xs uppercase border transition flex items-center justify-center gap-1 ${
+                    formTransacao.tipo === 'SAIDA' && !isInvestimento(formTransacao.categoria)
                       ? 'bg-red-600 text-white border-red-400 shadow-lg shadow-red-900/30'
-                      : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800'
+                      : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800 hover:text-white'
                   }`}
                 >
-                  🔴 Saída / Gasto (-)
+                  🔴 Despesa (-)
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormTransacao({
+                      ...formTransacao,
+                      tipo: 'SAIDA',
+                      categoria: isInvestimento(formTransacao.categoria)
+                        ? formTransacao.categoria
+                        : 'CAPEX_IMOBILIZADO',
+                    })
+                  }
+                  className={`py-2.5 px-1 rounded-xl font-black text-xs uppercase border transition flex items-center justify-center gap-1 ${
+                    formTransacao.tipo === 'SAIDA' && isInvestimento(formTransacao.categoria)
+                      ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-900/30'
+                      : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800 hover:text-white'
+                  }`}
+                >
+                  💎 Investimento (-)
                 </button>
               </div>
 
               {/* Categoria */}
               <div>
                 <label className="block text-zinc-300 text-xs font-bold mb-1">
-                  Categoria do Lançamento
+                  {formTransacao.tipo === 'ENTRADA'
+                    ? 'Categoria de Receita'
+                    : isInvestimento(formTransacao.categoria)
+                    ? 'Rubrica Contábil do Investimento (CAPEX)'
+                    : 'Rubrica Contábil da Despesa Operacional (OPEX)'}
                 </label>
                 <select
                   value={formTransacao.categoria}
@@ -1859,13 +2085,16 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                   }
                   className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold"
                 >
-                  {(formTransacao.tipo === 'ENTRADA' ? CATEGORIAS_ENTRADA : CATEGORIAS_SAIDA).map(
-                    (c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    )
-                  )}
+                  {(formTransacao.tipo === 'ENTRADA'
+                    ? CATEGORIAS_ENTRADA
+                    : isInvestimento(formTransacao.categoria)
+                    ? CATEGORIAS_INVESTIMENTOS
+                    : CATEGORIAS_DESPESAS
+                  ).map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

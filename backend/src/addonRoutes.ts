@@ -721,8 +721,18 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
   });
 
   // =========================================================
-  // MÓDULO 5 (SUPER ERP FINANCEIRO): ASSINATURAS, MERCADO, GASTOS, LUCRO, GRÁFICOS E TABELAS
+  // MÓDULO 5 (SUPER ERP FINANCEIRO): ASSINATURAS, MERCADO, DESPESAS & INVESTIMENTOS, DRE, GRÁFICOS E TABELAS
   // =========================================================
+  const isInvestimentoCat = (cat: string) => {
+    return [
+      'CAPEX_IMOBILIZADO',
+      'INVESTIMENTO_EQUIPAMENTOS',
+      'CAPEX_INTANGIVEL',
+      'INVESTIMENTO_EXPANSAO',
+      'OUTROS_INVESTIMENTOS',
+    ].includes(cat);
+  };
+
   app.get('/api/admin/financeiro', async (req: Request, res: Response) => {
     try {
       const agora = new Date();
@@ -976,6 +986,8 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       let receitaMercadoMes = 0;
       let receitaDiariasConveniosMes = 0;
       let receitaEventosExamesMes = 0;
+      let despesasTotaisMes = 0;
+      let investimentosTotaisMes = 0;
       let gastosTotaisMes = 0;
 
       const receitasPorCategoria: Record<string, number> = {};
@@ -996,6 +1008,11 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           else receitaEventosExamesMes += t.valor;
         } else if (t.tipo === 'SAIDA') {
           gastosTotaisMes += t.valor;
+          if (isInvestimentoCat(t.categoria)) {
+            investimentosTotaisMes += t.valor;
+          } else {
+            despesasTotaisMes += t.valor;
+          }
           gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.valor;
         }
       }
@@ -1029,6 +1046,9 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         mensalidades: number;
         mercado: number;
         outros: number;
+        despesas: number;
+        investimentos: number;
+        saidas: number;
         gastos: number;
         lucro: number;
       }> = [];
@@ -1045,6 +1065,8 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         let mercM = 0;
         let outM = 0;
         let gastM = 0;
+        let despM = 0;
+        let invM = 0;
 
         for (const t of transacoesConfirmadas) {
           const dt = new Date(t.data);
@@ -1056,6 +1078,11 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
               else outM += t.valor;
             } else if (t.tipo === 'SAIDA') {
               gastM += t.valor;
+              if (isInvestimentoCat(t.categoria)) {
+                invM += t.valor;
+              } else {
+                despM += t.valor;
+              }
             }
           }
         }
@@ -1074,6 +1101,9 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           mensalidades: Math.round(mensM * 100) / 100,
           mercado: Math.round(mercM * 100) / 100,
           outros: Math.round(outM * 100) / 100,
+          despesas: Math.round(despM * 100) / 100,
+          investimentos: Math.round(invM * 100) / 100,
+          saidas: Math.round(gastM * 100) / 100,
           gastos: Math.round(gastM * 100) / 100,
           lucro: Math.round((entM - gastM) * 100) / 100,
         });
@@ -1089,6 +1119,9 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           receitaDiariasConveniosMes,
           receitaEventosExamesMes,
           receitaPrevistaMes,
+          despesasTotaisMes,
+          investimentosTotaisMes,
+          saidasTotaisMes: gastosTotaisMes,
           gastosTotaisMes,
           lucroLiquidoMes,
           margemLucroMes,
@@ -1321,8 +1354,15 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         `[${novaTransacao.tipo}] ${novaTransacao.categoria}: ${novaTransacao.descricao} — R$ ${novaTransacao.valor.toFixed(2)} (por ${novaTransacao.registradoPor})`
       );
 
+      const labelOperacao =
+        novaTransacao.tipo === 'SAIDA'
+          ? isInvestimentoCat(novaTransacao.categoria)
+            ? 'Investimento (CAPEX)'
+            : 'Despesa Operacional (OPEX)'
+          : 'Receita / Pagamento';
+
       res.status(201).json({
-        mensagem: `${novaTransacao.tipo === 'SAIDA' ? 'Gasto/Despesa' : 'Receita/Pagamento'} registrado com sucesso!`,
+        mensagem: `${labelOperacao} registrado(a) com sucesso!`,
         transacao: novaTransacao,
       });
     } catch (error: any) {
