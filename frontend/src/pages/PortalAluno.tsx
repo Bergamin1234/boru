@@ -532,17 +532,6 @@ const fazerCheckin = async (id: string) => {
                       )}
                     </button>
                   </div>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <label className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
-                      <input 
-                        type="checkbox" 
-                        checked={mostrarSenhaLogin} 
-                        onChange={(e) => setMostrarSenhaLogin(e.target.checked)} 
-                        className="rounded accent-red-600 w-3.5 h-3.5 cursor-pointer" 
-                      />
-                      <span>Mostrar senha</span>
-                    </label>
-                  </div>
                   {erroCpf && <p className="text-red-500 text-xs mt-2 font-semibold">{erroCpf}</p>}
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 shadow-lg shadow-red-600/30 text-sm uppercase tracking-wider">
@@ -642,15 +631,6 @@ const fazerCheckin = async (id: string) => {
                       )}
                     </button>
                   </div>
-                  <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
-                    <input 
-                      type="checkbox" 
-                      checked={mostrarAdminPass} 
-                      onChange={(e) => setMostrarAdminPass(e.target.checked)} 
-                      className="rounded accent-amber-500 w-3 h-3 cursor-pointer" 
-                    />
-                    <span>Mostrar senha</span>
-                  </label>
                 </div>
 
                 {adminError && (
@@ -723,17 +703,6 @@ const fazerCheckin = async (id: string) => {
                   )}
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
-                  <input 
-                    type="checkbox" 
-                    checked={mostrarNovaSenha} 
-                    onChange={(e) => setMostrarNovaSenha(e.target.checked)} 
-                    className="rounded accent-red-600 w-3.5 h-3.5 cursor-pointer" 
-                  />
-                  <span>Mostrar senha</span>
-                </label>
-              </div>
             </div>
             <div>
               <label className="block text-zinc-400 text-xs font-semibold mb-1">Confirme a Senha</label>
@@ -764,17 +733,6 @@ const fazerCheckin = async (id: string) => {
                     </svg>
                   )}
                 </button>
-              </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
-                  <input 
-                    type="checkbox" 
-                    checked={mostrarConfirmarSenha} 
-                    onChange={(e) => setMostrarConfirmarSenha(e.target.checked)} 
-                    className="rounded accent-red-600 w-3.5 h-3.5 cursor-pointer" 
-                  />
-                  <span>Mostrar senha</span>
-                </label>
               </div>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 text-sm uppercase">

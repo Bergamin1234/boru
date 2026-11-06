@@ -142,15 +142,6 @@ export default function Checkout() {
                           )}
                         </button>
                       </div>
-                      <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
-                        <input 
-                          type="checkbox" 
-                          checked={mostrarSenha} 
-                          onChange={(e) => setMostrarSenha(e.target.checked)} 
-                          className="rounded accent-red-600 w-3 h-3 cursor-pointer" 
-                        />
-                        <span>Mostrar senha</span>
-                      </label>
                     </div>
                   </div>
                   <button type="submit" className="w-full mt-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 font-bold uppercase tracking-wider text-xs transition">

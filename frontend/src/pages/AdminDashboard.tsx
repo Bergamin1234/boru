@@ -1257,17 +1257,6 @@ export default function AdminDashboard() {
                   )}
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <label className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
-                  <input 
-                    type="checkbox" 
-                    checked={mostrarSenhaLogin} 
-                    onChange={(e) => setMostrarSenhaLogin(e.target.checked)} 
-                    className="rounded accent-red-600 w-3.5 h-3.5 cursor-pointer" 
-                  />
-                  <span>Mostrar senha</span>
-                </label>
-              </div>
             </div>
             <button 
               type="submit" 
@@ -3535,15 +3524,6 @@ export default function AdminDashboard() {
                       )}
                     </button>
                   </div>
-                  <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
-                    <input 
-                      type="checkbox" 
-                      checked={mostrarSenhaNovoProf} 
-                      onChange={(e) => setMostrarSenhaNovoProf(e.target.checked)} 
-                      className="rounded accent-amber-500 w-3 h-3 cursor-pointer" 
-                    />
-                    <span>Mostrar senha</span>
-                  </label>
                 </div>
               </div>
 
@@ -3903,15 +3883,6 @@ export default function AdminDashboard() {
                     )}
                   </button>
                 </div>
-                <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
-                  <input 
-                    type="checkbox" 
-                    checked={mostrarSenhaEditarProf} 
-                    onChange={(e) => setMostrarSenhaEditarProf(e.target.checked)} 
-                    className="rounded accent-amber-500 w-3 h-3 cursor-pointer" 
-                  />
-                  <span>Mostrar senha</span>
-                </label>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">

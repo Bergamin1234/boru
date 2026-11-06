@@ -223,17 +223,6 @@ export const PublicQuickCheckinCard: React.FC = () => {
         >
           {loading ? 'Validando...' : '✓ Check-in'}
         </button>
-        <div className="col-span-12 flex items-center justify-between pt-0.5">
-          <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
-            <input 
-              type="checkbox" 
-              checked={mostrarSenha} 
-              onChange={(e) => setMostrarSenha(e.target.checked)} 
-              className="rounded accent-red-600 w-3 h-3 cursor-pointer" 
-            />
-            <span>Mostrar senha</span>
-          </label>
-        </div>
       </form>
 
       {levelUpConquista && (
