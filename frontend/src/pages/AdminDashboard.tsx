@@ -99,6 +99,9 @@ export default function AdminDashboard() {
   const [usuarioLogado, setUsuarioLogado] = useState<any>(null);
   const [loginInput, setLoginInput] = useState('');
   const [password, setPassword] = useState('');
+  const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
+  const [mostrarSenhaNovoProf, setMostrarSenhaNovoProf] = useState(false);
+  const [mostrarSenhaEditarProf, setMostrarSenhaEditarProf] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   
   const [metricas, setMetricas] = useState<any>({
@@ -1226,14 +1229,45 @@ export default function AdminDashboard() {
             </div>
             <div>
               <label className="block text-zinc-400 text-xs font-semibold mb-1">Senha de Acesso</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition text-sm"
-                placeholder="Sua senha de acesso"
-                required
-              />
+              <div className="relative">
+                <input 
+                  type={mostrarSenhaLogin ? "text" : "password"} 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 pr-11 text-white focus:outline-none focus:border-red-500 transition text-sm"
+                  placeholder="Sua senha de acesso"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenhaLogin(!mostrarSenhaLogin)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition p-1"
+                  title={mostrarSenhaLogin ? "Ocultar senha" : "Ver senha"}
+                  aria-label={mostrarSenhaLogin ? "Ocultar senha" : "Ver senha"}
+                >
+                  {mostrarSenhaLogin ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-1.5">
+                <label className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={mostrarSenhaLogin} 
+                    onChange={(e) => setMostrarSenhaLogin(e.target.checked)} 
+                    className="rounded accent-red-600 w-3.5 h-3.5 cursor-pointer" 
+                  />
+                  <span>Mostrar senha</span>
+                </label>
+              </div>
             </div>
             <button 
               type="submit" 
@@ -3474,7 +3508,42 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-amber-400 text-xs font-bold mb-1">Senha Inicial (Registrada pelo Admin)</label>
-                  <input required type="password" value={novoProfessor.senha} onChange={(e) => setNovoProfessor({...novoProfessor, senha: e.target.value})} className="w-full bg-[#1A1A1E] border border-amber-500/50 rounded-lg p-2.5 text-sm text-white" placeholder="Senha do professor" />
+                  <div className="relative">
+                    <input 
+                      required 
+                      type={mostrarSenhaNovoProf ? "text" : "password"} 
+                      value={novoProfessor.senha} 
+                      onChange={(e) => setNovoProfessor({...novoProfessor, senha: e.target.value})} 
+                      className="w-full bg-[#1A1A1E] border border-amber-500/50 rounded-lg p-2.5 pr-10 text-sm text-white" 
+                      placeholder="Senha do professor" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMostrarSenhaNovoProf(!mostrarSenhaNovoProf)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1"
+                      title={mostrarSenhaNovoProf ? "Ocultar senha" : "Ver senha"}
+                    >
+                      {mostrarSenhaNovoProf ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
+                    <input 
+                      type="checkbox" 
+                      checked={mostrarSenhaNovoProf} 
+                      onChange={(e) => setMostrarSenhaNovoProf(e.target.checked)} 
+                      className="rounded accent-amber-500 w-3 h-3 cursor-pointer" 
+                    />
+                    <span>Mostrar senha</span>
+                  </label>
                 </div>
               </div>
 
@@ -3808,13 +3877,41 @@ export default function AdminDashboard() {
                 <p className="text-[11px] text-zinc-400 mb-2 leading-relaxed">
                   Caso o professor tenha esquecido a senha ou precise de uma nova, digite abaixo. Se deixar em branco, a senha atual continuará a mesma.
                 </p>
-                <input 
-                  type="password" 
-                  value={professorParaEditar.senha || ''} 
-                  onChange={(e) => setProfessorParaEditar({...professorParaEditar, senha: e.target.value})} 
-                  placeholder="Digite a nova senha (ou deixe em branco)"
-                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2 text-xs text-white"
-                />
+                <div className="relative">
+                  <input 
+                    type={mostrarSenhaEditarProf ? "text" : "password"} 
+                    value={professorParaEditar.senha || ''} 
+                    onChange={(e) => setProfessorParaEditar({...professorParaEditar, senha: e.target.value})} 
+                    placeholder="Digite a nova senha (ou deixe em branco)"
+                    className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2 pr-9 text-xs text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarSenhaEditarProf(!mostrarSenhaEditarProf)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1"
+                    title={mostrarSenhaEditarProf ? "Ocultar senha" : "Ver senha"}
+                  >
+                    {mostrarSenhaEditarProf ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none mt-1">
+                  <input 
+                    type="checkbox" 
+                    checked={mostrarSenhaEditarProf} 
+                    onChange={(e) => setMostrarSenhaEditarProf(e.target.checked)} 
+                    className="rounded accent-amber-500 w-3 h-3 cursor-pointer" 
+                  />
+                  <span>Mostrar senha</span>
+                </label>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">
