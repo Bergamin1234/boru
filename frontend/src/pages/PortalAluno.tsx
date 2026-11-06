@@ -813,162 +813,199 @@ const fazerCheckin = async (id: string) => {
           </div>
         </header>
 
-        {/* NAVEGAÇÃO DE ABAS NO DESKTOP */}
-        <div className="hidden sm:flex gap-2 border-b border-zinc-800 pb-3 overflow-x-auto boru-scrollbar">
-          <button 
-            id="treinos-checkin-tab-btn" onClick={() => setAbaAtiva('treinos')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'treinos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            🥊 Treinos & Check-in
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('frequencia')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'frequencia' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            📅 Minha Frequência & %
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('conquistas')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'conquistas' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
-            }`}
-          >
-            🏆 Minhas Conquistas {gamificacao?.rankAtual ? `(${isImageSource(gamificacao.rankAtual.badge_icon_url) ? '🥇' : gamificacao.rankAtual.badge_icon_url} ${gamificacao.rankAtual.name})` : ''}
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('contratos')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'contratos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            📄 Meus Contratos
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('avisos')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'avisos' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            📢 Mural de Avisos ({avisos.length})
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('mercado')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'mercado' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            🛍️ Loja & Lanches (Beta)
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('recompensas')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'recompensas' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/40'
-            }`}
-          >
-            🪙 Loja de Points & Prêmios
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('financeiro')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'financeiro' ? 'bg-red-600 text-white' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            {alunoLogado?.is_bolsista ? '🎓 Bolsa & Acesso' : isDiariaOuConvenio(alunoLogado?.plano) ? '🎫 Status do Acesso (Diária/Convênio)' : '💳 Mensalidade'}
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('torneios')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'torneios' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            🏆 Torneios do CT
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('ranking')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'ranking' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            🥋 Ranking do CT
-          </button>
-          <button 
-            onClick={() => setAbaAtiva('desempenho')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-              abaAtiva === 'desempenho' ? 'bg-red-600 text-white shadow-md shadow-red-900/30' : 'bg-[#141416] text-zinc-400 hover:text-white border border-zinc-800'
-            }`}
-          >
-            📊 Desempenho & Analytics
-          </button>
-        </div>
+        {/* NAVEGAÇÃO MATRICIAL EM GRADE RETO E ORGANIZADO (QUADRADOS OFICIAIS DO PORTAL DO ALUNO) */}
+        <div className="bg-[#111114]/95 border border-zinc-800/90 rounded-2xl p-2.5 sm:p-3.5 shadow-xl space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5">
+            {/* 1. TREINOS & CHECK-IN */}
+            <button 
+              id="treinos-checkin-tab-btn"
+              type="button"
+              onClick={() => setAbaAtiva('treinos')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'treinos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Treinos do dia e check-in"
+            >
+              <span className="text-base sm:text-lg">🥊</span>
+              <span className="truncate">Treinos & Check-in</span>
+            </button>
 
-        {/* BARRA DE ATALHOS RÁPIDOS NO MOBILE (ACESSO DIRETO AO CALENDÁRIO E CONQUISTAS) */}
-        <div className="flex sm:hidden items-center gap-2 overflow-x-auto boru-scrollbar pb-1">
-          <button
-            type="button"
-            onClick={() => {
-              setAbaAtiva('frequencia');
-              setTimeout(() => {
-                document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 120);
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
-              abaAtiva === 'frequencia'
-                ? 'bg-red-600 text-white shadow-red-900/40'
-                : 'bg-[#141416] text-red-400 hover:text-white border border-red-500/30'
-            }`}
-          >
-            <span>📅</span>
-            <span>Meu Calendário</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAbaAtiva('conquistas');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
-              abaAtiva === 'conquistas'
-                ? 'bg-amber-500 text-black shadow-amber-500/40'
-                : 'bg-[#141416] text-amber-400 hover:text-white border border-amber-500/30'
-            }`}
-          >
-            <span>🏆</span>
-            <span>Minhas Conquistas</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAbaAtiva('treinos');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
-              abaAtiva === 'treinos'
-                ? 'bg-red-600 text-white'
-                : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800'
-            }`}
-          >
-            <span>🥊</span>
-            <span>Check-in & Treinos</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAbaAtiva('contratos');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm shrink-0 ${
-              abaAtiva === 'contratos'
-                ? 'bg-red-600 text-white'
-                : 'bg-[#141416] text-zinc-300 hover:text-white border border-zinc-800'
-            }`}
-          >
-            <span>📄</span>
-            <span>Contrato</span>
-          </button>
+            {/* 2. FREQUÊNCIA */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('frequencia')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'frequencia'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Calendário e histórico de frequência"
+            >
+              <span className="text-base sm:text-lg">📅</span>
+              <span className="truncate">Minha Frequência</span>
+            </button>
+
+            {/* 3. CONQUISTAS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('conquistas')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'conquistas'
+                  ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
+                  : 'bg-[#141416] text-amber-400 hover:text-white border-amber-500/30 hover:border-amber-500/60 hover:bg-[#19191d]'
+              }`}
+              title="Trilha Nak Muay e conquistas"
+            >
+              <span className="text-base sm:text-lg">🏆</span>
+              <span className="truncate">Conquistas</span>
+              {gamificacao?.rankAtual && (
+                <span className="text-xs">
+                  {isImageSource(gamificacao.rankAtual.badge_icon_url) ? '🥇' : gamificacao.rankAtual.badge_icon_url}
+                </span>
+              )}
+            </button>
+
+            {/* 4. CONTRATOS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('contratos')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'contratos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Contratos e termos de adesão"
+            >
+              <span className="text-base sm:text-lg">📄</span>
+              <span className="truncate">Meus Contratos</span>
+            </button>
+
+            {/* 5. AVISOS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('avisos')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'avisos'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Mural de avisos do CT Borü"
+            >
+              <span className="text-base sm:text-lg">📢</span>
+              <span className="truncate">Mural Avisos</span>
+              {avisos?.length > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-black border border-red-500/30">
+                  {avisos.length}
+                </span>
+              )}
+            </button>
+
+            {/* 6. LOJA & LANCHES */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('mercado')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'mercado'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Loja Borü, equipamentos e lanches rápidos"
+            >
+              <span className="text-base sm:text-lg">🛍️</span>
+              <span className="truncate">Loja & Lanches</span>
+            </button>
+
+            {/* 7. LOJA DE POINTS & PRÊMIOS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('recompensas')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'recompensas'
+                  ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-950/50 ring-1 ring-amber-300'
+                  : 'bg-[#141416] text-amber-400 hover:text-white border-amber-500/30 hover:border-amber-500/60 hover:bg-[#19191d]'
+              }`}
+              title="Resgate de prêmios por pontos acumulados"
+            >
+              <span className="text-base sm:text-lg">🪙</span>
+              <span className="truncate">Points & Prêmios</span>
+            </button>
+
+            {/* 8. MENSALIDADE / ACESSO */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('financeiro')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'financeiro'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Status do plano e mensalidade"
+            >
+              <span className="text-base sm:text-lg">💳</span>
+              <span className="truncate">
+                {alunoLogado?.is_bolsista ? 'Bolsa & Acesso' : isDiariaOuConvenio(alunoLogado?.plano) ? 'Status Acesso' : 'Mensalidade'}
+              </span>
+            </button>
+
+            {/* 9. TORNEIOS DO CT */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('torneios')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'torneios'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Torneios internos do CT Borü"
+            >
+              <span className="text-base sm:text-lg">🥊</span>
+              <span className="truncate">Torneios do CT</span>
+            </button>
+
+            {/* 10. RANKING DO CT */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('ranking')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'ranking'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Ranking e pontuação dos atletas"
+            >
+              <span className="text-base sm:text-lg">🥋</span>
+              <span className="truncate">Ranking do CT</span>
+            </button>
+
+            {/* 11. DESEMPENHO & ANALYTICS */}
+            <button 
+              type="button"
+              onClick={() => setAbaAtiva('desempenho')}
+              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                abaAtiva === 'desempenho'
+                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+              }`}
+              title="Desempenho técnico e métricas"
+            >
+              <span className="text-base sm:text-lg">📊</span>
+              <span className="truncate">Desempenho</span>
+            </button>
+
+            {/* 12. WHATSAPP RECEPÇÃO */}
+            <a 
+              href={`https://wa.me/556992384491?text=${encodeURIComponent(`Olá Professor Felipe, sou o aluno(a) ${alunoLogado?.nome} e gostaria de tirar uma dúvida!`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center bg-[#141416] text-emerald-400 hover:text-white border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-600/30 shadow-sm"
+              title="Falar diretamente com a Recepção no WhatsApp"
+            >
+              <span className="text-base sm:text-lg">📲</span>
+              <span className="truncate">WhatsApp Recepção</span>
+            </a>
+          </div>
         </div>
 
         {/* CONTEÚDO DA ABA: TREINOS & CHECK-IN (ESTÍMULO / GAMIFICAÇÃO) */}
@@ -1425,7 +1462,7 @@ const fazerCheckin = async (id: string) => {
             </div>
 
             {/* Abas de Categorias Solicitadas */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex flex-wrap gap-2 pb-2">
               {['TODOS', 'PROTETOR_BUCAL', 'LUVAS', 'CANELEIRAS', 'BANDAGENS', 'ALIMENTOS'].map(cat => (
                 <button
                   key={cat}
@@ -1759,16 +1796,16 @@ const fazerCheckin = async (id: string) => {
         </div>
       )}
 
-      {/* BARRA INFERIOR FIXA PARA CELULAR (BOTTOM NAVIGATION BAR MOBILE) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#141416]/95 backdrop-blur-md border-t border-zinc-800 px-2 py-2 flex items-center gap-2 overflow-x-auto boru-scrollbar z-[9999]">
+      {/* BARRA INFERIOR FIXA PARA CELULAR (5 ATALHOS DIRETOS SEM ROLAGEM HORIZONTAL) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#141416]/95 backdrop-blur-md border-t border-zinc-800 px-1 py-1.5 grid grid-cols-5 gap-1 z-[9999] shadow-2xl">
         <button 
-          onClick={() => setAbaAtiva('treinos')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'treinos' ? 'text-red-500' : 'text-zinc-500'
+          onClick={() => { setAbaAtiva('treinos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'treinos' ? 'text-red-500 bg-red-950/30' : 'text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <span className="text-base">🥊</span>
-          <span>Treinos</span>
+          <span className="text-sm">🥊</span>
+          <span className="truncate text-[10px]">Treinos</span>
         </button>
 
         <button 
@@ -1778,102 +1815,42 @@ const fazerCheckin = async (id: string) => {
               document.getElementById('calendario-mensal-aluno')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
           }}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'frequencia' ? 'text-red-500' : 'text-zinc-500'
+          className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'frequencia' ? 'text-red-500 bg-red-950/30' : 'text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <span className="text-base">📅</span>
-          <span>Presença</span>
+          <span className="text-sm">📅</span>
+          <span className="truncate text-[10px]">Presença</span>
         </button>
 
         <button 
-          onClick={() => setAbaAtiva('conquistas')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'conquistas' ? 'text-amber-400' : 'text-zinc-500'
+          onClick={() => { setAbaAtiva('conquistas'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'conquistas' ? 'text-amber-400 bg-amber-950/30' : 'text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <span className="text-base">🏆</span>
-          <span>Conquistas</span>
+          <span className="text-sm">🏆</span>
+          <span className="truncate text-[10px]">Rank</span>
         </button>
 
         <button 
-          onClick={() => setAbaAtiva('contratos')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'contratos' ? 'text-red-500' : 'text-zinc-500'
+          onClick={() => { setAbaAtiva('avisos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'avisos' ? 'text-red-500 bg-red-950/30' : 'text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <span className="text-base">📄</span>
-          <span>Contrato</span>
+          <span className="text-sm">📢</span>
+          <span className="truncate text-[10px]">Mural</span>
         </button>
 
         <button 
-          onClick={() => setAbaAtiva('avisos')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'avisos' ? 'text-red-500' : 'text-zinc-500'
+          onClick={() => { setAbaAtiva('financeiro'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg text-[10px] font-bold transition ${
+            abaAtiva === 'financeiro' ? 'text-red-500 bg-red-950/30' : 'text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <span className="text-base">📢</span>
-          <span>Mural</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('mercado')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'mercado' ? 'text-red-500' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">🛍️</span>
-          <span>Loja</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('recompensas')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'recompensas' ? 'text-amber-400' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">🪙</span>
-          <span>Points</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('financeiro')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'financeiro' ? 'text-red-500' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">{alunoLogado?.is_bolsista ? '🎓' : isDiariaOuConvenio(alunoLogado?.plano) ? '🎫' : '💳'}</span>
-          <span>{alunoLogado?.is_bolsista ? 'Bolsa' : isDiariaOuConvenio(alunoLogado?.plano) ? 'Acesso' : 'Plano'}</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('torneios')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'torneios' ? 'text-red-500' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">🏆</span>
-          <span>Torneios</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('ranking')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'ranking' ? 'text-red-500' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">🥋</span>
-          <span>Ranking CT</span>
-        </button>
-
-        <button 
-          onClick={() => setAbaAtiva('desempenho')}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-bold transition shrink-0 ${
-            abaAtiva === 'desempenho' ? 'text-red-500' : 'text-zinc-500'
-          }`}
-        >
-          <span className="text-base">📊</span>
-          <span>Analytics</span>
+          <span className="text-sm">💳</span>
+          <span className="truncate text-[10px]">Acesso</span>
         </button>
       </nav>
 
