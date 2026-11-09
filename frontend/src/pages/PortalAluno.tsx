@@ -443,11 +443,15 @@ const fazerCheckin = async (id: string) => {
           {/* Card de Login */}
           <div className="bg-[#141416]/95 backdrop-blur-md border border-zinc-800 p-7 sm:p-8 rounded-2xl w-full shadow-2xl">
             <div className="text-center mb-6">
-              <img 
-                src="/logo-boru.jpg" 
-                alt="BORÜ Centro de Combate" 
-                className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-red-600 shadow-xl object-cover" 
-              />
+              <div className="relative inline-block mb-3">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/25 via-red-600/20 to-black/60 border-2 border-amber-500/50 p-2.5 flex items-center justify-center shadow-xl shadow-red-950/70">
+                  <img 
+                    src="/icon-aluno.png" 
+                    alt="Lobo Borü - Aluno" 
+                    className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(245,158,11,0.55)]" 
+                  />
+                </div>
+              </div>
               <h1 className="text-3xl font-black text-white tracking-widest mb-1">BORÜ</h1>
               <p className="text-red-500 font-bold text-xs uppercase tracking-widest">
                 {showRecuperarSenha ? 'Recuperar Acesso' : 'Portal do Aluno'}
@@ -554,8 +558,8 @@ const fazerCheckin = async (id: string) => {
               </button>
             </div>
 
-            <Link to="/" className="block text-center mt-3 text-zinc-500 hover:text-white text-xs transition">
-              ← Voltar ao site principal
+            <Link to="/" className="block text-center mt-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
+              ← Voltar às 3 Opções do Aplicativo
             </Link>
           </div>
 
@@ -776,7 +780,9 @@ const fazerCheckin = async (id: string) => {
         {/* HEADER SUPERIOR */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-5">
           <div className="flex items-center gap-3">
-            <img src="/logo-boru.jpg" alt="BORÜ" className="w-12 h-12 rounded-full border-2 border-red-600 shadow-md object-cover flex-shrink-0" />
+            <div className="w-12 h-12 rounded-2xl p-1 bg-gradient-to-br from-amber-500/20 via-red-600/20 to-black/60 border-2 border-amber-500/50 flex items-center justify-center shadow-md flex-shrink-0">
+              <img src="/icon-aluno.png" alt="BORÜ Aluno" className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(245,158,11,0.5)]" />
+            </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black tracking-wider text-white">

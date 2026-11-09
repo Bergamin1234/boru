@@ -94,7 +94,8 @@ const opcoesTempoDocencia = [
   'Mais de 10 anos como professor / Mestre'
 ];
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?: 'PROFESSOR' | 'ADMIN' }) {
+  const [modoLogin, setModoLogin] = useState<'PROFESSOR' | 'ADMIN'>(modoInicial);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [usuarioLogado, setUsuarioLogado] = useState<any>(null);
   const [loginInput, setLoginInput] = useState('');
@@ -103,6 +104,13 @@ export default function AdminDashboard() {
   const [mostrarSenhaNovoProf, setMostrarSenhaNovoProf] = useState(false);
   const [mostrarSenhaEditarProf, setMostrarSenhaEditarProf] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+
+  useEffect(() => {
+    setModoLogin(modoInicial);
+    if (modoInicial === 'PROFESSOR') {
+      setAbaAtiva('chamada_diaria');
+    }
+  }, [modoInicial]);
   
   const [metricas, setMetricas] = useState<any>({
     totalAlunos: 0,
@@ -432,7 +440,13 @@ export default function AdminDashboard() {
         emailOuUsuario: loginInput,
         senha: password
       });
-      setUsuarioLogado(response.data.usuario);
+      const user = response.data.usuario;
+      setUsuarioLogado(user);
+      if (user?.cargo !== 'ADMIN' || modoLogin === 'PROFESSOR') {
+        setAbaAtiva('chamada_diaria');
+      } else {
+        setAbaAtiva('alunos');
+      }
       setIsLoggedIn(true);
     } catch (error: any) {
       alert(error.response?.data?.erro || 'Erro ao realizar login.');
@@ -1198,33 +1212,82 @@ export default function AdminDashboard() {
   // TELA DE LOGIN DO ADMIN / PROFESSOR
   // ==========================================
   if (!isLoggedIn) {
+    const isModoProf = modoLogin === 'PROFESSOR';
     return (
-      <div className="fixed inset-0 bg-[#0B0B0C]/75 backdrop-blur-[2px] flex items-center justify-center z-[9999] px-4 relative overflow-hidden">
-        <div className="bg-[#141416]/95 backdrop-blur-md border border-zinc-800 p-8 rounded-2xl w-full max-w-md shadow-2xl relative z-10">
+      <div className="fixed inset-0 bg-[#0B0B0C]/85 backdrop-blur-[2px] flex items-center justify-center z-[9999] px-4 relative overflow-hidden">
+        <div className="bg-[#141416]/95 backdrop-blur-md border border-zinc-800 p-6 sm:p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10">
+          {/* SELETOR DE MODO (PROFESSOR vs ADMINISTRADOR) */}
+          <div className="grid grid-cols-2 gap-1.5 bg-[#0E0E11] p-1.5 rounded-2xl border border-zinc-800 mb-5">
+            <button
+              type="button"
+              onClick={() => setModoLogin('PROFESSOR')}
+              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 ${
+                isModoProf
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/60'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <img src="/icon-professor.png" alt="" className="w-5 h-5 object-contain" />
+              <span>Professor</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoLogin('ADMIN')}
+              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 ${
+                !isModoProf
+                  ? 'bg-amber-500 text-black shadow-lg shadow-amber-950/60'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <img src="/icon-admin.png" alt="" className="w-5 h-5 object-contain" />
+              <span>Administrador</span>
+            </button>
+          </div>
+
           <div className="text-center mb-6">
-            <img 
-              src="/logo-boru.jpg" 
-              alt="BORÜ Centro de Combate" 
-              className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-red-600 shadow-xl object-cover" 
-            />
-            <h1 className="text-3xl font-black text-white tracking-widest mb-1">BORÜ</h1>
-            <p className="text-red-500 font-bold text-xs uppercase tracking-widest">Painel Administrativo & Professores</p>
-            <p className="text-zinc-400 text-xs mt-1">Controle de Alunos, Aulas, Modalidades e Equipe</p>
+            <div className="relative inline-block mb-3">
+              <div className={`w-20 h-20 rounded-2xl p-2.5 flex items-center justify-center border-2 shadow-2xl transition-all ${
+                isModoProf
+                  ? 'bg-emerald-950/40 border-emerald-500 shadow-emerald-950/80'
+                  : 'bg-amber-950/40 border-amber-500 shadow-amber-950/80'
+              }`}>
+                <img 
+                  src={isModoProf ? "/icon-professor.png" : "/icon-admin.png"} 
+                  alt="Perfil BORÜ" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]" 
+                />
+              </div>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider mb-1">
+              {isModoProf ? 'PORTAL DO PROFESSOR' : 'PAINEL ADMINISTRADOR'}
+            </h1>
+            <p className={`font-bold text-xs uppercase tracking-widest ${isModoProf ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {isModoProf ? 'Mestres, Instrutores & Chamada' : 'Diretoria & Gestão Executiva'}
+            </p>
+            <p className="text-zinc-400 text-xs mt-1">
+              {isModoProf
+                ? 'Chamada diária em duas colunas, presença de turmas e avaliação experimental'
+                : 'Gestão Financeira (OPEX/CAPEX), Matrículas, Equipe e Controle Geral'}
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-zinc-400 text-xs font-semibold mb-1">Login de Acesso</label>
+              <label className="block text-zinc-400 text-xs font-semibold mb-1">
+                {isModoProf ? 'CPF do Professor / Mestre' : 'Login ou E-mail de Administrador'}
+              </label>
               <input 
                 type="text" 
                 value={loginInput}
                 onChange={(e) => setLoginInput(e.target.value)}
-                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition text-sm"
-                placeholder="Usuário ou CPF do Professor"
+                className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition text-sm"
+                placeholder={isModoProf ? 'Digite seu CPF (com ou sem pontos)' : 'Usuário (ex: BrgAdmin) ou E-mail'}
                 required
               />
               <p className="text-[11px] text-zinc-500 mt-1">
-                * Professores acessam informando o seu <strong>CPF</strong> (com ou sem pontuação) e senha cadastrada.
+                {isModoProf
+                  ? '* Informe seu CPF cadastrado pela administração do CT Borü.'
+                  : '* Acesso restrito à diretoria e gestores credenciados.'}
               </p>
             </div>
             <div>
@@ -1234,7 +1297,7 @@ export default function AdminDashboard() {
                   type={mostrarSenhaLogin ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg px-4 py-3 pr-11 text-white focus:outline-none focus:border-red-500 transition text-sm"
+                  className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-xl px-4 py-3 pr-11 text-white focus:outline-none focus:border-red-500 transition text-sm"
                   placeholder="Sua senha de acesso"
                   required
                 />
@@ -1261,17 +1324,22 @@ export default function AdminDashboard() {
             <button 
               type="submit" 
               disabled={loginLoading}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition transform active:scale-95 shadow-lg shadow-red-600/30 text-sm uppercase tracking-wider"
+              className={`w-full disabled:opacity-50 font-black py-3.5 rounded-xl transition transform active:scale-95 shadow-lg text-sm uppercase tracking-wider ${
+                isModoProf
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                  : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30'
+              }`}
             >
-              {loginLoading ? 'Verificando...' : 'Entrar no Painel'}
+              {loginLoading
+                ? 'Verificando...'
+                : isModoProf
+                ? 'Entrar como Professor →'
+                : 'Entrar como Administrador →'}
             </button>
-            <p className="text-[11px] text-zinc-500 text-center mt-3">
-              Esqueceu a senha de professor? A redefinição de senha é feita diretamente com a Administração.
-            </p>
           </form>
 
-          <Link to="/" className="block text-center mt-5 text-zinc-500 hover:text-white text-xs transition">
-            ← Voltar ao site principal
+          <Link to="/" className="block text-center mt-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
+            ← Voltar às 3 Opções do Aplicativo
           </Link>
         </div>
       </div>
@@ -1328,7 +1396,13 @@ export default function AdminDashboard() {
                 className="w-12 h-12 rounded-full border-2 border-amber-500 shadow-md object-cover flex-shrink-0" 
               />
             ) : (
-              <img src="/logo-boru.jpg" alt="BORÜ" className="w-12 h-12 rounded-full border-2 border-red-600 shadow-md object-cover flex-shrink-0" />
+              <img 
+                src={usuarioLogado?.cargo === 'ADMIN' ? "/icon-admin.png" : "/icon-professor.png"} 
+                alt="BORÜ" 
+                className={`w-12 h-12 rounded-2xl p-1 bg-zinc-900 border-2 shadow-md object-contain flex-shrink-0 ${
+                  usuarioLogado?.cargo === 'ADMIN' ? 'border-amber-500/50' : 'border-emerald-500/50'
+                }`} 
+              />
             )}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -1337,8 +1411,9 @@ export default function AdminDashboard() {
                 </h1>
                 {usuarioLogado?.cargo === 'ADMIN' ? (
                   <>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                      👑 ADMINISTRADOR
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                      <img src="/icon-admin.png" alt="" className="w-4 h-4 object-contain inline-block" />
+                      <span>ADMINISTRADOR</span>
                     </span>
                     {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-red-600/30 text-red-300 border border-red-500/50 flex items-center gap-1">
@@ -1347,8 +1422,9 @@ export default function AdminDashboard() {
                     )}
                   </>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1">
-                    🥋 PROFESSOR
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                    <img src="/icon-professor.png" alt="" className="w-4 h-4 object-contain inline-block" />
+                    <span>PROFESSOR</span>
                   </span>
                 )}
               </div>
@@ -1496,8 +1572,8 @@ export default function AdminDashboard() {
 
         {/* NAVEGAÇÃO MATRICIAL EM GRADE 4x2 RETO E ORGANIZADO (LAYOUT OFICIAL DO GUARDANAPO CT BORÜ) */}
         <div className="bg-[#111114]/95 border border-zinc-800/90 rounded-2xl p-2.5 sm:p-3.5 shadow-xl space-y-3">
-          {/* GRADE 4 COLUNAS X 2 LINHAS RETO E UNIFORME */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5">
+          {/* GRADE RETO E UNIFORME (4x2 ADMIN | 3x2 PROFESSOR) */}
+          <div className={`grid grid-cols-2 ${usuarioLogado?.cargo === 'ADMIN' ? 'md:grid-cols-4' : 'sm:grid-cols-3'} gap-2 sm:gap-2.5`}>
             {/* COLUNA 1 - LINHA 1: LEADS & AULAS EXP. */}
             <button 
               type="button"
@@ -1533,35 +1609,39 @@ export default function AdminDashboard() {
               <span className="truncate">Alunos ({alunos.length})</span>
             </button>
 
-            {/* COLUNA 3 - LINHA 1: PROFESSORES */}
-            <button 
-              type="button"
-              onClick={() => setAbaAtiva('professores')}
-              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
-                abaAtiva === 'professores'
-                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
-                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
-              }`}
-              title="Professores, equipe e horários das turmas"
-            >
-              <span className="text-base sm:text-lg">👑</span>
-              <span className="truncate">Professores</span>
-            </button>
+            {/* COLUNA 3 - LINHA 1: PROFESSORES (EXCLUSIVO ADMIN) */}
+            {usuarioLogado?.cargo === 'ADMIN' && (
+              <button 
+                type="button"
+                onClick={() => setAbaAtiva('professores')}
+                className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                  abaAtiva === 'professores'
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                }`}
+                title="Professores, equipe e horários das turmas"
+              >
+                <span className="text-base sm:text-lg">👑</span>
+                <span className="truncate">Professores</span>
+              </button>
+            )}
 
-            {/* COLUNA 4 - LINHA 1: GESTÃO */}
-            <button 
-              type="button"
-              onClick={() => setAbaAtiva('financeiro_gestao')}
-              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
-                ['financeiro_gestao', 'caixa_diario', 'comissoes'].includes(abaAtiva)
-                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
-                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
-              }`}
-              title="Gestão Financeira, Caixa Diário e Comissões"
-            >
-              <span className="text-base sm:text-lg">💰</span>
-              <span className="truncate">Gestão</span>
-            </button>
+            {/* COLUNA 4 - LINHA 1: GESTÃO (EXCLUSIVO ADMIN) */}
+            {usuarioLogado?.cargo === 'ADMIN' && (
+              <button 
+                type="button"
+                onClick={() => setAbaAtiva('financeiro_gestao')}
+                className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                  ['financeiro_gestao', 'caixa_diario', 'comissoes'].includes(abaAtiva)
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                }`}
+                title="Gestão Financeira, Caixa Diário e Comissões"
+              >
+                <span className="text-base sm:text-lg">💰</span>
+                <span className="truncate">Gestão</span>
+              </button>
+            )}
 
             {/* COLUNA 1 - LINHA 2: CHAMADA */}
             <button 
