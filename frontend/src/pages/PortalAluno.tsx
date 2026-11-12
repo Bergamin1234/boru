@@ -544,21 +544,7 @@ const fazerCheckin = async (id: string) => {
               </form>
             )}
 
-            {/* Acesso para Apresentação (Protegido por Login & Senha de Administrador) */}
-            <div className="mt-5 pt-4 border-t border-zinc-800/80 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAdminDemoModal(true);
-                  setAdminError('');
-                }}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-400 hover:text-amber-400 transition"
-              >
-                <span>🎭 Modo Apresentação (Requer Senha Admin)</span>
-              </button>
-            </div>
-
-            <Link to="/" className="block text-center mt-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
+            <Link to="/" className="block text-center mt-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-bold transition">
               ← Voltar às 3 Opções do Aplicativo
             </Link>
           </div>

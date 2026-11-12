@@ -1282,7 +1282,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                 value={loginInput}
                 onChange={(e) => setLoginInput(e.target.value)}
                 className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition text-sm"
-                placeholder={isModoProf ? 'Digite seu CPF (com ou sem pontos)' : 'Usuário (ex: BrgAdmin) ou E-mail'}
+                placeholder={isModoProf ? 'Digite seu CPF (com ou sem pontos)' : 'Usuário ou E-mail'}
                 required
               />
               <p className="text-[11px] text-zinc-500 mt-1">
