@@ -33,7 +33,7 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
   // 1. WEBHOOK OFICIAL WHATSAPP BUSINESS CLOUD API (META)
   // ==========================================================================
 
-  // Verificação oficial do Webhook (Meta Challenge)
+  // Verificação oficial do Webhook (Meta Challenge) + Status amigável no navegador
   app.get('/api/whatsapp/webhook', async (req: Request, res: Response) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -41,6 +41,19 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
 
     const config = await getOrCreateAiConfig(prisma);
     const verifyTokenEsperado = process.env.WHATSAPP_VERIFY_TOKEN || config.whatsappVerifyToken;
+
+    // Se for aberto diretamente no navegador pelo administrador (sem parâmetros da Meta)
+    if (!mode && !token) {
+      return res.status(200).json({
+        status: 'WEBHOOK_ONLINE',
+        sistema: 'BORÜ IA AUTÔNOMA — INTELLIGENT OPERATIONS',
+        iaAtiva: config.enabled,
+        modoOperacao: config.mode,
+        whatsappOficial: config.whatsappPhoneNumber,
+        instrucao:
+          'Este endereço é o Webhook técnico para a Meta (WhatsApp Cloud API). Para usar o painel visual, ver as conversas e testar no Modo Simulação, acesse a aba "💬 WhatsApp & Atendimento IA" dentro do Painel Administrativo (/admin).'
+      });
+    }
 
     if (mode === 'subscribe' && token === verifyTokenEsperado) {
       await prisma.systemLog.create({
