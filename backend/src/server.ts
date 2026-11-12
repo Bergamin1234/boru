@@ -7,6 +7,7 @@ import { registerGamificationRoutes } from './gamificationRoutes';
 import { registerAddonRoutes, calcularProximoVencimentoPorAdesao } from './addonRoutes';
 import { registerPhase1Routes } from './phase1Routes';
 import { registerClassScheduleRoutes } from './classScheduleRoutes';
+import { registerBoruAiRoutes } from './ai/boruAiRoutes';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -15,6 +16,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://boru-lime.vercel.app',
+  'https://borucentrodecombate.com',
+  'https://www.borucentrodecombate.com',
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : [])
 ];
 
@@ -33,6 +37,7 @@ registerGamificationRoutes(app, prisma);
 registerAddonRoutes(app, prisma);
 registerPhase1Routes(app, prisma);
 registerClassScheduleRoutes(app, prisma);
+registerBoruAiRoutes(app, prisma);
 
 // Servir arquivos estáticos do frontend e uploads (modo portátil / produção)
 app.use(express.static(path.join(__dirname, '../public')));

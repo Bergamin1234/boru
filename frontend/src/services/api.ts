@@ -184,6 +184,48 @@ export const adminApi = {
     api.post(`/aulas/${eventoId}/reativar`),
   markClassAttendance: (eventoId: string, data: { alunoId: string; status: string }) =>
     api.post(`/aulas/${eventoId}/marcar-presenca`, data),
+
+  // ============================================================================
+  // BORÜ IA AUTÔNOMA — INTELLIGENT OPERATIONS
+  // ============================================================================
+  getAiStatus: () => api.get('/admin/ia/status'),
+  toggleAiMaster: (data: { enabled?: boolean; mode?: 'IA_AUTONOMA' | 'IA_ASSISTIDA' | 'MODO_MANUAL'; operador?: string }) =>
+    api.post('/admin/ia/toggle', data),
+  updateAiConfig: (data: Record<string, unknown>) =>
+    api.patch('/admin/ia/config', data),
+  getAiDashboard: (periodo: string = '30d') =>
+    api.get('/admin/ia/dashboard', { params: { periodo } }),
+  exportAiReportUrl: (formato: 'csv' | 'json' = 'csv') =>
+    `${api.defaults.baseURL}/admin/ia/relatorios/exportar?formato=${formato}`,
+  getAiConversations: (params?: { status?: string; tipo?: string; busca?: string }) =>
+    api.get('/admin/ia/conversas', { params }),
+  getAiConversationDetail: (id: string) =>
+    api.get(`/admin/ia/conversas/${id}`),
+  assumeAiConversation: (id: string, atendenteNome?: string) =>
+    api.post(`/admin/ia/conversas/${id}/assumir`, { atendenteNome }),
+  returnConversationToAi: (id: string, operadorNome?: string) =>
+    api.post(`/admin/ia/conversas/${id}/devolver-ia`, { operadorNome }),
+  sendManualWhatsAppMessage: (id: string, data: { conteudo: string; atendenteNome?: string; pausarIa?: boolean }) =>
+    api.post(`/admin/ia/conversas/${id}/mensagem-manual`, data),
+  approveAssistedMessage: (msgId: string, data?: { textoEditado?: string; aprovadoPor?: string }) =>
+    api.post(`/admin/ia/mensagens/${msgId}/aprovar`, data || {}),
+  rejectAssistedMessage: (msgId: string) =>
+    api.post(`/admin/ia/mensagens/${msgId}/rejeitar`),
+  scanFollowUps: () =>
+    api.post('/admin/ia/followups/varrer'),
+  processFollowUps: (forcarEnvioImediato = true) =>
+    api.post('/admin/ia/followups/processar', { forcarEnvioImediato }),
+  cancelFollowUp: (id: string) =>
+    api.post(`/admin/ia/followups/${id}/cancelar`),
+  updateAiTicket: (id: string, data: { status: string; resolvidoPor?: string }) =>
+    api.patch(`/admin/ia/tickets/${id}`, data),
+  simulateWhatsAppMessage: (data: {
+    telefone: string;
+    nomeContato?: string;
+    conteudo: string;
+    tipoMidia?: 'TEXT' | 'AUDIO' | 'IMAGE';
+    transcricaoAudio?: string;
+  }) => api.post('/admin/ia/simular-mensagem', data),
 };
 
 export const studentApi = {

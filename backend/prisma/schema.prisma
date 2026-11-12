@@ -390,3 +390,134 @@ model TeacherCommissionReport {
 
   @@unique([professorId, mes, ano])
 }
+
+// ==========================================
+// BORÜ IA AUTÔNOMA — INTELLIGENT OPERATIONS
+// ==========================================
+
+model AiAutomationConfig {
+  id                       String   @id @default("default")
+  enabled                  Boolean  @default(false) // Controle central ON/OFF (ATIVAR IA / DESATIVAR IA)
+  mode                     String   @default("IA_AUTONOMA") // "IA_AUTONOMA" | "IA_ASSISTIDA" | "MODO_MANUAL"
+  whatsappConnected        Boolean  @default(false)
+  whatsappProvider         String   @default("CLOUD_API") // "CLOUD_API" | "OFFICIAL_BSP"
+  whatsappPhoneNumber      String   @default("(69) 99238-4491")
+  whatsappPhoneNumberId    String?
+  whatsappBusinessAccountId String?
+  whatsappVerifyToken      String   @default("boru_ia_webhook_verify_2026")
+  businessHoursOnlyFollowUp Boolean @default(true)
+  followUpStartHour        Int      @default(8)
+  followUpEndHour          Int      @default(20)
+  maxFollowUpsPerContact   Int      @default(3)
+  minHoursBetweenFollowUps Int      @default(24)
+  pixChaveOficial          String   @default("borucentrodecombate@gmail.com")
+  pixFavorecido            String   @default("BORÜ Centro de Combate")
+  linkPagamentoOficial     String   @default("https://www.borucentrodecombate.com/portal")
+  enderecoOficial          String   @default("Porto Velho - RO (Coordenadas GPS: -8.762142, -63.869645) — Estrutura 180m² 100% Climatizada")
+  instagramOficial         String   @default("@borucentrodecombate")
+  updatedBy                String?  @default("Sistema")
+  updatedAt                DateTime @updatedAt
+  criadoEm                 DateTime @default(now())
+}
+
+model WhatsAppConversation {
+  id                      String   @id @default(uuid())
+  telefone                String   @unique // Telefone normalizado (ex: 5569992384491)
+  telefoneExibicao        String?  // Ex: (69) 99238-4491
+  nomeContato             String   @default("Visitante WhatsApp")
+  tipoContato             String   @default("LEAD") // "ALUNO" | "EX_ALUNO" | "LEAD" | "RESPONSAVEL"
+  alunoId                 String?  // Vínculo com Aluno cadastrado
+  experimentalId          String?  // Vínculo com AgendamentoExperimental (CRM)
+  statusAtendimento       String   @default("IA_ATIVA") // "IA_ATIVA" | "PAUSADA_HUMANO" | "AGUARDANDO_APROVACAO" | "TRANSFERIDA_HUMANO" | "ENCERRADA"
+  iaPausadaIndividual     Boolean  @default(false) // Pausa individual por conversa
+  etapaFunil              String   @default("RECEPCAO") // "RECEPCAO" | "QUALIFICACAO" | "APRESENTACAO_PLANOS" | "AGENDAMENTO_EXPERIMENTAL" | "EXPERIMENTAL_AGENDADA" | "POS_EXPERIMENTAL" | "MATRICULADO" | "SUPORTE_ALUNO" | "FINANCEIRO"
+  objetivoTreino          String?  // Ex: Condicionamento, Defesa Pessoal, Emagrecimento, Competição, Kids
+  modalidadeInteresse     String?  @default("Muay Thai")
+  experienciaPrevia       String?  // Ex: Iniciante zero, Já treinou
+  disponibilidadeHorario  String?  // Ex: Noite 19h, Tarde 16h
+  ultimaIntencao          String?  // Ex: DUVIDA_PRECO, AGENDAR_EXPERIMENTAL, CONSULTA_MENSALIDADE, CANCELAMENTO
+  resumoMemoriaContexto   String?  // Memória contextual acumulativa da conversa
+  motivoTransferencia     String?  // Preenchido quando transferido para humano
+  dossieTransferenciaJson String?  // JSON completo com Nome, Telefone, Histórico, Motivo, Coletados, Ações e Recomendação
+  atendenteHumanoNome     String?
+  optOutFollowUp          Boolean  @default(false) // Respeito a opt-out (PARAR / SAIR)
+  naoLidasAdmin           Int      @default(0)
+  ultimaMensagemTexto     String?
+  ultimaMensagemEm        DateTime @default(now())
+  criadoEm                DateTime @default(now())
+  atualizadoEm            DateTime @updatedAt
+
+  mensagens               WhatsAppMessage[]
+  operacoes               AiOperationAuditLog[]
+  followUps               AiFollowUpTask[]
+  tickets                 AiServiceTicket[]
+}
+
+model WhatsAppMessage {
+  id                  String               @id @default(uuid())
+  conversationId      String
+  conversation        WhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  externalMessageId   String?              @unique // ID da mensagem na WhatsApp Cloud API (controle de duplicidade)
+  direcao             String               @default("INBOUND") // "INBOUND" | "OUTBOUND"
+  remetente           String               @default("CONTATO") // "CONTATO" | "IA" | "HUMANO" | "SISTEMA"
+  remetenteNome       String?
+  tipoMidia           String               @default("TEXT") // "TEXT" | "AUDIO" | "IMAGE" | "DOCUMENT" | "TEMPLATE"
+  conteudo            String
+  transcricaoAudio    String?
+  statusEnvio         String               @default("SENT") // "RECEIVED" | "PENDING_APPROVAL" | "APPROVED_SENT" | "REJECTED" | "SENT" | "DELIVERED" | "READ" | "FAILED"
+  intencaoDetectada   String?
+  toolsAcionadasJson  String?              // Lista de tools executadas pela IA para esta resposta
+  tempoRespostaMs     Int?
+  erroDetalhe         String?
+  criadoEm            DateTime             @default(now())
+}
+
+model AiOperationAuditLog {
+  id               String                @id @default(uuid())
+  conversationId   String?
+  conversation     WhatsAppConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  toolName         String                // Ex: consultar_aluno, agendar_aula_experimental, Toggle_IA_Status
+  categoria        String                @default("TOOL_EXECUTION") // "STATE_CHANGE" | "TOOL_EXECUTION" | "WEBHOOK" | "FOLLOW_UP" | "HANDOFF" | "SECURITY_GUARD"
+  inputPayload     String?
+  outputResult     String?
+  sucesso          Boolean               @default(true)
+  autorizado       Boolean               @default(true)
+  executadoPor     String                @default("BORU_IA") // "BORU_IA" | Nome do Admin
+  criadoEm         DateTime              @default(now())
+}
+
+model AiFollowUpTask {
+  id               String               @id @default(uuid())
+  conversationId   String
+  conversation     WhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tipoGatilho      String               // "LEAD_PRECO_SUMIU" | "INTERESSE_EXPERIMENTAL" | "LEMBRETE_EXPERIMENTAL" | "FALTOU_EXPERIMENTAL" | "POS_EXPERIMENTAL_NAO_MATRICULOU" | "ALUNO_SUMIDO_TREINO" | "MENSALIDADE_PROXIMA_VENCIMENTO" | "MENSALIDADE_PENDENTE"
+  descricaoMotivo  String
+  agendadoPara     DateTime
+  status           String               @default("PENDENTE") // "PENDENTE" | "ENVIADO" | "CANCELADO" | "FALHOU" | "BLOQUEADO_IA_OFF"
+  tentativa        Int                  @default(1)
+  mensagemSugerida String?
+  mensagemEnviada  String?
+  executadoEm      DateTime?
+  erroDetalhe      String?
+  criadoEm         DateTime             @default(now())
+}
+
+model AiServiceTicket {
+  id                  String                @id @default(uuid())
+  protocolo           String                @unique
+  conversationId      String?
+  conversation        WhatsAppConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  alunoId             String?
+  nomeContato         String
+  telefone            String
+  tipoSolicitacao     String                // "CANCELAMENTO" | "PAUSA_PLANO" | "ALTERACAO_PLANO" | "NEGOCIACAO_FINANCEIRA" | "DIVERGENCIA_FINANCEIRA" | "PROBLEMA_ADMINISTRATIVO" | "SUPORTE_PORTAL"
+  descricao           String
+  prioridade          String                @default("MEDIA") // "BAIXA" | "MEDIA" | "ALTA" | "URGENTE"
+  status              String                @default("ABERTO") // "ABERTO" | "EM_ANALISE" | "RESOLVIDO" | "CANCELADO"
+  dadosColetadosJson  String?
+  acaoRealizadaIa     String?
+  proximaProvidencia  String?
+  resolvidoPor        String?
+  resolvidoEm         DateTime?
+  criadoEm            DateTime              @default(now())
+}
