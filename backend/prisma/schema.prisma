@@ -415,6 +415,7 @@ model AiAutomationConfig {
   linkPagamentoOficial     String   @default("https://www.borucentrodecombate.com/portal")
   enderecoOficial          String   @default("Porto Velho - RO (Coordenadas GPS: -8.762142, -63.869645) — Estrutura 180m² 100% Climatizada")
   instagramOficial         String   @default("@borucentrodecombate")
+  customSettingsJson       String?  // JSON com templates de mensagens editáveis, prazos customizados e instruções gerais da IA
   updatedBy                String?  @default("Sistema")
   updatedAt                DateTime @updatedAt
   criadoEm                 DateTime @default(now())

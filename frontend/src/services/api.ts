@@ -217,6 +217,21 @@ export const adminApi = {
     api.post('/admin/ia/followups/processar', { forcarEnvioImediato }),
   cancelFollowUp: (id: string) =>
     api.post(`/admin/ia/followups/${id}/cancelar`),
+  updateFollowUp: (id: string, data: { mensagemSugerida?: string; agendadoPara?: string; descricaoMotivo?: string; status?: string }) =>
+    api.patch(`/admin/ia/followups/${id}`, data),
+  createFollowUp: (data: {
+    telefone: string;
+    nomeContato?: string;
+    tipoGatilho?: string;
+    descricaoMotivo?: string;
+    mensagemSugerida: string;
+    agendadoPara?: string;
+    prazoHoras?: number;
+  }) => api.post('/admin/ia/followups/criar', data),
+  dispatchSingleFollowUp: (id: string, mensagemCustomizada?: string) =>
+    api.post(`/admin/ia/followups/${id}/disparar`, { mensagemCustomizada }),
+  deleteAiConversation: (id: string) =>
+    api.delete(`/admin/ia/conversas/${id}`),
   updateAiTicket: (id: string, data: { status: string; resolvidoPor?: string }) =>
     api.patch(`/admin/ia/tickets/${id}`, data),
   simulateWhatsAppMessage: (data: {
@@ -225,6 +240,7 @@ export const adminApi = {
     conteudo: string;
     tipoMidia?: 'TEXT' | 'AUDIO' | 'IMAGE';
     transcricaoAudio?: string;
+    forcarSimulacaoAtiva?: boolean;
   }) => api.post('/admin/ia/simular-mensagem', data),
 };
 

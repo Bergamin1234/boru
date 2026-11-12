@@ -1,5 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { formatPhoneBr, normalizePhoneE164, BORU_OFFICIAL_KNOWLEDGE } from './boruAiKnowledge';
+import {
+  formatPhoneBr,
+  normalizePhoneE164,
+  BORU_OFFICIAL_KNOWLEDGE,
+  parseBoruAiCustomSettings,
+  interpolateAiTemplate
+} from './boruAiKnowledge';
 import { getOrCreateAiConfig, sendWhatsAppCloudMessage } from './whatsappService';
 
 // ============================================================================
@@ -8,6 +14,8 @@ import { getOrCreateAiConfig, sendWhatsAppCloudMessage } from './whatsappService
 
 export async function scanAndGenerateFollowUpTasks(prisma: PrismaClient) {
   const config = await getOrCreateAiConfig(prisma);
+  const customSettings = parseBoruAiCustomSettings(config.customSettingsJson);
+  const regras = customSettings.regrasFollowUp;
   const agora = new Date();
   let novasTarefasCriadas = 0;
 
@@ -106,17 +114,25 @@ export async function scanAndGenerateFollowUpTasks(prisma: PrismaClient) {
     if (!exp.telefone) continue;
     const primeiroNome = exp.nome.split(' ')[0];
 
-    if (exp.status === 'REALIZADA') {
+    if (exp.status === 'REALIZADA' && regras.POS_EXPERIMENTAL_NAO_MATRICULOU?.ativo !== false) {
+      const r = regras.POS_EXPERIMENTAL_NAO_MATRICULOU;
       await ensureFollowUpForContact({
         telefone: exp.telefone,
         nome: exp.nome,
         tipoContato: 'LEAD',
         experimentalId: exp.id,
         tipoGatilho: 'POS_EXPERIMENTAL_NAO_MATRICULOU',
-        descricaoMotivo: `Realizou aula experimental e ainda não fechou matrícula.`,
-        mensagemSugerida: `Fala, ${primeiroNome}! Tudo bem? 🥊 Aqui é do BORÜ Centro de Combate! O Mestre Felipe Borü comentou da sua aula experimental. O que você achou do treino e da nossa estrutura? Se quiser garantir sua vaga oficial no tatame, nossos planos começam a partir de R$ 140/mês (2x) e R$ 160/mês (3x). Posso te ajudar a finalizar sua matrícula hoje? 🐺🔥`
+        descricaoMotivo: `Realizou aula experimental e ainda não fechou matrícula (Prazo: ${r.prazoValor} ${r.prazoUnidade.toLowerCase()}).`,
+        mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, {
+          nome: primeiroNome,
+          data: exp.data,
+          horario: exp.horario,
+          modalidade: exp.modalidade || 'Muay Thai',
+          chave_pix: config.pixChaveOficial,
+          link_portal: config.linkPagamentoOficial || BORU_OFFICIAL_KNOWLEDGE.portalAlunoUrl
+        })
       });
-    } else if (exp.status === 'PENDENTE') {
+    } else if (exp.status === 'PENDENTE' && regras.FALTOU_EXPERIMENTAL?.ativo !== false) {
       // Verifica se a data já passou (ex: formato DD/MM/YYYY ou YYYY-MM-DD)
       let dataAula: Date | null = null;
       if (/^\d{4}-\d{2}-\d{2}$/.test(exp.data)) {
@@ -127,22 +143,28 @@ export async function scanAndGenerateFollowUpTasks(prisma: PrismaClient) {
       }
 
       if (dataAula && dataAula < agora) {
+        const r = regras.FALTOU_EXPERIMENTAL;
         await ensureFollowUpForContact({
           telefone: exp.telefone,
           nome: exp.nome,
           tipoContato: 'LEAD',
           experimentalId: exp.id,
           tipoGatilho: 'FALTOU_EXPERIMENTAL',
-          descricaoMotivo: `Agendou aula experimental em ${exp.data} às ${exp.horario} e não compareceu.`,
-          mensagemSugerida: `Olá, ${primeiroNome}! Tudo bem? Sentimos sua falta na aula experimental no BORÜ Centro de Combate (${exp.data} às ${exp.horario}). Imprevistos acontecem! Qual dia e horário desta semana fica melhor para reagendarmos seu treino gratuito? 🥊🐺`
+          descricaoMotivo: `Agendou aula experimental em ${exp.data} às ${exp.horario} e não compareceu (Prazo: ${r.prazoValor} ${r.prazoUnidade.toLowerCase()}).`,
+          mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, {
+            nome: primeiroNome,
+            data: exp.data,
+            horario: exp.horario,
+            modalidade: exp.modalidade || 'Muay Thai'
+          })
         });
       }
     }
   }
 
   // --------------------------------------------------------------------------
-  // CASO B: ALUNOS COM MENSALIDADE PRÓXIMA DO VENCIMENTO (<= 3 DIAS) OU PENDENTE/ATRASADA
-  // E ALUNOS HÁ MUITO TEMPO SEM TREINAR (>= 10 DIAS)
+  // CASO B: ALUNOS COM MENSALIDADE PRÓXIMA DO VENCIMENTO OU PENDENTE/ATRASADA
+  // E ALUNOS HÁ MUITO TEMPO SEM TREINAR
   // --------------------------------------------------------------------------
   const alunos = await prisma.aluno.findMany({
     where: {
@@ -156,6 +178,10 @@ export async function scanAndGenerateFollowUpTasks(prisma: PrismaClient) {
     take: 15
   });
 
+  const diasAvisoVencimento = regras.MENSALIDADE_PROXIMA_VENCIMENTO?.prazoValor ?? 3;
+  const diasAtrasoCobranca = regras.MENSALIDADE_PENDENTE?.prazoValor ?? 1;
+  const diasAusenciaTreino = regras.ALUNO_SUMIDO_TREINO?.prazoValor ?? 10;
+
   for (const aluno of alunos) {
     if (!aluno.telefone) continue;
     const primeiroNome = aluno.nome.split(' ')[0];
@@ -168,43 +194,67 @@ export async function scanAndGenerateFollowUpTasks(prisma: PrismaClient) {
         const vencFormatado = new Date(m.dataVencimento).toLocaleDateString('pt-BR');
         const valorFormatado = `R$ ${m.valor.toFixed(2).replace('.', ',')}`;
 
-        if (diffDias < 0 || m.status === 'ATRASADO') {
-          await ensureFollowUpForContact({
-            telefone: aluno.telefone,
-            nome: aluno.nome,
-            tipoContato: 'ALUNO',
-            alunoId: aluno.id,
-            tipoGatilho: 'MENSALIDADE_PENDENTE',
-            descricaoMotivo: `Mensalidade vencida em ${vencFormatado} (${valorFormatado}).`,
-            mensagemSugerida: `Olá, ${primeiroNome}! Tudo bem? 🥊 Passando pelo atendimento do BORÜ Centro de Combate para lembrar que consta em aberto a sua mensalidade com vencimento em ${vencFormatado} (${valorFormatado}). Você pode regularizar via Chave PIX oficial (${config.pixChaveOficial}) ou pelo Portal do Aluno: ${BORU_OFFICIAL_KNOWLEDGE.portalAlunoUrl}. Caso já tenha efetuado o pagamento, basta nos enviar o comprovante por aqui! 🤝🐺`
-          });
-        } else if (diffDias >= 0 && diffDias <= 3) {
-          await ensureFollowUpForContact({
-            telefone: aluno.telefone,
-            nome: aluno.nome,
-            tipoContato: 'ALUNO',
-            alunoId: aluno.id,
-            tipoGatilho: 'MENSALIDADE_PROXIMA_VENCIMENTO',
-            descricaoMotivo: `Mensalidade vence em ${diffDias} dia(s) (${vencFormatado}).`,
-            mensagemSugerida: `Fala, ${primeiroNome}! Bons treinos! 🥊 Passando para lembrar que a mensalidade do seu plano no BORÜ Centro de Combate (${valorFormatado}) vence no dia ${vencFormatado}. Para sua comodidade, nossa Chave PIX oficial é ${config.pixChaveOficial} ou acesse ${BORU_OFFICIAL_KNOWLEDGE.portalAlunoUrl}. Oss! 🐺`
-          });
+        if ((diffDias <= -Math.max(0, diasAtrasoCobranca - 1) && diffDias < 0) || m.status === 'ATRASADO') {
+          if (regras.MENSALIDADE_PENDENTE?.ativo !== false) {
+            const r = regras.MENSALIDADE_PENDENTE;
+            await ensureFollowUpForContact({
+              telefone: aluno.telefone,
+              nome: aluno.nome,
+              tipoContato: 'ALUNO',
+              alunoId: aluno.id,
+              tipoGatilho: 'MENSALIDADE_PENDENTE',
+              descricaoMotivo: `Mensalidade vencida em ${vencFormatado} (${valorFormatado}) — Regra: ${r.prazoValor} dia(s) após vencer.`,
+              mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, {
+                nome: primeiroNome,
+                vencimento: vencFormatado,
+                valor: valorFormatado,
+                chave_pix: config.pixChaveOficial,
+                favorecido: config.pixFavorecido,
+                link_portal: config.linkPagamentoOficial || BORU_OFFICIAL_KNOWLEDGE.portalAlunoUrl
+              })
+            });
+          }
+        } else if (diffDias >= 0 && diffDias <= diasAvisoVencimento) {
+          if (regras.MENSALIDADE_PROXIMA_VENCIMENTO?.ativo !== false) {
+            const r = regras.MENSALIDADE_PROXIMA_VENCIMENTO;
+            await ensureFollowUpForContact({
+              telefone: aluno.telefone,
+              nome: aluno.nome,
+              tipoContato: 'ALUNO',
+              alunoId: aluno.id,
+              tipoGatilho: 'MENSALIDADE_PROXIMA_VENCIMENTO',
+              descricaoMotivo: `Mensalidade vence em ${diffDias} dia(s) (${vencFormatado}) — Regra: avisar ${diasAvisoVencimento} dia(s) antes.`,
+              mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, {
+                nome: primeiroNome,
+                vencimento: vencFormatado,
+                valor: valorFormatado,
+                chave_pix: config.pixChaveOficial,
+                favorecido: config.pixFavorecido,
+                link_portal: config.linkPagamentoOficial || BORU_OFFICIAL_KNOWLEDGE.portalAlunoUrl
+              })
+            });
+          }
         }
       }
     }
 
-    // 2. Verificação de Ausência Prolongada (Aluno sumido dos treinos >= 10 dias)
+    // 2. Verificação de Ausência Prolongada (Aluno sumido dos treinos >= diasAusenciaTreino)
     const ultimaPresenca = aluno.presencas[0];
-    if (ultimaPresenca) {
+    if (ultimaPresenca && regras.ALUNO_SUMIDO_TREINO?.ativo !== false) {
       const diasSemTreinar = Math.floor((agora.getTime() - new Date(ultimaPresenca.data).getTime()) / (1000 * 60 * 60 * 24));
-      if (diasSemTreinar >= 10) {
+      if (diasSemTreinar >= diasAusenciaTreino) {
+        const r = regras.ALUNO_SUMIDO_TREINO;
         await ensureFollowUpForContact({
           telefone: aluno.telefone,
           nome: aluno.nome,
           tipoContato: 'ALUNO',
           alunoId: aluno.id,
           tipoGatilho: 'ALUNO_SUMIDO_TREINO',
-          descricaoMotivo: `Aluno está há ${diasSemTreinar} dias sem registrar presença no tatame.`,
-          mensagemSugerida: `Fala, ${primeiroNome}! Tudo certo com você? 🥊 Sentimos sua falta nos últimos treinos aqui no tatame do BORÜ! Lembre-se que a constância é o segredo da evolução na Trilha do Nak Muay. Estamos te esperando essa semana para suar o kimono/bandagem com a família BORÜ! Bora voltar? 🐺🔥`
+          descricaoMotivo: `Aluno está há ${diasSemTreinar} dias sem registrar presença no tatame (Limite configurado: ${diasAusenciaTreino} dias).`,
+          mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, {
+            nome: primeiroNome,
+            dias_ausente: diasSemTreinar
+          })
         });
       }
     }

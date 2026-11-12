@@ -8,7 +8,12 @@ import {
   setMasterAiState
 } from './whatsappService';
 import { processPendingFollowUpTasks, scanAndGenerateFollowUpTasks } from './followUpEngine';
-import { formatPhoneBr, normalizePhoneE164 } from './boruAiKnowledge';
+import {
+  formatPhoneBr,
+  normalizePhoneE164,
+  parseBoruAiCustomSettings,
+  DEFAULT_BORU_AI_CUSTOM_SETTINGS
+} from './boruAiKnowledge';
 
 export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
   // Inicializa o loop autônomo de verificação de Follow-up em background (a cada 5 minutos)
@@ -95,7 +100,10 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
   app.get('/api/admin/ia/status', async (_req: Request, res: Response) => {
     try {
       const config = await getOrCreateAiConfig(prisma);
-      res.json({ config });
+      res.json({
+        config,
+        customSettings: parseBoruAiCustomSettings(config.customSettingsJson)
+      });
     } catch (error: any) {
       res.status(500).json({ erro: 'Erro ao consultar status da BORÜ IA.', detalhe: error?.message });
     }
@@ -139,8 +147,17 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
         pixChaveOficial,
         pixFavorecido,
         linkPagamentoOficial,
+        customSettings,
+        resetCustomSettings,
         updatedBy
       } = req.body;
+
+      let customSettingsJsonToSave: string | undefined = undefined;
+      if (resetCustomSettings) {
+        customSettingsJsonToSave = JSON.stringify(DEFAULT_BORU_AI_CUSTOM_SETTINGS);
+      } else if (customSettings && typeof customSettings === 'object') {
+        customSettingsJsonToSave = JSON.stringify(customSettings);
+      }
 
       const config = await prisma.aiAutomationConfig.update({
         where: { id: 'default' },
@@ -159,11 +176,16 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
           ...(pixChaveOficial ? { pixChaveOficial } : {}),
           ...(pixFavorecido ? { pixFavorecido } : {}),
           ...(linkPagamentoOficial ? { linkPagamentoOficial } : {}),
+          ...(customSettingsJsonToSave !== undefined ? { customSettingsJson: customSettingsJsonToSave } : {}),
           updatedBy: updatedBy || 'Administrador BORÜ'
         }
       });
 
-      res.json({ mensagem: 'Configurações da BORÜ IA salvas com sucesso!', config });
+      res.json({
+        mensagem: 'Configurações, mensagens e prazos da BORÜ IA salvos com sucesso!',
+        config,
+        customSettings: parseBoruAiCustomSettings(config.customSettingsJson)
+      });
     } catch (error: any) {
       res.status(500).json({ erro: 'Erro ao salvar configurações da IA.', detalhe: error?.message });
     }
@@ -214,6 +236,7 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
         }),
         prisma.aiFollowUpTask.findMany({
           where: { criadoEm: { gte: dataCorte } },
+          include: { conversation: true },
           orderBy: { criadoEm: 'desc' },
           take: 50
         }),
@@ -287,6 +310,7 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
 
       res.json({
         config,
+        customSettings: parseBoruAiCustomSettings(config.customSettingsJson),
         indicadores: {
           estadoAtualIa: config.enabled ? config.mode : 'DESATIVADA',
           iaAtiva: config.enabled,
@@ -680,6 +704,136 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
     }
   });
 
+  // Editar mensagem, prazo (data/hora agendada) ou motivo de qualquer follow-up individual
+  app.patch('/api/admin/ia/followups/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { mensagemSugerida, agendadoPara, descricaoMotivo, status } = req.body;
+    try {
+      const task = await prisma.aiFollowUpTask.update({
+        where: { id },
+        data: {
+          ...(mensagemSugerida !== undefined ? { mensagemSugerida: String(mensagemSugerida) } : {}),
+          ...(agendadoPara ? { agendadoPara: new Date(agendadoPara) } : {}),
+          ...(descricaoMotivo !== undefined ? { descricaoMotivo: String(descricaoMotivo) } : {}),
+          ...(status ? { status: String(status) } : {})
+        }
+      });
+      res.json({ mensagem: 'Mensagem e prazo do follow-up atualizados com sucesso!', task });
+    } catch (error: any) {
+      res.status(500).json({ erro: 'Erro ao editar follow-up.', detalhe: error?.message });
+    }
+  });
+
+  // Criar novo agendamento de mensagem / follow-up customizado
+  app.post('/api/admin/ia/followups/criar', async (req: Request, res: Response) => {
+    const { telefone, nomeContato, tipoGatilho, descricaoMotivo, mensagemSugerida, agendadoPara, prazoHoras } = req.body;
+    if (!telefone || !mensagemSugerida) {
+      return res.status(400).json({ erro: 'Informe o telefone e a mensagem a ser enviada.' });
+    }
+
+    try {
+      const telNorm = normalizePhoneE164(String(telefone));
+      let conv = await prisma.whatsAppConversation.findUnique({ where: { telefone: telNorm } });
+      if (!conv) {
+        conv = await prisma.whatsAppConversation.create({
+          data: {
+            telefone: telNorm,
+            telefoneExibicao: formatPhoneBr(telNorm),
+            nomeContato: nomeContato || 'Contato WhatsApp',
+            tipoContato: 'LEAD',
+            statusAtendimento: 'IA_ATIVA',
+            etapaFunil: 'RECEPCAO'
+          }
+        });
+      }
+
+      const dataEnvio = agendadoPara
+        ? new Date(agendadoPara)
+        : new Date(Date.now() + Number(prazoHoras || 24) * 3600000);
+
+      const task = await prisma.aiFollowUpTask.create({
+        data: {
+          conversationId: conv.id,
+          tipoGatilho: tipoGatilho || 'MENSAGEM_PROGRAMADA_ADMIN',
+          descricaoMotivo: descricaoMotivo || 'Mensagem programada manualmente pela administração',
+          agendadoPara: dataEnvio,
+          status: 'PENDENTE',
+          mensagemSugerida: String(mensagemSugerida)
+        }
+      });
+
+      res.json({ mensagem: 'Envio programado com sucesso na fila!', task });
+    } catch (error: any) {
+      res.status(500).json({ erro: 'Erro ao programar mensagem.', detalhe: error?.message });
+    }
+  });
+
+  // Disparar imediatamente um follow-up específico (com opção de edição na hora)
+  app.post('/api/admin/ia/followups/:id/disparar', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { mensagemCustomizada } = req.body;
+    try {
+      const task = await prisma.aiFollowUpTask.findUnique({
+        where: { id },
+        include: { conversation: true }
+      });
+      if (!task || !task.conversation) {
+        return res.status(404).json({ erro: 'Follow-up não encontrado.' });
+      }
+
+      const textoEnvio = (mensagemCustomizada || task.mensagemSugerida || '').trim();
+      const sendRes = await sendWhatsAppCloudMessage(prisma, task.conversation.telefone, textoEnvio);
+
+      await prisma.whatsAppMessage.create({
+        data: {
+          conversationId: task.conversationId,
+          externalMessageId: sendRes.externalId || null,
+          direcao: 'OUTBOUND',
+          remetente: 'IA',
+          remetenteNome: 'BORÜ IA (Follow-up Programado)',
+          tipoMidia: 'TEXT',
+          conteudo: textoEnvio,
+          statusEnvio: sendRes.enviado ? 'SENT' : 'FAILED',
+          intencaoDetectada: `FOLLOWUP_${task.tipoGatilho}`
+        }
+      });
+
+      await prisma.whatsAppConversation.update({
+        where: { id: task.conversationId },
+        data: {
+          ultimaMensagemTexto: textoEnvio,
+          ultimaMensagemEm: new Date()
+        }
+      });
+
+      const atualizado = await prisma.aiFollowUpTask.update({
+        where: { id },
+        data: {
+          status: sendRes.enviado ? 'ENVIADO' : 'FALHOU',
+          mensagemSugerida: textoEnvio,
+          mensagemEnviada: textoEnvio,
+          executadoEm: new Date()
+        }
+      });
+
+      res.json({ mensagem: 'Follow-up disparado com sucesso!', task: atualizado });
+    } catch (error: any) {
+      res.status(500).json({ erro: 'Erro ao disparar follow-up.', detalhe: error?.message });
+    }
+  });
+
+  // Limpar / Resetar uma conversa de teste ou histórico específico
+  app.delete('/api/admin/ia/conversas/:id', async (req: Request, res: Response) => {
+    try {
+      await prisma.whatsAppConversation.delete({
+        where: { id: req.params.id }
+      });
+      res.json({ mensagem: 'Conversa removida/resetada com sucesso!' });
+    } catch (error: any) {
+      res.status(500).json({ erro: 'Erro ao remover conversa.', detalhe: error?.message });
+    }
+  });
+
   app.patch('/api/admin/ia/tickets/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, resolvidoPor } = req.body;
@@ -703,7 +857,7 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
   // ==========================================================================
 
   app.post('/api/admin/ia/simular-mensagem', async (req: Request, res: Response) => {
-    const { telefone, nomeContato, conteudo, tipoMidia, transcricaoAudio } = req.body;
+    const { telefone, nomeContato, conteudo, tipoMidia, transcricaoAudio, forcarSimulacaoAtiva } = req.body;
     if (!telefone || !conteudo) {
       return res.status(400).json({ erro: 'Informe o telefone e o conteúdo da mensagem para simular.' });
     }
@@ -715,7 +869,8 @@ export function registerBoruAiRoutes(app: Express, prisma: PrismaClient) {
         conteudo: String(conteudo),
         tipoMidia: tipoMidia || 'TEXT',
         transcricaoAudio: transcricaoAudio || undefined,
-        origem: 'SIMULADOR_SANDBOX'
+        origem: 'SIMULADOR_SANDBOX',
+        forcarSimulacaoAtiva: forcarSimulacaoAtiva !== undefined ? Boolean(forcarSimulacaoAtiva) : true
       });
 
       res.json({

@@ -1705,41 +1705,42 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
             </button>
           </div>
 
-          {/* BARRA PRINCIPAL DE DESTAQUE: BORÜ IA AUTÔNOMA (WHATSAPP ON/OFF) & DEV DASHBOARD */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
-            {usuarioLogado?.cargo === 'ADMIN' && (
+          {/* ABAS COMPLEMENTARES DISCRETAS (ADMINISTRAÇÃO & DEV) */}
+          {(usuarioLogado?.cargo === 'ADMIN' || usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
               <button
                 type="button"
                 onClick={() => setAbaAtiva('boru_ia')}
-                className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer border ${
+                className={`h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
                   abaAtiva === 'boru_ia'
-                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white border-emerald-400 shadow-lg shadow-emerald-950/60'
-                    : 'bg-gradient-to-r from-emerald-950/50 via-zinc-900 to-zinc-950 text-emerald-300 hover:text-white border-emerald-500/50 hover:border-emerald-400'
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
                 }`}
+                title="Acompanhar todas as conversas do WhatsApp, simular atendimento e configurar a IA"
               >
-                <span className="text-base">🐺🤖</span>
-                <span>BORÜ IA AUTÔNOMA — WhatsApp ON/OFF & Operações Inteligentes</span>
+                <span className="text-sm">💬</span>
+                <span>WhatsApp & Atendimento IA</span>
               </button>
-            )}
 
-            {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
-              <button 
-                type="button"
-                onClick={() => setAbaAtiva('dev_dashboard')}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition flex items-center gap-1.5 ${
-                  abaAtiva === 'dev_dashboard' 
-                    ? 'bg-red-600 text-white shadow-md' 
-                    : 'bg-red-950/20 text-red-400 hover:text-white border border-red-900/40 hover:border-red-600/60'
-                }`}
-              >
-                <span>💻 Dev Dashboard (Painel Engenharia)</span>
-              </button>
-            )}
-          </div>
+              {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+                <button 
+                  type="button"
+                  onClick={() => setAbaAtiva('dev_dashboard')}
+                  className={`h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                    abaAtiva === 'dev_dashboard' 
+                      ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50' 
+                      : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                  }`}
+                >
+                  <span>💻 Dev Dashboard</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* MÓDULO BORÜ IA AUTÔNOMA — INTELLIGENT OPERATIONS */}
-        {abaAtiva === 'boru_ia' && usuarioLogado?.cargo === 'ADMIN' && (
+        {/* MÓDULO DE CONVERSAS WHATSAPP & ATENDIMENTO IA (VISÍVEL PARA ADMIN E DEV) */}
+        {abaAtiva === 'boru_ia' && (usuarioLogado?.cargo === 'ADMIN' || usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
           <BoruAiAutonomousTab usuarioLogado={usuarioLogado} />
         )}
 

@@ -10,6 +10,7 @@ export interface InboundMessageInput {
   transcricaoAudio?: string;
   externalMessageId?: string;
   origem?: 'WHATSAPP_WEBHOOK' | 'SIMULADOR_SANDBOX';
+  forcarSimulacaoAtiva?: boolean;
 }
 
 // ============================================================================
@@ -261,9 +262,10 @@ export async function handleInboundWhatsAppMessage(
   // REGRA INEGOCIÁVEL: Se a IA estiver DESATIVADA globalmente, em MODO_MANUAL,
   // ou se a conversa estiver sob controle humano (PAUSADA_HUMANO / TRANSFERIDA_HUMANO),
   // interrompe imediatamente novas respostas automáticas!
+  // (No Simulador Sandbox, se forcarSimulacaoAtiva=true, permite testar o cérebro da IA mesmo com o WhatsApp real desligado)
+  const ignorarTravaPorSimulacao = input.origem === 'SIMULADOR_SANDBOX' && input.forcarSimulacaoAtiva === true;
   if (
-    !config.enabled ||
-    config.mode === 'MODO_MANUAL' ||
+    (!ignorarTravaPorSimulacao && (!config.enabled || config.mode === 'MODO_MANUAL')) ||
     conv.iaPausadaIndividual ||
     conv.statusAtendimento === 'PAUSADA_HUMANO' ||
     conv.statusAtendimento === 'TRANSFERIDA_HUMANO'

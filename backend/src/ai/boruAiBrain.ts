@@ -5,7 +5,9 @@ import {
   SYSTEM_INSTRUCTION_BORU_IA,
   extractPhoneSearchVariants,
   formatPhoneBr,
-  normalizePhoneE164
+  normalizePhoneE164,
+  parseBoruAiCustomSettings,
+  interpolateAiTemplate
 } from './boruAiKnowledge';
 import {
   BORU_AI_TOOL_DECLARATIONS,
@@ -354,8 +356,15 @@ export async function processIncomingMessageWithBoruBrain(
         ? `, ${convSincronizada.nomeContato.split(' ')[0]}`
         : '';
 
+    const cfgRow = await prisma.aiAutomationConfig.findUnique({ where: { id: 'default' } }).catch(() => null);
+    const customSettings = parseBoruAiCustomSettings(cfgRow?.customSettingsJson);
+
     return {
-      respostaTexto: `Entendi perfeitamente${nomeSaudacao}. Já registrei sua solicitação sob o protocolo *${handoffResult.protocoloHandoff || 'BORU-HANDOFF'}* e passei todo o histórico da nossa conversa para a nossa administração do BORÜ.\n\nVocê não precisará repetir nada — um responsável da nossa equipe já vai te responder por aqui em instantes! 🤝🐺`,
+      respostaTexto: interpolateAiTemplate(customSettings.mensagensAtendimento.transferenciaHumana, {
+        nome_virgula: nomeSaudacao,
+        nome: convSincronizada.nomeContato.split(' ')[0] || 'você',
+        protocolo: handoffResult.protocoloHandoff || 'BORU-HANDOFF'
+      }),
       intencaoDetectada: 'TRANSFERENCIA_HUMANA_OBRIGATORIA',
       toolsExecutadas,
       transferidoParaHumano: true,
@@ -366,6 +375,9 @@ export async function processIncomingMessageWithBoruBrain(
   // ==========================================================================
   // CAMINHO A: INTEGRAÇÃO COM GEMINI (@google/genai) + FUNCTION CALLING
   // ==========================================================================
+  const cfgRowGlobal = await prisma.aiAutomationConfig.findUnique({ where: { id: 'default' } }).catch(() => null);
+  const customSettingsGlobal = parseBoruAiCustomSettings(cfgRowGlobal?.customSettingsJson);
+
   const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (geminiApiKey && geminiApiKey.trim().length > 10) {
     try {
@@ -397,7 +409,7 @@ Instrução: Utilize as ferramentas disponíveis para consultar dados reais ou r
         model: 'gemini-2.5-flash',
         contents: promptContexto,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION_BORU_IA,
+          systemInstruction: customSettingsGlobal.instrucoesGeraisPrompt || SYSTEM_INSTRUCTION_BORU_IA,
           tools: [{ functionDeclarations: BORU_AI_TOOL_DECLARATIONS }],
           temperature: 0.35
         }
@@ -858,13 +870,20 @@ async function runDeterministicBoruNluOrchestrator(
   // --------------------------------------------------------------------------
   // INTENÇÃO 7: RECEPÇÃO PERSONALIZADA (ALUNO JÁ IDENTIFICADO vs. NOVO LEAD COMERCIAL)
   // --------------------------------------------------------------------------
+  const cfgRowOrch = await prisma.aiAutomationConfig.findUnique({ where: { id: 'default' } }).catch(() => null);
+  const customOrch = parseBoruAiCustomSettings(cfgRowOrch?.customSettingsJson);
+
   if (aluno) {
     const dadosAluno = await executeBoruAiTool('consultar_aluno', { alunoId: aluno.id }, toolCtx);
     toolsExecutadas.push('consultar_aluno');
     const a = dadosAluno.aluno;
 
     return {
-      respostaTexto: `${prefixoAudio}Sawadee Krap, **${a.nome.split(' ')[0]}**! 🥊🐺 Que bom falar com você aqui no atendimento inteligente do **BORÜ Centro de Combate**!\n\nJá identifiquei sua matrícula ativa no plano **${a.planoContratado}** (${a.graduacaoPrajied}).\n\nComo posso te ajudar hoje? Posso consultar seus horários de treino de hoje, sua frequência e XP na Trilha do Nak Muay, situação de mensalidade ou registrar alguma solicitação para a coordenação!`,
+      respostaTexto: `${prefixoAudio}${interpolateAiTemplate(customOrch.mensagensAtendimento.boasVindasAluno, {
+        nome: a.nome.split(' ')[0],
+        plano: a.planoContratado,
+        graduacao: a.graduacaoPrajied
+      })}`,
       intencaoDetectada: 'RECEPCAO_ALUNO_CADASTRADO',
       toolsExecutadas,
       transferidoParaHumano: false,
@@ -931,7 +950,9 @@ async function runDeterministicBoruNluOrchestrator(
   toolsExecutadas.push('registrar_atendimento');
 
   return {
-    respostaTexto: `${prefixoAudio}Sawadee Krap! Seja muito bem-vindo(a) ao **BORÜ Centro de Combate** em Porto Velho! 🥊🐺\n\nSou o atendimento inteligente do CT BORÜ. Para eu te atender da melhor forma:\n• Se você **quer começar a treinar ou agendar sua Aula Experimental Gratuita**, me conta o seu **nome** e qual o seu principal objetivo (condicionamento, perder peso, aprender Muay Thai do zero ou turma Kids)!\n• Se você **já é nosso aluno**, pode me pedir informações de horários, check-in, mensalidades ou enviar seu CPF para eu puxar sua ficha completa!`,
+    respostaTexto: `${prefixoAudio}${interpolateAiTemplate(customOrch.mensagensAtendimento.boasVindasLead, {
+      nome: primeiroNome || 'visitante'
+    })}`,
     intencaoDetectada: 'RECEPCAO_BOAS_VINDAS',
     toolsExecutadas,
     transferidoParaHumano: false
@@ -960,33 +981,45 @@ async function scheduleContextualFollowUpIfNeeded(
     });
     if (pendenteExistente) return;
 
+    const cfgRow = await prisma.aiAutomationConfig.findUnique({ where: { id: 'default' } }).catch(() => null);
+    const customSettings = parseBoruAiCustomSettings(cfgRow?.customSettingsJson);
+    const regras = customSettings.regrasFollowUp;
+
     const primeiroNome =
       conv.nomeContato && conv.nomeContato !== 'Visitante WhatsApp'
         ? conv.nomeContato.split(' ')[0]
         : 'tudo bem';
 
-    if (toolsExecutadas.includes('consultar_plano')) {
-      const agendadoPara = new Date(Date.now() + 1000 * 60 * 60 * 24); // +24h
+    if (toolsExecutadas.includes('consultar_plano') && regras.LEAD_PRECO_SUMIU?.ativo !== false) {
+      const r = regras.LEAD_PRECO_SUMIU;
+      const msMultiplier = r.prazoUnidade === 'DIAS' ? 86400000 : 3600000;
+      const agendadoPara = new Date(Date.now() + (r.prazoValor || 24) * msMultiplier);
       await prisma.aiFollowUpTask.create({
         data: {
           conversationId,
           tipoGatilho: 'LEAD_PRECO_SUMIU',
-          descricaoMotivo: 'Interessado consultou valores de planos e ainda não agendou aula experimental.',
+          descricaoMotivo: `Interessado consultou valores de planos e ainda não agendou aula experimental (Prazo: ${r.prazoValor} ${r.prazoUnidade.toLowerCase()}).`,
           agendadoPara,
           status: 'PENDENTE',
-          mensagemSugerida: `Olá, ${primeiroNome}! Passando para saber se ficou alguma dúvida sobre os planos do BORÜ Centro de Combate. Que tal agendarmos sua Aula Experimental 100% Gratuita essa semana para você conhecer nosso tatame climatizado e treinar com o Mestre Felipe Borü? 🥊🐺`
+          mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, { nome: primeiroNome })
         }
       });
-    } else if (conv.etapaFunil === 'AGENDAMENTO_EXPERIMENTAL' && !toolsExecutadas.includes('agendar_aula_experimental')) {
-      const agendadoPara = new Date(Date.now() + 1000 * 60 * 60 * 20); // +20h
+    } else if (
+      conv.etapaFunil === 'AGENDAMENTO_EXPERIMENTAL' &&
+      !toolsExecutadas.includes('agendar_aula_experimental') &&
+      regras.INTERESSE_EXPERIMENTAL?.ativo !== false
+    ) {
+      const r = regras.INTERESSE_EXPERIMENTAL;
+      const msMultiplier = r.prazoUnidade === 'DIAS' ? 86400000 : 3600000;
+      const agendadoPara = new Date(Date.now() + (r.prazoValor || 18) * msMultiplier);
       await prisma.aiFollowUpTask.create({
         data: {
           conversationId,
           tipoGatilho: 'INTERESSE_EXPERIMENTAL',
-          descricaoMotivo: 'Demonstrou interesse na aula experimental, mas não concluiu a escolha de horário.',
+          descricaoMotivo: `Demonstrou interesse na aula experimental, mas não concluiu a escolha de horário (Prazo: ${r.prazoValor} ${r.prazoUnidade.toLowerCase()}).`,
           agendadoPara,
           status: 'PENDENTE',
-          mensagemSugerida: `Fala, ${primeiroNome}! Ainda temos vagas nas turmas das 16h, 19h e 20h para a sua Aula Experimental Gratuita aqui no BORÜ. Qual dia fica melhor para eu reservar sua vaga e deixarmos um par de luvas separado pra você? 🥊`
+          mensagemSugerida: interpolateAiTemplate(r.mensagemTemplate, { nome: primeiroNome })
         }
       });
     }
