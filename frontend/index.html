@@ -6,6 +6,9 @@
   <title>BORÜ Centro de Combate | CT de Artes Marciais & Alta Performance em Porto Velho</title>
   <meta name="description" content="Conheça o Centro de Treinamento BORÜ em Porto Velho - RO. Estrutura de ponta, professores graduados em Muay Thai, Jiu-Jitsu, MMA, Kickboxing e Funcional. Agende sua aula experimental gratuita!">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preload" as="image" href="/equipe-boru-hero.jpg" fetchpriority="high">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,8 +34,8 @@
     }
   </script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide Icons (deferred & pinned to avoid render-blocking and redirect) -->
+  <script defer src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   
 
   <style>
@@ -346,7 +349,7 @@
   <div class="arena-sparks-bg" aria-hidden="true"></div>
   <div class="ambient-neon-glow" aria-hidden="true"></div>
   <div id="global-boru-wallpaper" aria-hidden="true">
-    <img src="/wallpaper-boru.png" alt="Wallpaper Lobo BORÜ" />
+    <img src="/wallpaper-boru.jpg" alt="Wallpaper Lobo BORÜ" width="1024" height="572" fetchpriority="low" decoding="async" />
   </div>
 
   <!-- ================= NAVBAR ================= -->
@@ -355,7 +358,7 @@
       
       <!-- Brand Logo -->
       <a href="#hero" class="flex items-center gap-3 group shrink-0">
-        <img src="/logo-boru.jpg" alt="BORÜ Centro de Combate" class="w-12 h-12 rounded-full border-2 border-red-600 shadow-lg object-cover group-hover:scale-105 transition" />
+        <img src="/logo-boru.jpg" alt="BORÜ Centro de Combate" width="48" height="48" decoding="async" class="w-12 h-12 rounded-full border-2 border-red-600 shadow-lg object-cover group-hover:scale-105 transition" />
         <div class="flex flex-col">
           <span class="font-display text-2xl sm:text-3xl tracking-widest font-black text-white leading-none group-hover:text-red-500 transition">
             BORÜ
@@ -503,6 +506,10 @@
           <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-950 group">
             <img src="/equipe-boru-hero.jpg" 
                  alt="Equipe e Família BORÜ Centro de Combate" 
+                 width="1024"
+                 height="768"
+                 fetchpriority="high"
+                 decoding="async"
                  class="w-full h-[460px] object-cover object-center group-hover:scale-105 transition duration-700">
             
             <div class="absolute inset-0 bg-gradient-to-t from-[#0B0B0C] via-transparent to-black/20 pointer-events-none"></div>
@@ -733,7 +740,7 @@
                 <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 p-0.5 shrink-0">
-                      <img src="/felipe-boru.jpg" alt="Aluno" class="w-full h-full rounded-full object-cover">
+                      <img loading="lazy" decoding="async" src="/felipe-boru.jpg" alt="Aluno" class="w-full h-full rounded-full object-cover">
                     </div>
                     <div class="min-w-0">
                       <span class="block text-[11px] font-black text-white italic truncate">Ítalo Bergamin</span>
@@ -840,7 +847,7 @@
                 <!-- Navbar do Site -->
                 <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
                   <div class="flex items-center gap-2">
-                    <img src="/logo-boru.jpg" alt="Logo CT Borü" class="w-7 h-7 rounded-lg object-contain bg-black border border-zinc-700">
+                    <img loading="lazy" decoding="async" src="/logo-boru.jpg" alt="Logo CT Borü" class="w-7 h-7 rounded-lg object-contain bg-black border border-zinc-700">
                     <div>
                       <span class="font-black text-xs text-white uppercase tracking-tighter block leading-none">CT BORÜ</span>
                       <span class="text-[7px] font-mono text-zinc-400 uppercase tracking-widest">Centro de Combate</span>
@@ -853,7 +860,7 @@
 
                 <!-- Hero Banner do Site -->
                 <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow group/hero">
-                  <img src="/hero-ct-combat.jpg" alt="Treino CT Borü" class="w-full h-32 object-cover brightness-75 group-hover/hero:scale-105 transition duration-500">
+                  <img loading="lazy" decoding="async" src="/hero-ct-combat.jpg" alt="Treino CT Borü" class="w-full h-32 object-cover brightness-75 group-hover/hero:scale-105 transition duration-500">
                   <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2.5">
                     <span class="text-[8px] font-mono uppercase tracking-widest text-red-400 font-bold">MUAY THAI TRADICIONAL</span>
                     <h4 class="font-display text-xs font-black text-white uppercase tracking-tight leading-tight">
@@ -943,7 +950,7 @@
                 <div class="flex items-center justify-between border-b border-zinc-800/80 pb-2">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shrink-0">
-                      <img src="/felipe-boru.jpg" alt="Mestre Felipe Borü" class="w-full h-full rounded-full object-cover">
+                      <img loading="lazy" decoding="async" src="/felipe-boru.jpg" alt="Mestre Felipe Borü" class="w-full h-full rounded-full object-cover">
                     </div>
                     <div class="min-w-0">
                       <span class="block text-[11px] font-black text-white italic truncate">Mestre Felipe Borü</span>
@@ -1626,7 +1633,7 @@
         
         <div class="lg:col-span-5 space-y-4">
           <div class="relative rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
-            <img src="/oque-e-ct-boru.jpg" 
+            <img loading="lazy" decoding="async" src="/oque-e-ct-boru.jpg" 
                  alt="Treino no BORÜ Centro de Combate" 
                  class="w-full h-80 object-cover object-center">
             <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
@@ -1788,7 +1795,7 @@
         <!-- Muay Thai -->
         <div class="group rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600 transition duration-300 flex flex-col justify-between card-combat shadow-2xl spotlight-card tilt-card">
           <div class="relative h-64 overflow-hidden">
-            <img src="/modalidade-muaythai.jpg" 
+            <img loading="lazy" decoding="async" src="/modalidade-muaythai.jpg" 
                  alt="Muay Thai Tradicional no CT BORÜ" 
                  class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
             <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/40 to-transparent"></div>
@@ -1872,7 +1879,7 @@
               
               <!-- FOTO 1: CHUTE & MANOPLA -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
                   <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
@@ -1881,7 +1888,7 @@
 
               <!-- FOTO 2: SPARRING TÉCNICO -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
                   <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
@@ -1890,7 +1897,7 @@
 
               <!-- FOTO 3: ESTRUTURA DO CT -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
                   <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
@@ -1899,7 +1906,7 @@
 
               <!-- CLONES PARA LOOP CONTÍNUO ININTERRUPTO -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/galeria-treino-chute.jpg" alt="Chute & Manopla" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-400 font-bold">TÉCNICA DE CHUTE</span>
                   <span class="text-xs font-black text-white uppercase italic">Potência & Guarda Firme</span>
@@ -1907,7 +1914,7 @@
               </div>
 
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/hero-ct-combat.jpg" alt="Sparring Técnico" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">SPARRING SUPERVISIONADO</span>
                   <span class="text-xs font-black text-white uppercase italic">Tatame Principal do CT</span>
@@ -1915,7 +1922,7 @@
               </div>
 
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/ct-boru-estrutura.jpg" alt="Estrutura e Tatame" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">INFRAESTRUTURA</span>
                   <span class="text-xs font-black text-white uppercase italic">Sacos Pesados & Ringue</span>
@@ -1931,7 +1938,7 @@
               
               <!-- FOTO 4: MESTRE & ALUNO -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
                   <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
@@ -1940,7 +1947,7 @@
 
               <!-- FOTO 5: CANTO DE RINGUE -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
                   <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
@@ -1949,7 +1956,7 @@
 
               <!-- FOTO 6: TREINO DE MANOPLAS -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
                   <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
@@ -1958,7 +1965,7 @@
 
               <!-- CLONES PARA LOOP CONTÍNUO ININTERRUPTO -->
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/galeria-mestre-aluno.jpg" alt="Mestre e Aluno" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-400 font-bold">DISCIPLINA & RESPEITO</span>
                   <span class="text-xs font-black text-white uppercase italic">Mestre Felipe Borü & Alunos</span>
@@ -1966,7 +1973,7 @@
               </div>
 
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/70 shadow-xl relative group transition duration-300">
-                <img src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/modalidade-muaythai.jpg" alt="Muay Thai Tradicional" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-red-500 font-bold">TRADIÇÃO TAILANDESA</span>
                   <span class="text-xs font-black text-white uppercase italic">Arte das 8 Armas</span>
@@ -1974,7 +1981,7 @@
               </div>
 
               <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-amber-500/70 shadow-xl relative group transition duration-300">
-                <img src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img loading="lazy" decoding="async" src="/oque-e-ct-boru.jpg" alt="Treino de Manoplas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
                   <span class="text-[9px] font-mono uppercase tracking-widest text-amber-500 font-bold">EVOLUÇÃO TÉCNICA</span>
                   <span class="text-xs font-black text-white uppercase italic">Velocidade & Combinações</span>
@@ -2006,7 +2013,7 @@
         const tagColor = index % 2 === 0 ? 'text-red-400' : 'text-amber-400';
         return `
           <div class="shrink-0 w-[260px] sm:w-[340px] h-[190px] sm:h-[230px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 ${borderHover} shadow-xl relative group transition duration-300">
-            <img src="${foto.url}" alt="${foto.titulo || 'CT BORÜ'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='/galeria-treino-chute.jpg'">
+            <img loading="lazy" decoding="async" src="${foto.url}" alt="${foto.titulo || 'CT BORÜ'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='/galeria-treino-chute.jpg'">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3.5">
               <span class="text-[9px] font-mono uppercase tracking-widest ${tagColor} font-bold">${foto.titulo || 'CT BORÜ MUAY THAI'}</span>
               <span class="text-xs font-black text-white uppercase italic">${foto.subtitulo || 'Treinamento & Disciplina'}</span>
@@ -2036,6 +2043,7 @@
 
             if (fotosTop.length > 0) populateRow(rowTop, fotosTop);
             if (fotosBottom.length > 0) populateRow(rowBottom, fotosBottom);
+            requestAnimationFrame(measureWidths);
           }
         })
         .catch(() => {
@@ -2045,10 +2053,23 @@
       let posTop = 0;
       let posBottom = 0;
       const speed = 0.85; // Velocidade suave e constante
+      let halfWidthTop = (rowTop.scrollWidth / 2) || 1000;
+      let halfWidthBottom = (rowBottom.scrollWidth / 2) || 1000;
+      let isGalleryVisible = false;
+      let rafId = null;
+
+      function measureWidths() {
+        halfWidthTop = (rowTop.scrollWidth / 2) || 1000;
+        halfWidthBottom = (rowBottom.scrollWidth / 2) || 1000;
+      }
+
+      window.addEventListener('resize', measureWidths, { passive: true });
 
       function step() {
-        const halfWidthTop = (rowTop.scrollWidth / 2) || 1000;
-        const halfWidthBottom = (rowBottom.scrollWidth / 2) || 1000;
+        if (!isGalleryVisible) {
+          rafId = null;
+          return;
+        }
 
         posTop -= speed;
         if (posTop <= -halfWidthTop) {
@@ -2063,10 +2084,23 @@
         rowTop.style.transform = 'translate3d(' + posTop + 'px, 0, 0)';
         rowBottom.style.transform = 'translate3d(' + posBottom + 'px, 0, 0)';
 
-        requestAnimationFrame(step);
+        rafId = requestAnimationFrame(step);
       }
 
-      requestAnimationFrame(step);
+      const gallerySection = document.getElementById('galeria') || rowTop;
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          isGalleryVisible = entries.some(e => e.isIntersecting);
+          if (isGalleryVisible && !rafId) {
+            measureWidths();
+            rafId = requestAnimationFrame(step);
+          }
+        }, { rootMargin: '120px' });
+        observer.observe(gallerySection);
+      } else {
+        isGalleryVisible = true;
+        rafId = requestAnimationFrame(step);
+      }
     })();
   </script>
 
@@ -2180,7 +2214,7 @@
       <div class="flex flex-col md:flex-row items-center justify-between gap-6">
         
         <div class="flex items-center gap-3">
-          <img src="/logo-boru.jpg" alt="BORÜ" class="w-9 h-9 rounded-full border border-red-600/70 shadow-sm object-cover" />
+          <img loading="lazy" decoding="async" src="/logo-boru.jpg" alt="BORÜ" class="w-9 h-9 rounded-full border border-red-600/70 shadow-sm object-cover" />
           <span class="font-display text-xl font-bold tracking-widest text-white">BORÜ</span>
           <span class="text-xs text-zinc-500">| Centro de Treinamento em Artes Marciais</span>
         </div>
@@ -2279,12 +2313,17 @@
   <!-- Toast Notifications Container -->
   <div id="toast-container"></div>
 
-  <!-- JavaScript Scripts -->
-  <script src="/mockData.js"></script>
-  <script src="/app.js"></script>
+  <!-- JavaScript Scripts (deferred for faster FCP/LCP) -->
+  <script defer src="/mockData.js"></script>
+  <script defer src="/app.js"></script>
   <script>
-    lucide.createIcons();
-    document.getElementById('current-year').textContent = new Date().getFullYear();
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+      var yearEl = document.getElementById('current-year');
+      if (yearEl) yearEl.textContent = new Date().getFullYear();
+    });
   </script>
 <div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

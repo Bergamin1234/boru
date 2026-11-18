@@ -1,10 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import PortalAluno from './pages/PortalAluno';
-import AdminDashboard from './pages/AdminDashboard';
-import Checkout from './pages/Checkout';
-import AgendarAula from './pages/AgendarAula';
+
+const PortalAluno = lazy(() => import('./pages/PortalAluno'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const AgendarAula = lazy(() => import('./pages/AgendarAula'));
+
+function RouteLoadingFallback() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0B0B0C] text-zinc-200">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-2 border-red-600/30 border-t-red-600 animate-spin" />
+        <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+          Carregando BORÜ...
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // Componente auxiliar para interceptar cliques nos links do index.html estático
 function GlobalLinkInterceptor() {
@@ -56,16 +70,18 @@ function App() {
       <GlobalLinkInterceptor />
       <BodyClassManager />
       <SpeedInsightsTracker />
-      <Routes>
-        <Route path="/" element={null} />
-        <Route path="/portal" element={<PortalAluno />} />
-        <Route path="/ranking" element={<PortalAluno />} />
-        <Route path="/dashboard-lutador" element={<PortalAluno />} />
-        <Route path="/torneios" element={<PortalAluno />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/agendar" element={<AgendarAula />} />
-      </Routes>
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <Routes>
+          <Route path="/" element={null} />
+          <Route path="/portal" element={<PortalAluno />} />
+          <Route path="/ranking" element={<PortalAluno />} />
+          <Route path="/dashboard-lutador" element={<PortalAluno />} />
+          <Route path="/torneios" element={<PortalAluno />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/agendar" element={<AgendarAula />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

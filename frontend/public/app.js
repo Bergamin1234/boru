@@ -10,11 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFAQ();
   initSpotlightCards();
   initTiltEffect();
-  lucide.createIcons();
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
 });
 
 function initHeaderScroll() {
   const header = document.getElementById('main-header');
+  if (!header) return;
   window.addEventListener('scroll', () => {
     if (window.scrollY > 40) {
       header.classList.add('bg-[#0B0B0C]', 'shadow-xl', 'border-zinc-800');
@@ -23,7 +26,7 @@ function initHeaderScroll() {
       header.classList.remove('bg-[#0B0B0C]', 'shadow-xl');
       header.classList.add('bg-[#0B0B0C]/90');
     }
-  });
+  }, { passive: true });
 }
 
 function initMobileMenu() {
@@ -77,7 +80,7 @@ function renderInstructorsPortfolio() {
         
         <div class="w-full md:w-48 flex-shrink-0">
           <div class="relative h-60 md:h-full rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
-            <img src="${coach.image}" alt="${coach.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            <img loading="lazy" decoding="async" src="${coach.image}" alt="${coach.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:hidden"></div>
           </div>
         </div>
