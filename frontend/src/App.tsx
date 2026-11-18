@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import PortalAluno from './pages/PortalAluno';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
@@ -44,11 +45,17 @@ function BodyClassManager() {
   return null;
 }
 
+function SpeedInsightsTracker() {
+  const location = useLocation();
+  return <SpeedInsights route={location.pathname} />;
+}
+
 function App() {
   return (
     <Router>
       <GlobalLinkInterceptor />
       <BodyClassManager />
+      <SpeedInsightsTracker />
       <Routes>
         <Route path="/" element={null} />
         <Route path="/portal" element={<PortalAluno />} />
