@@ -821,10 +821,28 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
 
       if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado.' });
 
-      // Métricas de assiduidade
-      const totalPresencas = await prisma.agendamentoPresenca.count({
-        where: { alunoId: id, status: 'PRESENTE' }
-      });
+      // Métricas de assiduidade e histórico de 1º check-in vs recorrente
+      const [totalPresencas, checkinsHistorico] = await Promise.all([
+        prisma.agendamentoPresenca.count({
+          where: { alunoId: id, status: 'PRESENTE' }
+        }),
+        prisma.agendamentoPresenca.findMany({
+          where: { alunoId: id, status: { in: ['AGENDADO', 'PRESENTE', 'DOENCA', 'JUSTIFICADO'] } },
+          orderBy: [{ data: 'asc' }, { criadoEm: 'asc' }],
+          select: { id: true, data: true, criadoEm: true, status: true },
+        }),
+      ]);
+
+      const totalCheckins = checkinsHistorico.length;
+      const primeiroReg = totalCheckins > 0 ? checkinsHistorico[0] : null;
+      const ultimoReg = totalCheckins > 0 ? checkinsHistorico[totalCheckins - 1] : null;
+      const isPrimeiroCheckin = totalCheckins === 1;
+      const tagPerfilCheckin =
+        totalCheckins === 0
+          ? 'Sem check-ins registrados'
+          : totalCheckins === 1
+          ? 'Fez seu primeiro check-in'
+          : 'Check-in recorrente';
 
       res.json({
         aluno: {
@@ -846,6 +864,11 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
         },
         metricas: {
           totalPresencas,
+          totalCheckins,
+          isPrimeiroCheckin,
+          tagPerfilCheckin,
+          dataPrimeiroCheckin: primeiroReg ? new Date(primeiroReg.criadoEm || primeiroReg.data).toISOString() : null,
+          dataUltimoCheckin: ultimoReg ? new Date(ultimoReg.criadoEm || ultimoReg.data).toISOString() : null,
           totalConquistas: aluno.conquistasProgresso.length,
           totalContratos: aluno.contratosLongos.length,
           totalResgates: aluno.resgatesLoja.length

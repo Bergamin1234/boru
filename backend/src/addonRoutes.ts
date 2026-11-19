@@ -4,6 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { evaluateStudentGamification } from './gamificationService';
+import {
+  evaluateCheckinAccessProfile,
+  buildCheckinHistoryMapForStudents,
+  buildStudentMatricula,
+} from './firstCheckinService';
 
 export async function ensureRbacSeeded(prisma: PrismaClient) {
   try {
@@ -690,22 +695,37 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       const gamificacao = await evaluateStudentGamification(prisma, aluno.id).catch(() => null);
       const novasConquistas = gamificacao?.recemDesbloqueadas || [];
 
+      const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+        alunoId: aluno.id,
+        alunoNome: aluno.nome,
+        alunoCpf: aluno.cpf,
+        alunoCriadoEm: aluno.criadoEm,
+        currentCheckinId: presencaHoje?.id || null,
+        currentCheckinDate: presencaHoje?.criadoEm || presencaHoje?.data || agora,
+      });
+
       await logSystemEvent(
         'INFO',
         'QUICK_CHECKIN',
-        `Check-in Rápido confirmado: ${aluno.nome} (${alunoId ? 'Portal Logado' : 'Home Pública'})`
+        `Check-in Rápido confirmado: ${aluno.nome} [${perfilAcesso.tagPerfilAcesso} • Acesso #${perfilAcesso.totalAcessos}] (${alunoId ? 'Portal Logado' : 'Home Pública'})`
       );
 
       return res.json({
         ok: true,
         jaEstavaPresente,
+        isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+        tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+        perfilAcesso,
         mensagem: jaEstavaPresente
-          ? `Oss, ${aluno.nome.split(' ')[0]}! Sua presença de hoje já estava confirmada no tatame! 🥊`
-          : `Oss, ${aluno.nome.split(' ')[0]}! Check-in de hoje registrado com sucesso! Bom treino! 🐺🥊`,
+          ? `Oss, ${aluno.nome.split(' ')[0]}! Sua presença de hoje já estava confirmada no tatame! (${perfilAcesso.resumoClassificacao}) 🥊`
+          : perfilAcesso.isPrimeiroCheckin
+          ? `🌟 Fez seu primeiro check-in! Bem-vindo(a) ao tatame do CT Borü, ${aluno.nome.split(' ')[0]}! Nossa equipe fará seu acolhimento inicial. 🐺🥊`
+          : `Oss, ${aluno.nome.split(' ')[0]}! Check-in recorrente (#${perfilAcesso.totalAcessos}) registrado com sucesso! Bom treino! 🐺🥊`,
         aluno: {
           id: aluno.id,
           nome: aluno.nome,
           cpf: aluno.cpf,
+          matricula: perfilAcesso.alunoIdentificacao.matricula,
           plano: aluno.plano || '2x na semana',
           prajied: aluno.prajied,
           is_bolsista: aluno.is_bolsista,
@@ -719,6 +739,165 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       return res.status(500).json({ erro: 'Erro interno ao processar o Check-in Rápido.' });
     }
   });
+
+  // =========================================================
+  // MÓDULO ADICIONAL: VERIFICAÇÃO E CONSULTA DE PERFIL DE 1º CHECK-IN
+  // =========================================================
+  const handleVerificarPerfilCheckin = async (req: Request, res: Response) => {
+    try {
+      const payload = req.method === 'GET' ? req.query : req.body || {};
+      const {
+        alunoId,
+        cpf,
+        nome,
+        matricula,
+        checkinsAnterioresCount,
+        dataUltimoAcesso,
+        dataPrimeiroCheckin,
+        registroAtualDataHora,
+        modoEntradaManualSemBanco,
+      } = payload as any;
+
+      // Se nenhum identificador foi informado, solicita identificação + verificação de histórico
+      if (!alunoId && !cpf && !nome && !matricula) {
+        return res.status(400).json({
+          ok: false,
+          historicoVerificado: false,
+          verificacaoHistoricoSolicitada: true,
+          erro: 'Identificação do aluno/usuário (ID, nome, CPF ou matrícula) é obrigatória. Não é permitido assumir automaticamente que é o primeiro check-in sem verificar o histórico.',
+        });
+      }
+
+      // Se estiver em modo de entrada manual/avulsa e o histórico não foi fornecido na entrada, solicita verificação antes de aplicar marcação
+      if (
+        Boolean(modoEntradaManualSemBanco) &&
+        (checkinsAnterioresCount === undefined || checkinsAnterioresCount === null || checkinsAnterioresCount === '')
+      ) {
+        const perfilPendente = await evaluateCheckinAccessProfile(prisma, {
+          alunoId: alunoId ? String(alunoId) : undefined,
+          alunoNome: nome ? String(nome) : undefined,
+          alunoCpf: cpf ? String(cpf) : undefined,
+          currentCheckinDate: registroAtualDataHora || new Date(),
+          exigirHistoricoExplicitoSemBanco: true,
+          historicoFornecido: null,
+        });
+        return res.status(200).json({
+          ok: false,
+          verificacaoHistoricoSolicitada: true,
+          mensagem: perfilPendente.mensagemVerificacao,
+          perfilAcesso: perfilPendente,
+        });
+      }
+
+      // Se foi fornecido histórico explícito na entrada de dados, avalia com base nele
+      if (checkinsAnterioresCount !== undefined && checkinsAnterioresCount !== null && checkinsAnterioresCount !== '') {
+        const qtd = Number(checkinsAnterioresCount);
+        if (Number.isNaN(qtd) || qtd < 0) {
+          return res.status(400).json({
+            ok: false,
+            verificacaoHistoricoSolicitada: true,
+            erro: 'A quantidade de check-ins anteriores informada é inválida. Verifique o histórico do aluno antes de aplicar a marcação.',
+          });
+        }
+
+        const perfilManual = await evaluateCheckinAccessProfile(prisma, {
+          alunoId: alunoId ? String(alunoId) : undefined,
+          alunoNome: nome ? String(nome) : 'Aluno',
+          alunoCpf: cpf ? String(cpf) : undefined,
+          currentCheckinDate: registroAtualDataHora || new Date(),
+          historicoFornecido: {
+            checkinsAnterioresCount: qtd,
+            dataUltimoAcesso: dataUltimoAcesso ? String(dataUltimoAcesso) : null,
+            dataPrimeiroCheckin: dataPrimeiroCheckin ? String(dataPrimeiroCheckin) : null,
+          },
+        });
+
+        return res.json({
+          ok: true,
+          verificacaoHistoricoSolicitada: false,
+          perfilAcesso: perfilManual,
+        });
+      }
+
+      // Caso contrário, consulta o histórico real do aluno no banco de dados
+      let alunoDb: any = null;
+      if (alunoId) {
+        alunoDb = await prisma.aluno.findUnique({ where: { id: String(alunoId) } });
+      }
+      if (!alunoDb && cpf) {
+        const cpfLimpo = String(cpf).replace(/\D/g, '');
+        alunoDb = await prisma.aluno.findFirst({
+          where: { OR: [{ cpf: cpfLimpo }, { cpf: String(cpf).trim() }] },
+        });
+      }
+      if (!alunoDb && nome) {
+        alunoDb = await prisma.aluno.findFirst({
+          where: { nome: { contains: String(nome).trim() } },
+        });
+      }
+
+      if (!alunoDb) {
+        return res.status(404).json({
+          ok: false,
+          historicoVerificado: false,
+          verificacaoHistoricoSolicitada: true,
+          erro: 'Aluno não localizado no cadastro para verificação automática. Informe o histórico de check-ins anteriores ou cadastre o aluno antes de aplicar a marcação de primeiro acesso.',
+        });
+      }
+
+      const todosCheckins = await prisma.agendamentoPresenca.findMany({
+        where: {
+          alunoId: alunoDb.id,
+          status: { in: ['AGENDADO', 'PRESENTE', 'DOENCA', 'JUSTIFICADO'] },
+        },
+        orderBy: [{ data: 'asc' }, { criadoEm: 'asc' }],
+      });
+
+      const totalExistentes = todosCheckins.length;
+      const primeiroReg = totalExistentes > 0 ? todosCheckins[0] : null;
+      const ultimoReg = totalExistentes > 0 ? todosCheckins[totalExistentes - 1] : null;
+      const mat = buildStudentMatricula(alunoDb);
+
+      return res.json({
+        ok: true,
+        historicoVerificado: true,
+        verificacaoHistoricoSolicitada: false,
+        aluno: {
+          id: alunoDb.id,
+          nome: alunoDb.nome,
+          cpf: alunoDb.cpf,
+          matricula: mat,
+          plano: alunoDb.plano,
+          prajied: alunoDb.prajied,
+        },
+        historico: {
+          totalCheckinsRegistrados: totalExistentes,
+          dataPrimeiroCheckin: primeiroReg ? new Date(primeiroReg.criadoEm || primeiroReg.data).toISOString() : null,
+          dataUltimoCheckin: ultimoReg ? new Date(ultimoReg.criadoEm || ultimoReg.data).toISOString() : null,
+          statusAtualNoPortal:
+            totalExistentes === 0
+              ? 'Ainda sem check-ins (O próximo check-in receberá a marcação: "Fez seu primeiro check-in")'
+              : totalExistentes === 1
+              ? 'Fez seu primeiro check-in'
+              : `Check-in recorrente (${totalExistentes} acessos registrados)`,
+          tagPerfilAtual:
+            totalExistentes === 0
+              ? 'Aguardando 1º check-in'
+              : totalExistentes === 1
+              ? 'Fez seu primeiro check-in'
+              : 'Check-in recorrente',
+          isPrimeiroCheckinAtivo: totalExistentes === 1,
+          proximoCheckinSeraPrimeiro: totalExistentes === 0,
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao verificar perfil de check-in:', error);
+      return res.status(500).json({ erro: 'Erro interno ao verificar histórico de check-ins.' });
+    }
+  };
+
+  app.get('/api/checkin/verificar-perfil', handleVerificarPerfilCheckin);
+  app.post('/api/checkin/verificar-perfil', handleVerificarPerfilCheckin);
 
   // =========================================================
   // MÓDULO 5 (SUPER ERP FINANCEIRO): ASSINATURAS, MERCADO, DESPESAS & INVESTIMENTOS, DRE, GRÁFICOS E TABELAS
@@ -1435,7 +1614,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       const inicioDia = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 0, 0, 0, 0);
       const fimDia = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 59, 59, 999);
 
-      const [alunos, presencasDia] = await Promise.all([
+      const [alunos, presencasDia, historicoMap] = await Promise.all([
         prisma.aluno.findMany({
           orderBy: { nome: 'asc' },
         }),
@@ -1445,6 +1624,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           },
           orderBy: { criadoEm: 'desc' },
         }),
+        buildCheckinHistoryMapForStudents(prisma),
       ]);
 
       const mapaPresencaPorAluno = new Map<string, any>();
@@ -1459,10 +1639,29 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
 
       for (const aluno of alunos) {
         const reg = mapaPresencaPorAluno.get(aluno.id);
+        const infoCheckinHoje = reg ? historicoMap.porCheckinId.get(reg.id) : null;
+        const infoAlunoHist = historicoMap.porAlunoId.get(aluno.id);
+        const totalAcessos = infoCheckinHoje
+          ? infoCheckinHoje.totalAcessosAluno
+          : infoAlunoHist?.totalAcessos || 0;
+        const isPrimeiroCheckin = infoCheckinHoje
+          ? infoCheckinHoje.isPrimeiroCheckin
+          : Boolean(infoAlunoHist?.isEstreanteNoPrimeiroAcesso && reg);
+        const tagPerfilAcesso = reg
+          ? isPrimeiroCheckin
+            ? 'Fez seu primeiro check-in'
+            : 'Check-in recorrente'
+          : totalAcessos === 0
+          ? 'Estreante (0 check-ins anteriores)'
+          : totalAcessos === 1
+          ? 'Fez seu primeiro check-in'
+          : 'Check-in recorrente';
+
         const item = {
           id: aluno.id,
           nome: aluno.nome,
           cpf: aluno.cpf,
+          matricula: buildStudentMatricula(aluno),
           telefone: aluno.telefone,
           plano: aluno.plano || '2x na semana',
           prajied: aluno.prajied || 'Branco',
@@ -1474,6 +1673,18 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             ? new Date(reg.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
             : null,
           shift: reg?.shift || null,
+          isPrimeiroCheckin,
+          tagPerfilAcesso,
+          totalAcessos,
+          numeroAcessoHoje: infoCheckinHoje?.numeroAcesso || totalAcessos,
+          checkinsAnterioresCount: infoCheckinHoje
+            ? infoCheckinHoje.checkinsAnterioresCount
+            : Math.max(0, totalAcessos - (reg ? 1 : 0)),
+          dataPrimeiroCheckin: infoCheckinHoje?.dataPrimeiroCheckin || infoAlunoHist?.dataPrimeiroCheckin || null,
+          dataUltimoCheckin: infoAlunoHist?.dataUltimoCheckin || null,
+          alertaOperacionalAcolhimento: isPrimeiroCheckin
+            ? 'Estreante na unidade: realizar acolhimento inicial, apresentação do espaço e acompanhamento de entrada.'
+            : null,
         };
 
         if (reg && reg.status === 'PRESENTE') {
@@ -1543,10 +1754,20 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       }
 
       const gamificacao = await evaluateStudentGamification(prisma, alunoId).catch(() => null);
+      const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+        alunoId,
+        currentCheckinId: registro.id,
+        currentCheckinDate: registro.criadoEm || registro.data,
+      });
 
       res.json({
         ok: true,
-        mensagem: 'Presença confirmada na chamada diária!',
+        isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+        tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+        perfilAcesso,
+        mensagem: perfilAcesso.isPrimeiroCheckin
+          ? '🌟 Fez seu primeiro check-in! Presença de estreante confirmada na chamada diária!'
+          : `Presença confirmada na chamada diária (${perfilAcesso.resumoClassificacao})!`,
         registro,
         gamificacao,
       });

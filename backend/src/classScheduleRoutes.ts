@@ -1,6 +1,11 @@
 import { Express, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { evaluateStudentGamification } from './gamificationService';
+import {
+  evaluateCheckinAccessProfile,
+  buildCheckinHistoryMapForStudents,
+  buildStudentMatricula,
+} from './firstCheckinService';
 
 // Grade horária oficial real do CT Borü (Mestre Felipe Ferreira Pontes)
 const GRADE_OFICIAL_POR_DIA: Record<number, Array<{ horario: string; horaFim: string; titulo: string; modalidade: string; professor: string; capacidade: number }>> = {
@@ -155,10 +160,13 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
         orderBy: { dataInicio: 'asc' }
       });
 
-      // Busca agendamentos experimentais (leads) do mês
-      const experimentais = await prisma.agendamentoExperimental.findMany({
-        orderBy: { criadoEm: 'desc' }
-      });
+      // Busca agendamentos experimentais (leads) do mês e mapa de histórico de check-ins
+      const [experimentais, historicoMap] = await Promise.all([
+        prisma.agendamentoExperimental.findMany({
+          orderBy: { criadoEm: 'desc' }
+        }),
+        buildCheckinHistoryMapForStudents(prisma),
+      ]);
 
       // Agrupa por data (YYYY-MM-DD)
       const mapaPorDia: Record<string, any[]> = {};
@@ -216,16 +224,35 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
           meuCheckin: meuCheckin ? {
             id: meuCheckin.id,
             status: meuCheckin.status, // AGENDADO, PRESENTE, FALTA, DOENCA
-            data: meuCheckin.data
+            data: meuCheckin.data,
+            isPrimeiroCheckin: historicoMap.porCheckinId.get(meuCheckin.id)?.isPrimeiroCheckin || false,
+            tagPerfilAcesso: historicoMap.porCheckinId.get(meuCheckin.id)?.tagPerfilAcesso || 'Check-in recorrente',
+            numeroAcesso: historicoMap.porCheckinId.get(meuCheckin.id)?.numeroAcesso || 1,
+            totalAcessos: historicoMap.porCheckinId.get(meuCheckin.id)?.totalAcessosAluno || 1,
           } : null,
-          alunosAgendados: alunosValidos.map(a => ({
-            id: a.aluno.id,
-            nome: a.aluno.nome,
-            prajied: a.aluno.prajied,
-            telefone: a.aluno.telefone,
-            status: a.status,
-            presencaId: a.id
-          })),
+          alunosAgendados: alunosValidos.map(a => {
+            const infoCheckin = historicoMap.porCheckinId.get(a.id);
+            const infoAluno = historicoMap.porAlunoId.get(a.aluno.id);
+            const isPrimeiro = infoCheckin
+              ? infoCheckin.isPrimeiroCheckin
+              : Boolean(infoAluno?.isEstreanteNoPrimeiroAcesso);
+            return {
+              id: a.aluno.id,
+              nome: a.aluno.nome,
+              prajied: a.aluno.prajied,
+              telefone: a.aluno.telefone,
+              status: a.status,
+              presencaId: a.id,
+              isPrimeiroCheckin: isPrimeiro,
+              tagPerfilAcesso: isPrimeiro ? 'Fez seu primeiro check-in' : 'Check-in recorrente',
+              numeroAcesso: infoCheckin?.numeroAcesso || infoAluno?.totalAcessos || 1,
+              totalAcessos: infoCheckin?.totalAcessosAluno || infoAluno?.totalAcessos || 1,
+              dataPrimeiroCheckin: infoCheckin?.dataPrimeiroCheckin || infoAluno?.dataPrimeiroCheckin || null,
+              alertaOperacionalAcolhimento: isPrimeiro
+                ? 'Estreante na unidade: acolhimento inicial e apresentação do tatame'
+                : null,
+            };
+          }),
           leadsExp: leadsDoHorario.map(l => ({
             id: l.id,
             nome: l.nome,
@@ -386,11 +413,21 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
         }
       });
 
-      // Avalia gamificação em background
+      // Avalia gamificação em background e perfil de 1º check-in vs recorrente
       evaluateStudentGamification(prisma, alunoId).catch(() => null);
+      const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+        alunoId,
+        currentCheckinId: checkin.id,
+        currentCheckinDate: checkin.criadoEm || checkin.data,
+      });
 
       res.status(201).json({
-        mensagem: 'Check-in confirmado com sucesso! Seu lugar está reservado.',
+        isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+        tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+        perfilAcesso,
+        mensagem: perfilAcesso.isPrimeiroCheckin
+          ? '🌟 Fez seu primeiro check-in! Seu lugar está reservado e nossa equipe fará seu acolhimento inicial no tatame.'
+          : `Check-in recorrente (#${perfilAcesso.totalAcessos}) confirmado com sucesso! Seu lugar está reservado.`,
         checkin
       });
     } catch (error) {
@@ -555,7 +592,21 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
         }
       }
 
-      res.json({ mensagem: 'Presença atualizada com sucesso!', registro });
+      const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+        alunoId,
+        currentCheckinId: registro.id,
+        currentCheckinDate: registro.criadoEm || registro.data,
+      });
+
+      res.json({
+        isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+        tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+        perfilAcesso,
+        mensagem: perfilAcesso.isPrimeiroCheckin
+          ? '🌟 Fez seu primeiro check-in! Presença de estreante confirmada no tatame!'
+          : `Presença atualizada com sucesso (${perfilAcesso.resumoClassificacao})!`,
+        registro,
+      });
     } catch (error) {
       console.error('Erro ao marcar presença na aula:', error);
       res.status(500).json({ erro: 'Erro ao registrar presença.' });

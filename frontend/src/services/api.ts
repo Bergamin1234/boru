@@ -24,6 +24,17 @@ export const publicApi = {
   getTodayClasses: (params?: { alunoId?: string }) => api.get('/aulas/hoje', { params }),
   quickCheckIn: (data: { cpf?: string; senha?: string; alunoId?: string; shift?: string; eventoId?: string; horario?: string }) =>
     api.post('/quick-checkin', data),
+  verifyCheckinProfile: (data: {
+    alunoId?: string;
+    cpf?: string;
+    nome?: string;
+    matricula?: string;
+    checkinsAnterioresCount?: number | string;
+    dataUltimoAcesso?: string;
+    dataPrimeiroCheckin?: string;
+    registroAtualDataHora?: string;
+    modoEntradaManualSemBanco?: boolean;
+  }) => api.post('/checkin/verificar-perfil', data),
   uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
     api.post('/upload', data)
 };
@@ -114,6 +125,17 @@ export const adminApi = {
     api.get('/admin/chamada-diaria', { params: data ? { data } : undefined }),
   markExpressDailyRollCall: (data: { alunoId: string; professorId?: string; data?: string; status?: string }) =>
     api.post('/admin/chamada-diaria/marcar', data),
+  verifyCheckinProfile: (data: {
+    alunoId?: string;
+    cpf?: string;
+    nome?: string;
+    matricula?: string;
+    checkinsAnterioresCount?: number | string;
+    dataUltimoAcesso?: string;
+    dataPrimeiroCheckin?: string;
+    registroAtualDataHora?: string;
+    modoEntradaManualSemBanco?: boolean;
+  }) => api.post('/checkin/verificar-perfil', data),
 
   // Upload de Arquivo Local (Storage Real)
   uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>

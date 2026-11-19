@@ -164,16 +164,32 @@ export const Student360Modal: React.FC<Student360ModalProps> = ({
               {aluno.nome.charAt(0)}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-black text-white">{aluno.nome}</h3>
                 {aluno.prajied && (
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
                     {aluno.prajied}
                   </span>
                 )}
+                {metricas.totalCheckins === 1 || metricas.isPrimeiroCheckin ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-black border border-amber-300 shadow-sm">
+                    🌟 Fez seu primeiro check-in
+                  </span>
+                ) : (metricas.totalCheckins || metricas.totalPresencas || 0) > 1 ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    🔄 Check-in recorrente • {metricas.totalCheckins || metricas.totalPresencas} acessos
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                    🆕 Aguardando 1º check-in
+                  </span>
+                )}
               </div>
               <span className="text-xs text-zinc-400">
                 CPF: {aluno.cpf || 'Não cadastrado'} • {aluno.telefone || 'Sem telefone'} • Plano: {aluno.plano}
+                {metricas.dataPrimeiroCheckin
+                  ? ` • 1º Check-in em: ${new Date(metricas.dataPrimeiroCheckin).toLocaleDateString('pt-BR')}`
+                  : ''}
               </span>
             </div>
           </div>

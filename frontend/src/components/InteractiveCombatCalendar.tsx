@@ -22,6 +22,10 @@ export interface ClassScheduleItem {
     id: string;
     status: 'AGENDADO' | 'PRESENTE' | 'FALTA' | 'DOENCA';
     data: string;
+    isPrimeiroCheckin?: boolean;
+    tagPerfilAcesso?: string;
+    numeroAcesso?: number;
+    totalAcessos?: number;
   } | null;
   alunosAgendados: Array<{
     id: string;
@@ -30,6 +34,12 @@ export interface ClassScheduleItem {
     telefone?: string;
     status: string;
     presencaId?: string;
+    isPrimeiroCheckin?: boolean;
+    tagPerfilAcesso?: string;
+    numeroAcesso?: number;
+    totalAcessos?: number;
+    dataPrimeiroCheckin?: string | null;
+    alertaOperacionalAcolhimento?: string | null;
   }>;
   leadsExp: Array<{
     id: string;
@@ -582,7 +592,7 @@ export const InteractiveCombatCalendar: React.FC<InteractiveCombatCalendarProps>
                         {userRole === 'ALUNO' && !aula.cancelada && (
                           <div className="pt-2 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             {isMinhaAula ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <span
                                   className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase flex items-center gap-1.5 ${
                                     presencaAceita
@@ -597,6 +607,19 @@ export const InteractiveCombatCalendar: React.FC<InteractiveCombatCalendarProps>
                                       : 'Check-in Realizado (Aguardando Professor)'}
                                   </span>
                                 </span>
+                                {aula.meuCheckin && (
+                                  <span
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+                                      aula.meuCheckin.isPrimeiroCheckin
+                                        ? 'bg-amber-400 text-black border-amber-300'
+                                        : 'bg-zinc-900 text-emerald-300 border-emerald-500/40'
+                                    }`}
+                                  >
+                                    {aula.meuCheckin.isPrimeiroCheckin
+                                      ? '🌟 Fez seu primeiro check-in'
+                                      : `🔄 Check-in recorrente${aula.meuCheckin.totalAcessos ? ` • ${aula.meuCheckin.totalAcessos}º acesso` : ''}`}
+                                  </span>
+                                )}
 
                                 {/* CANCELAR CHECK-IN SE NÃO FOI ACEITO AINDA (REQUISITO EXPLÍCITO DO USUÁRIO!) */}
                                 {pendenteAceite && aula.meuCheckin && (
@@ -648,19 +671,43 @@ export const InteractiveCombatCalendar: React.FC<InteractiveCombatCalendarProps>
                                 <p className="text-xs text-zinc-500 italic">Nenhum aluno agendado ainda.</p>
                               ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {aula.alunosAgendados.map(al => (
-                                    <div
-                                      key={al.id}
-                                      className="bg-black/40 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between gap-2"
-                                    >
-                                      <div>
-                                        <div className="text-xs font-bold text-white">{al.nome}</div>
-                                        <span className="text-[10px] text-zinc-400">
-                                          {al.prajied || 'Iniciante'} • {al.telefone || 'Sem telefone'}
-                                        </span>
-                                      </div>
+                                  {aula.alunosAgendados.map(al => {
+                                    const isPrimeiro = Boolean(
+                                      al.isPrimeiroCheckin || al.tagPerfilAcesso === 'Fez seu primeiro check-in'
+                                    );
+                                    return (
+                                      <div
+                                        key={al.id}
+                                        className={`rounded-xl p-2.5 flex items-center justify-between gap-2 border ${
+                                          isPrimeiro
+                                            ? 'bg-gradient-to-r from-amber-950/35 to-black/50 border-amber-500/50'
+                                            : 'bg-black/40 border-zinc-800'
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="flex flex-wrap items-center gap-1.5">
+                                            <span className="text-xs font-bold text-white">{al.nome}</span>
+                                            {isPrimeiro ? (
+                                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-400 text-black border border-amber-300">
+                                                🌟 Fez seu primeiro check-in
+                                              </span>
+                                            ) : (
+                                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-zinc-900 text-emerald-300 border border-emerald-500/30">
+                                                🔄 Check-in recorrente{al.totalAcessos ? ` • ${al.totalAcessos}º` : ''}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="text-[10px] text-zinc-400 block">
+                                            {al.prajied || 'Iniciante'} • {al.telefone || 'Sem telefone'}
+                                          </span>
+                                          {isPrimeiro && (
+                                            <span className="text-[9px] font-bold text-amber-300 block mt-0.5">
+                                              🤝 Estreante: acolhimento inicial e apresentação do tatame
+                                            </span>
+                                          )}
+                                        </div>
 
-                                      <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-1 shrink-0">
                                         <button
                                           onClick={() => handleMarcarPresencaAluno(aula.id, al.id, 'PRESENTE')}
                                           disabled={processandoAcao}
@@ -688,7 +735,8 @@ export const InteractiveCombatCalendar: React.FC<InteractiveCombatCalendarProps>
                                         </button>
                                       </div>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>

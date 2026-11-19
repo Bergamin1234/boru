@@ -20,8 +20,18 @@ export const PublicQuickCheckinCard: React.FC = () => {
     titulo: string;
     mensagem: string;
     alunoNome?: string;
+    alunoId?: string;
+    matricula?: string;
     prajied?: string;
     horarioInfo?: string;
+    isPrimeiroCheckin?: boolean;
+    tagPerfilAcesso?: string;
+    totalAcessos?: number;
+    checkinsAnterioresCount?: number;
+    registroAtualDataHora?: string;
+    dataPrimeiroCheckin?: string | null;
+    dataUltimoAcessoAnterior?: string | null;
+    alertaOperacionalAcolhimento?: string | null;
   } | null>(null);
   const [levelUpConquista, setLevelUpConquista] = useState<any | null>(null);
 
@@ -74,14 +84,31 @@ export const PublicQuickCheckinCard: React.FC = () => {
         eventoId: eventoSelecionadoId || undefined
       });
       const data = res.data;
+      const perfil = data.perfilAcesso;
+      const isPrimeiro = Boolean(data.isPrimeiroCheckin ?? perfil?.isPrimeiroCheckin);
+      const tagPerfil = data.tagPerfilAcesso || perfil?.tagPerfilAcesso || (isPrimeiro ? 'Fez seu primeiro check-in' : 'Check-in recorrente');
 
       setToast({
         tipo: 'ok',
-        titulo: '✅ CHECK-IN REALIZADO COM SUCESSO!',
-        mensagem: data.mensagem || `Presença agendada para o treino de hoje${aulaEscolhida ? ` (${aulaEscolhida.horarioFormatado})` : ''}! Bom treino!`,
+        titulo: isPrimeiro
+          ? '🌟 FEZ SEU PRIMEIRO CHECK-IN!'
+          : '✅ CHECK-IN RECORRENTE REALIZADO COM SUCESSO!',
+        mensagem:
+          data.mensagem ||
+          `Presença agendada para o treino de hoje${aulaEscolhida ? ` (${aulaEscolhida.horarioFormatado})` : ''}! Bom treino!`,
         alunoNome: data.aluno?.nome,
+        alunoId: data.aluno?.id,
+        matricula: data.aluno?.matricula || perfil?.alunoIdentificacao?.matricula,
         prajied: data.aluno?.prajied,
-        horarioInfo: aulaEscolhida ? `${aulaEscolhida.horarioFormatado} • ${aulaEscolhida.modalidade}` : undefined
+        horarioInfo: aulaEscolhida ? `${aulaEscolhida.horarioFormatado} • ${aulaEscolhida.modalidade}` : undefined,
+        isPrimeiroCheckin: isPrimeiro,
+        tagPerfilAcesso: tagPerfil,
+        totalAcessos: perfil?.totalAcessos,
+        checkinsAnterioresCount: perfil?.checkinsAnterioresCount,
+        registroAtualDataHora: perfil?.registroAtualDataHora || new Date().toISOString(),
+        dataPrimeiroCheckin: perfil?.dataPrimeiroCheckin || null,
+        dataUltimoAcessoAnterior: perfil?.dataUltimoAcessoAnterior || null,
+        alertaOperacionalAcolhimento: perfil?.alertaOperacionalAcolhimento || null,
       });
 
       if (data.novasConquistas && data.novasConquistas.length > 0) {
@@ -95,7 +122,7 @@ export const PublicQuickCheckinCard: React.FC = () => {
 
       setTimeout(() => {
         setToast(null);
-      }, 7000);
+      }, 10000);
     } catch (err: any) {
       setToast({
         tipo: 'erro',
@@ -127,18 +154,37 @@ export const PublicQuickCheckinCard: React.FC = () => {
 
       {toast && (
         <div
-          className={`p-3.5 rounded-xl border text-xs animate-fadeIn ${
+          className={`p-3.5 rounded-xl border text-xs animate-fadeIn space-y-2 ${
             toast.tipo === 'ok'
-              ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200'
+              ? toast.isPrimeiroCheckin
+                ? 'bg-gradient-to-r from-amber-950/70 via-emerald-950/60 to-amber-950/50 border-amber-400/70 text-amber-100 shadow-lg shadow-amber-900/20'
+                : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200'
               : 'bg-red-950/60 border-red-500/50 text-red-200'
           }`}
         >
-          <div className="font-black text-sm">{toast.titulo}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="font-black text-sm">{toast.titulo}</div>
+            {toast.tipo === 'ok' && (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  toast.isPrimeiroCheckin
+                    ? 'bg-amber-400 text-black border-amber-300 shadow-sm'
+                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                }`}
+              >
+                {toast.isPrimeiroCheckin
+                  ? '🌟 Fez seu primeiro check-in'
+                  : `🔄 Check-in recorrente${toast.totalAcessos ? ` • ${toast.totalAcessos}º acesso` : ''}`}
+              </span>
+            )}
+          </div>
+
           <p className="mt-0.5 font-medium">{toast.mensagem}</p>
+
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
             {toast.alunoNome && (
               <span className="px-2 py-0.5 rounded bg-black/40 text-[10px] font-bold text-amber-300">
-                🥋 Atleta: {toast.alunoNome} • Prajied {toast.prajied || 'Branco'}
+                🥋 Atleta: {toast.alunoNome} {toast.matricula ? `(${toast.matricula})` : ''} • Prajied {toast.prajied || 'Branco'}
               </span>
             )}
             {toast.horarioInfo && (
@@ -146,7 +192,23 @@ export const PublicQuickCheckinCard: React.FC = () => {
                 ⏰ Horário: {toast.horarioInfo}
               </span>
             )}
+            {toast.registroAtualDataHora && (
+              <span className="px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700 text-[10px] font-mono text-zinc-300">
+                🕒 Registro: {new Date(toast.registroAtualDataHora).toLocaleString('pt-BR')}
+              </span>
+            )}
+            {typeof toast.checkinsAnterioresCount === 'number' && (
+              <span className="px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700 text-[10px] font-bold text-zinc-300">
+                📊 Histórico anterior: {toast.checkinsAnterioresCount} check-in(s)
+              </span>
+            )}
           </div>
+
+          {toast.isPrimeiroCheckin && toast.alertaOperacionalAcolhimento && (
+            <div className="p-2.5 rounded-lg bg-amber-500/15 border border-amber-400/40 text-[11px] text-amber-200 font-bold">
+              🤝 {toast.alertaOperacionalAcolhimento}
+            </div>
+          )}
         </div>
       )}
 
@@ -266,7 +328,16 @@ export const LoggedQuickCheckinBanner: React.FC<{
   const [aulaSelecionadaId, setAulaSelecionadaId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [loadingAulas, setLoadingAulas] = useState(false);
-  const [feedback, setFeedback] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tipo: 'ok' | 'erro';
+    texto: string;
+    isPrimeiroCheckin?: boolean;
+    tagPerfilAcesso?: string;
+    totalAcessos?: number;
+    checkinsAnterioresCount?: number;
+    registroAtualDataHora?: string;
+    alertaOperacionalAcolhimento?: string | null;
+  } | null>(null);
 
   const carregarAulasHoje = async () => {
     if (!aluno?.id) return;
@@ -310,9 +381,21 @@ export const LoggedQuickCheckinBanner: React.FC<{
         alunoId: aluno.id,
         eventoId: aulaAtiva.id
       });
+      const perfil = res.data?.perfilAcesso;
+      const isPrimeiro = Boolean(res.data?.isPrimeiroCheckin ?? perfil?.isPrimeiroCheckin);
       setFeedback({
         tipo: 'ok',
-        texto: res.data?.mensagem || `Check-in realizado com sucesso para às ${aulaAtiva.horario}! Presença agendada.`,
+        texto:
+          res.data?.mensagem ||
+          (isPrimeiro
+            ? `🌟 Fez seu primeiro check-in para às ${aulaAtiva.horario}! Nossa equipe fará seu acolhimento inicial no tatame.`
+            : `Check-in recorrente realizado com sucesso para às ${aulaAtiva.horario}! Presença agendada.`),
+        isPrimeiroCheckin: isPrimeiro,
+        tagPerfilAcesso: res.data?.tagPerfilAcesso || perfil?.tagPerfilAcesso || (isPrimeiro ? 'Fez seu primeiro check-in' : 'Check-in recorrente'),
+        totalAcessos: perfil?.totalAcessos,
+        checkinsAnterioresCount: perfil?.checkinsAnterioresCount,
+        registroAtualDataHora: perfil?.registroAtualDataHora || new Date().toISOString(),
+        alertaOperacionalAcolhimento: perfil?.alertaOperacionalAcolhimento || null,
       });
       await carregarAulasHoje();
       if (onCheckinSuccess) {
@@ -389,13 +472,46 @@ export const LoggedQuickCheckinBanner: React.FC<{
 
       {feedback && (
         <div
-          className={`p-3 rounded-xl text-xs font-bold border animate-fadeIn ${
+          className={`p-3.5 rounded-xl text-xs font-bold border animate-fadeIn space-y-2 ${
             feedback.tipo === 'ok'
-              ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
+              ? feedback.isPrimeiroCheckin
+                ? 'bg-gradient-to-r from-amber-950/70 via-emerald-950/60 to-amber-950/50 border-amber-400/70 text-amber-100 shadow-lg'
+                : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
               : 'bg-red-950/60 border-red-500/50 text-red-300'
           }`}
         >
-          {feedback.texto}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>{feedback.texto}</span>
+            {feedback.tipo === 'ok' && feedback.tagPerfilAcesso && (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  feedback.isPrimeiroCheckin
+                    ? 'bg-amber-400 text-black border-amber-300'
+                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                }`}
+              >
+                {feedback.isPrimeiroCheckin
+                  ? '🌟 Fez seu primeiro check-in'
+                  : `🔄 Check-in recorrente${feedback.totalAcessos ? ` • ${feedback.totalAcessos}º acesso` : ''}`}
+              </span>
+            )}
+          </div>
+          {feedback.tipo === 'ok' && (
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold opacity-95">
+              <span>🥋 Aluno: {aluno?.nome} (ID: {aluno?.id?.slice(0, 8)})</span>
+              {typeof feedback.checkinsAnterioresCount === 'number' && (
+                <span>• Histórico anterior: {feedback.checkinsAnterioresCount} check-in(s)</span>
+              )}
+              {feedback.registroAtualDataHora && (
+                <span>• Registro: {new Date(feedback.registroAtualDataHora).toLocaleString('pt-BR')}</span>
+              )}
+            </div>
+          )}
+          {feedback.isPrimeiroCheckin && feedback.alertaOperacionalAcolhimento && (
+            <div className="p-2 rounded-lg bg-amber-500/15 border border-amber-400/40 text-[11px] text-amber-200 font-bold">
+              🤝 {feedback.alertaOperacionalAcolhimento}
+            </div>
+          )}
         </div>
       )}
 

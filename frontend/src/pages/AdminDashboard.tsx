@@ -14,6 +14,7 @@ import { Student360Modal } from '../components/Student360Modal';
 import { AdminStoreRedemptionsTab } from '../components/AdminStoreRedemptionsTab';
 import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
 import { BoruAiAutonomousTab } from '../components/BoruAiAutonomousTab';
+import { FirstCheckinIdentificationBanner } from '../components/FirstCheckinIdentificationBanner';
 
 const graduacoesPorModalidade: Record<string, string[]> = {
   'Muay Thai': [
@@ -141,6 +142,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
 
   // Filtros e lote em Chamada & Presenças
   const [filtroChamada, setFiltroChamada] = useState<'TODOS' | 'PRESENTE' | 'FALTA' | 'DOENCA' | 'AGENDADO'>('TODOS');
+  const [filtroPerfilCheckin, setFiltroPerfilCheckin] = useState<'TODOS' | 'PRIMEIRO_CHECKIN' | 'RECORRENTE'>('TODOS');
   const [buscaPresenca, setBuscaPresenca] = useState('');
   const [selecionadosLote, setSelecionadosLote] = useState<string[]>([]);
   const [loteLoading, setLoteLoading] = useState(false);
@@ -1368,6 +1370,11 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
 
   const presencasFiltradas = presencas.filter(p => {
     if (filtroChamada !== 'TODOS' && p.status !== filtroChamada) return false;
+    const isPrimeiro = Boolean(
+      p.isPrimeiroCheckin || p.tagPerfilAcesso === 'Fez seu primeiro check-in' || p.numeroAcesso === 1
+    );
+    if (filtroPerfilCheckin === 'PRIMEIRO_CHECKIN' && !isPrimeiro) return false;
+    if (filtroPerfilCheckin === 'RECORRENTE' && isPrimeiro) return false;
     if (buscaPresenca.trim()) {
       const termo = buscaPresenca.trim().toLowerCase();
       const nome = (p.aluno?.nome || '').toLowerCase();
@@ -2716,6 +2723,14 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
 
         {/* CONTEÚDO DA ABA: CHAMADA RÁPIDA & PRESENÇAS EM LOTE */}
         {abaAtiva === 'presencas' && (
+          <div className="space-y-4">
+            <FirstCheckinIdentificationBanner
+              presencas={presencas}
+              alunos={alunos}
+              filtroPerfil={filtroPerfilCheckin}
+              onChangeFiltroPerfil={setFiltroPerfilCheckin}
+            />
+
           <div className="bg-[#141416] border border-zinc-800 rounded-xl overflow-hidden shadow-xl space-y-4 p-4 sm:p-5">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div>
@@ -2870,10 +2885,43 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                             />
                           </td>
                           <td className="p-3 sm:p-4 font-bold text-white">
-                            {p.aluno?.nome}
-                            <span className="block text-[11px] text-zinc-400 font-normal">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span>{p.aluno?.nome}</span>
+                              {p.matricula && (
+                                <span className="text-[10px] font-mono text-zinc-400">({p.matricula})</span>
+                              )}
+                              {Boolean(
+                                p.isPrimeiroCheckin ||
+                                  p.tagPerfilAcesso === 'Fez seu primeiro check-in' ||
+                                  p.numeroAcesso === 1
+                              ) ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-black border border-amber-300 shadow-sm">
+                                  🌟 Fez seu primeiro check-in
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-emerald-300 border border-emerald-500/30">
+                                  🔄 Check-in recorrente
+                                  {p.numeroAcesso || p.totalAcessosAluno
+                                    ? ` • ${p.numeroAcesso || p.totalAcessosAluno}º acesso`
+                                    : ''}
+                                </span>
+                              )}
+                            </div>
+                            <span className="block text-[11px] text-zinc-400 font-normal mt-0.5">
                               {p.aluno?.plano} • Prajied {p.aluno?.prajied || 'Branco'}
+                              {typeof p.checkinsAnterioresCount === 'number'
+                                ? ` • Histórico anterior: ${p.checkinsAnterioresCount} acesso(s)`
+                                : ''}
                             </span>
+                            {Boolean(
+                              p.isPrimeiroCheckin ||
+                                p.tagPerfilAcesso === 'Fez seu primeiro check-in' ||
+                                p.numeroAcesso === 1
+                            ) && (
+                              <span className="block text-[10px] font-bold text-amber-300 mt-0.5">
+                                🤝 Estreante na unidade: acolhimento inicial, apresentação do espaço e acompanhamento
+                              </span>
+                            )}
                           </td>
                           <td className="p-3 sm:p-4 text-zinc-300">
                             {p.evento?.titulo || 'Treino de Muay Thai'}
@@ -2927,6 +2975,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                 </tbody>
               </table>
             </div>
+          </div>
           </div>
         )}
 

@@ -46,21 +46,54 @@ export const SplitRollCallTab: React.FC<SplitRollCallTabProps> = ({
       minute: '2-digit',
     });
 
+    const checkinsAnteriores = Number(aluno.totalAcessos || 0);
+    const seraPrimeiroCheckin = checkinsAnteriores === 0;
+    const novoTotalAcessos = checkinsAnteriores + 1;
+
     // Optimistic UI: Move instantaneamente da coluna "Não fizeram" para "Fizeram check-in HOJE"
     setAusentes((prev) => prev.filter((a) => a.id !== aluno.id));
     setPresentes((prev) =>
-      [...prev, { ...aluno, statusHoje: 'PRESENTE', horarioCheckin: horarioAgora }].sort((a, b) =>
-        a.nome.localeCompare(b.nome, 'pt-BR')
-      )
+      [
+        ...prev,
+        {
+          ...aluno,
+          statusHoje: 'PRESENTE',
+          horarioCheckin: horarioAgora,
+          isPrimeiroCheckin: seraPrimeiroCheckin,
+          tagPerfilAcesso: seraPrimeiroCheckin ? 'Fez seu primeiro check-in' : 'Check-in recorrente',
+          totalAcessos: novoTotalAcessos,
+          checkinsAnterioresCount: checkinsAnteriores,
+          alertaOperacionalAcolhimento: seraPrimeiroCheckin
+            ? 'Estreante na unidade: realizar acolhimento inicial, apresentação do espaço e acompanhamento de entrada.'
+            : null,
+        },
+      ].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     );
 
     try {
-      await adminApi.markExpressDailyRollCall({
+      const res = await adminApi.markExpressDailyRollCall({
         alunoId: aluno.id,
         professorId: professorId || 'PROFESSOR',
         data: dataReferencia,
         status: 'PRESENTE',
       });
+      const perfil = res.data?.perfilAcesso;
+      if (perfil) {
+        setPresentes((prev) =>
+          prev.map((p) =>
+            p.id === aluno.id
+              ? {
+                  ...p,
+                  isPrimeiroCheckin: perfil.isPrimeiroCheckin,
+                  tagPerfilAcesso: perfil.tagPerfilAcesso,
+                  totalAcessos: perfil.totalAcessos,
+                  checkinsAnterioresCount: perfil.checkinsAnterioresCount,
+                  alertaOperacionalAcolhimento: perfil.alertaOperacionalAcolhimento,
+                }
+              : p
+          )
+        );
+      }
       if (onRefreshDashboard) onRefreshDashboard();
     } catch {
       // Reverte se houver falha de rede
@@ -154,28 +187,57 @@ export const SplitRollCallTab: React.FC<SplitRollCallTabProps> = ({
                   Nenhum aluno realizou check-in ainda nesta data.
                 </div>
               ) : (
-                presentesFiltrados.map((aluno) => (
-                  <div
-                    key={aluno.id}
-                    className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between gap-3 transition"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-xs sm:text-sm">{aluno.nome}</span>
-                        <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
-                          PRESENTE
-                        </span>
+                presentesFiltrados.map((aluno) => {
+                  const isPrimeiro = Boolean(
+                    aluno.isPrimeiroCheckin || aluno.tagPerfilAcesso === 'Fez seu primeiro check-in'
+                  );
+                  return (
+                    <div
+                      key={aluno.id}
+                      className={`rounded-xl p-3 flex items-center justify-between gap-3 transition border ${
+                        isPrimeiro
+                          ? 'bg-gradient-to-r from-amber-950/35 via-emerald-950/25 to-amber-950/20 border-amber-500/50 shadow-md shadow-amber-950/20'
+                          : 'bg-emerald-950/20 border-emerald-500/30'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-bold text-white text-xs sm:text-sm">{aluno.nome}</span>
+                          {aluno.matricula && (
+                            <span className="text-[10px] font-mono text-zinc-400">({aluno.matricula})</span>
+                          )}
+                          <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                            PRESENTE
+                          </span>
+                          {isPrimeiro ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-400 text-black border border-amber-300 shadow-sm">
+                              🌟 Fez seu primeiro check-in
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800/90 text-emerald-300 border border-emerald-500/30">
+                              🔄 Check-in recorrente{aluno.totalAcessos ? ` • ${aluno.totalAcessos}º acesso` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          {aluno.plano} • Prajied {aluno.prajied}
+                          {aluno.horarioCheckin ? ` • Check-in às ${aluno.horarioCheckin}` : ''}
+                          {typeof aluno.checkinsAnterioresCount === 'number'
+                            ? ` • Histórico anterior: ${aluno.checkinsAnterioresCount} acesso(s)`
+                            : ''}
+                        </p>
+                        {isPrimeiro && (
+                          <p className="text-[10px] font-bold text-amber-300">
+                            🤝 Estreante na unidade — Acolhimento inicial, apresentação do espaço e acompanhamento de entrada
+                          </p>
+                        )}
                       </div>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">
-                        {aluno.plano} • Prajied {aluno.prajied}
-                        {aluno.horarioCheckin ? ` • Check-in às ${aluno.horarioCheckin}` : ''}
-                      </p>
+                      <span className="text-emerald-400 font-black text-sm px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                        [ ✓ ]
+                      </span>
                     </div>
-                    <span className="text-emerald-400 font-black text-sm px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                      [ ✓ ]
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -213,11 +275,23 @@ export const SplitRollCallTab: React.FC<SplitRollCallTabProps> = ({
                     className="bg-[#1A1A1E] border border-zinc-800 hover:border-zinc-700 rounded-xl p-3 flex items-center justify-between gap-3 transition"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <span className="font-bold text-white text-xs sm:text-sm">{aluno.nome}</span>
+                        {aluno.matricula && (
+                          <span className="text-[10px] font-mono text-zinc-500">({aluno.matricula})</span>
+                        )}
                         {aluno.is_bolsista && (
                           <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-purple-500/20 text-purple-300">
                             BOLSISTA
+                          </span>
+                        )}
+                        {(aluno.totalAcessos || 0) === 0 ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            🆕 0 check-ins (Estreante no 1º acesso)
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            🔄 Histórico: {aluno.totalAcessos} check-in(s)
                           </span>
                         )}
                       </div>

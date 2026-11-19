@@ -355,8 +355,20 @@ export async function executeBoruAiTool(
         }).catch(() => null);
 
         const presencasConfirmadas = aluno.presencas.filter(p => p.status === 'PRESENTE').length;
+        const checkinsValidos = [...aluno.presencas]
+          .filter(p => ['AGENDADO', 'PRESENTE', 'DOENCA', 'JUSTIFICADO'].includes(p.status))
+          .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+        const totalCheckins = checkinsValidos.length;
+        const primeiroCheckin = totalCheckins > 0 ? checkinsValidos[0] : null;
         const ultimaPresenca = aluno.presencas.find(p => p.status === 'PRESENTE');
         const mensalidadeAtual = aluno.mensalidades[0] || null;
+        const isPrimeiroCheckin = totalCheckins === 1;
+        const tagPerfilCheckin =
+          totalCheckins === 0
+            ? 'Sem check-ins anteriores (Estreante no próximo acesso)'
+            : totalCheckins === 1
+            ? 'Fez seu primeiro check-in'
+            : `Check-in recorrente (${totalCheckins} acessos registrados)`;
 
         const result = {
           encontrado: true,
@@ -377,7 +389,15 @@ export async function executeBoruAiTool(
             },
             frequenciaRecente: {
               presencasNosUltimosRegistros: presencasConfirmadas,
-              ultimoTreinoData: ultimaPresenca ? ultimaPresenca.data.toLocaleDateString('pt-BR') : 'Sem registro recente'
+              totalCheckinsRegistrados: totalCheckins,
+              isPrimeiroCheckin,
+              tagPerfilCheckin,
+              dataPrimeiroCheckin: primeiroCheckin ? primeiroCheckin.data.toLocaleDateString('pt-BR') : null,
+              ultimoTreinoData: ultimaPresenca ? ultimaPresenca.data.toLocaleDateString('pt-BR') : 'Sem registro recente',
+              orientacaoOperacional:
+                totalCheckins <= 1
+                  ? 'Estreante na unidade (Fez seu primeiro check-in): priorizar acolhimento inicial, apresentação do espaço e acompanhamento de entrada.'
+                  : 'Aluno recorrente/ativo no tatame.'
             },
             situacaoFinanceiraResumo: aluno.is_bolsista
               ? 'ISENTO / BOLSISTA'

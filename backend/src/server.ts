@@ -8,6 +8,11 @@ import { registerAddonRoutes, calcularProximoVencimentoPorAdesao } from './addon
 import { registerPhase1Routes } from './phase1Routes';
 import { registerClassScheduleRoutes } from './classScheduleRoutes';
 import { registerBoruAiRoutes } from './ai/boruAiRoutes';
+import {
+  evaluateCheckinAccessProfile,
+  buildCheckinHistoryMapForStudents,
+  buildStudentMatricula,
+} from './firstCheckinService';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -954,9 +959,19 @@ app.post('/api/checkin', async (req, res) => {
     });
 
     const gamificacao = await evaluateStudentGamification(prisma, alunoId).catch(() => null);
+    const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+      alunoId,
+      currentCheckinId: checkin.id,
+      currentCheckinDate: checkin.criadoEm || checkin.data,
+    });
 
     res.json({ 
-      mensagem: 'Oss! Check-in registrado com sucesso! Mostre sua determinação no tatame.', 
+      isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+      tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+      perfilAcesso,
+      mensagem: perfilAcesso.isPrimeiroCheckin
+        ? '🌟 Fez seu primeiro check-in! Bem-vindo(a) ao tatame do CT Borü! Nossa equipe fará seu acolhimento inicial.'
+        : `Oss! Check-in recorrente (#${perfilAcesso.totalAcessos}) registrado com sucesso! Mostre sua determinação no tatame.`, 
       checkin,
       gamificacao
     });
@@ -1179,9 +1194,27 @@ app.get('/api/admin/dashboard', async (req, res) => {
         }
       }
 
+      // Histórico completo de check-ins válidos para identificação de 1º check-in vs recorrente
+      const checkinsValidosHistorico = [...aluno.presencas]
+        .filter(p => ['AGENDADO', 'PRESENTE', 'DOENCA', 'JUSTIFICADO'].includes(p.status))
+        .sort((a, b) => new Date(a.criadoEm || a.data).getTime() - new Date(b.criadoEm || b.data).getTime());
+      const totalCheckinsHistorico = checkinsValidosHistorico.length;
+      const primeiroCheckinReg = totalCheckinsHistorico > 0 ? checkinsValidosHistorico[0] : null;
+      const dataPrimeiroCheckin = primeiroCheckinReg
+        ? new Date(primeiroCheckinReg.criadoEm || primeiroCheckinReg.data).toISOString()
+        : null;
+      const isPrimeiroCheckin = totalCheckinsHistorico === 1;
+      const tagPerfilCheckin =
+        totalCheckinsHistorico === 0
+          ? 'Sem check-ins (Aguardando 1º acesso)'
+          : totalCheckinsHistorico === 1
+          ? 'Fez seu primeiro check-in'
+          : 'Check-in recorrente';
+
       return {
         id: aluno.id,
         nome: aluno.nome,
+        matricula: buildStudentMatricula(aluno),
         plano: aluno.plano || '2x na semana',
         cpf: aluno.cpf,
         email: aluno.email,
@@ -1205,7 +1238,11 @@ app.get('/api/admin/dashboard', async (req, res) => {
         statusAtividade,
         diasSemTreinar,
         semanasSemTreinar,
-        dataUltimoTreino
+        dataUltimoTreino,
+        totalCheckinsHistorico,
+        isPrimeiroCheckin,
+        tagPerfilCheckin,
+        dataPrimeiroCheckin,
       };
     });
 
@@ -1347,18 +1384,51 @@ app.post('/api/admin/alunos/:id/pagar', async (req, res) => {
   }
 });
 
-// Visualizar presenças/check-ins recentes
+// Visualizar presenças/check-ins recentes com identificação explícita de 1º Check-in vs Recorrente
 app.get('/api/admin/presencas', async (req, res) => {
   try {
-    const presencas = await prisma.agendamentoPresenca.findMany({
-      include: {
-        aluno: { select: { id: true, nome: true, plano: true, telefone: true } },
-        evento: { select: { id: true, titulo: true, dataInicio: true } }
-      },
-      orderBy: { data: 'desc' },
-      take: 100
+    const [presencas, historicoMap] = await Promise.all([
+      prisma.agendamentoPresenca.findMany({
+        include: {
+          aluno: { select: { id: true, nome: true, cpf: true, prajied: true, plano: true, telefone: true, criadoEm: true } },
+          evento: { select: { id: true, titulo: true, dataInicio: true } }
+        },
+        orderBy: { data: 'desc' },
+        take: 100
+      }),
+      buildCheckinHistoryMapForStudents(prisma),
+    ]);
+
+    const presencasEnriquecidas = presencas.map(p => {
+      const infoCheckin = historicoMap.porCheckinId.get(p.id);
+      const infoAluno = historicoMap.porAlunoId.get(p.alunoId);
+      const isPrimeiroCheckin = infoCheckin
+        ? infoCheckin.isPrimeiroCheckin
+        : Boolean(infoAluno && infoAluno.primeiroCheckinId === p.id);
+      const numeroAcesso = infoCheckin?.numeroAcesso || infoAluno?.totalAcessos || 1;
+      const totalAcessosAluno = infoCheckin?.totalAcessosAluno || infoAluno?.totalAcessos || 1;
+      const checkinsAnterioresCount = infoCheckin
+        ? infoCheckin.checkinsAnterioresCount
+        : Math.max(0, numeroAcesso - 1);
+      const tagPerfilAcesso = isPrimeiroCheckin ? 'Fez seu primeiro check-in' : 'Check-in recorrente';
+
+      return {
+        ...p,
+        matricula: p.aluno ? buildStudentMatricula(p.aluno) : 'BORU',
+        isPrimeiroCheckin,
+        tagPerfilAcesso,
+        numeroAcesso,
+        totalAcessosAluno,
+        checkinsAnterioresCount,
+        dataPrimeiroCheckin: infoCheckin?.dataPrimeiroCheckin || infoAluno?.dataPrimeiroCheckin || null,
+        dataUltimoAcessoAnterior: infoCheckin?.dataUltimoAcessoAnterior || null,
+        alertaOperacionalAcolhimento: isPrimeiroCheckin
+          ? 'Estreante na unidade: realizar acolhimento inicial, apresentação do espaço e acompanhamento de entrada.'
+          : null,
+      };
     });
-    res.json(presencas);
+
+    res.json(presencasEnriquecidas);
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao buscar presenças.' });
   }
@@ -1742,7 +1812,21 @@ app.post('/api/admin/alunos/:id/presenca', async (req, res) => {
     }
 
     const gamificacao = await evaluateStudentGamification(prisma, id).catch(() => null);
-    res.json({ mensagem: 'Frequência atualizada com sucesso!', registro, gamificacao });
+    const perfilAcesso = await evaluateCheckinAccessProfile(prisma, {
+      alunoId: id,
+      currentCheckinId: registro.id,
+      currentCheckinDate: registro.criadoEm || registro.data,
+    });
+    res.json({
+      isPrimeiroCheckin: perfilAcesso.isPrimeiroCheckin,
+      tagPerfilAcesso: perfilAcesso.tagPerfilAcesso,
+      perfilAcesso,
+      mensagem: perfilAcesso.isPrimeiroCheckin
+        ? '🌟 Fez seu primeiro check-in! Frequência de estreante registrada com sucesso!'
+        : `Frequência atualizada com sucesso (${perfilAcesso.resumoClassificacao})!`,
+      registro,
+      gamificacao,
+    });
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao registrar frequência.' });
   }
