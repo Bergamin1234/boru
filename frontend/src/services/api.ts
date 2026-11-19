@@ -120,6 +120,18 @@ export const adminApi = {
   deleteFinancialTransaction: (id: string) =>
     api.delete(`/admin/financeiro/transacoes/${id}`),
 
+  // Módulo Adicional: Gestão e Desvalorização de Imóveis (Patrimônio Líquido)
+  getRealEstatePortfolio: (caixaOperacional?: number) =>
+    api.get('/admin/patrimonio/imoveis', {
+      params: caixaOperacional !== undefined ? { caixaOperacional } : undefined,
+    }),
+  simulateRealEstateDepreciation: (data: unknown) =>
+    api.post('/admin/patrimonio/imoveis/simular', data),
+  saveRealEstateAsset: (data: unknown) =>
+    api.post('/admin/patrimonio/imoveis', data),
+  deleteRealEstateAsset: (id: string) =>
+    api.delete(`/admin/patrimonio/imoveis/${id}`),
+
   // Módulo 6: Split-List de Chamada Diária
   getSplitDailyRollCall: (data?: string) =>
     api.get('/admin/chamada-diaria', { params: data ? { data } : undefined }),

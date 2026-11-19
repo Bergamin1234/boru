@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
+import { RealEstateDepreciationPanel } from './RealEstateDepreciationPanel';
 
 interface FinancialDashboardTabProps {
   onRefreshGlobal?: () => void;
@@ -86,15 +87,16 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
   const [resumo, setResumo] = useState<any>(null);
   const [graficos, setGraficos] = useState<any>(null);
+  const [patrimonioImobiliario, setPatrimonioImobiliario] = useState<any>(null);
   const [registros, setRegistros] = useState<any[]>([]);
   const [transacoes, setTransacoes] = useState<any[]>([]);
   const [produtos, setProdutos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Sub-Abas do ERP Financeiro:
-  // 'graficos_bi' | 'livro_caixa' | 'mercado_pdv' | 'controle_gastos' | 'assinaturas_alunos'
+  // 'graficos_bi' | 'livro_caixa' | 'mercado_pdv' | 'controle_gastos' | 'assinaturas_alunos' | 'patrimonio_imoveis'
   const [subAba, setSubAba] = useState<
-    'graficos_bi' | 'livro_caixa' | 'mercado_pdv' | 'controle_gastos' | 'assinaturas_alunos'
+    'graficos_bi' | 'livro_caixa' | 'mercado_pdv' | 'controle_gastos' | 'assinaturas_alunos' | 'patrimonio_imoveis'
   >('graficos_bi');
 
   // Filtro da Aba Despesas & Investimentos
@@ -156,6 +158,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       const res = await adminApi.getFinancialDashboard({ mes, ano });
       setResumo(res.data.resumo);
       setGraficos(res.data.graficos);
+      setPatrimonioImobiliario(res.data.patrimonioImobiliario || null);
       setRegistros(res.data.registros || []);
       setTransacoes(res.data.transacoes || []);
       setProdutos(res.data.produtos || []);
@@ -810,7 +813,75 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
         >
           👥 Assinaturas de Alunos & Baixa ({registros.length})
         </button>
+
+        <button
+          type="button"
+          onClick={() => setSubAba('patrimonio_imoveis')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 ${
+            subAba === 'patrimonio_imoveis'
+              ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-900/30'
+              : 'bg-[#141416] text-amber-300 hover:text-white border border-amber-500/40'
+          }`}
+        >
+          🏢 Patrimônio & Desvalorização de Imóveis
+        </button>
       </div>
+
+      {/* FAIXA EXECUTIVA: PATRIMÔNIO LÍQUIDO TOTAL & DESVALORIZAÇÃO IMOBILIÁRIA */}
+      {subAba !== 'patrimonio_imoveis' && (
+        <div className="bg-gradient-to-r from-[#16161B] via-[#141418] to-amber-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-lg">
+          <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-400 text-black">
+                🏢 Balanço Patrimonial & Imóveis
+              </span>
+              <span className="text-xs font-black text-white">
+                Patrimônio Líquido Real Ajustado:{' '}
+                <strong className="text-emerald-400">
+                  {formatarMoeda(
+                    resumo?.patrimonioLiquidoRealAjustado ??
+                      (resumo?.lucroAcumuladoAno || 0) + 418500
+                  )}
+                </strong>
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              Custo Total Aquisição Imóveis:{' '}
+              <strong className="text-zinc-200">
+                {formatarMoeda(resumo?.custoTotalAquisicaoImoveis ?? 522000)}
+              </strong>{' '}
+              • Valor Líquido Atual:{' '}
+              <strong className="text-emerald-300">
+                {formatarMoeda(resumo?.valorLiquidoAtualImoveis ?? 418500)}
+              </strong>{' '}
+              • Desvalorização Acumulada (Entrada + Depreciação Física):{' '}
+              <strong className="text-red-400">
+                -{formatarMoeda(resumo?.desvalorizacaoImoveisLiquidaTotalRs ?? 103500)} (-
+                {resumo?.desvalorizacaoImoveisAcumuladaPct ?? 14.18}%)
+              </strong>{' '}
+              • Queda:{' '}
+              <strong className="text-amber-300">
+                -{formatarMoeda(resumo?.ritmoQuedaImoveisMensalRs ?? 1066.67)}/mês
+              </strong>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubAba('patrimonio_imoveis')}
+            className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 text-xs font-black transition shrink-0"
+          >
+            🏢 Abrir Gestão & Simulador de Imóveis →
+          </button>
+        </div>
+      )}
+
+      {subAba === 'patrimonio_imoveis' && (
+        <RealEstateDepreciationPanel
+          caixaOperacionalAcumulado={resumo?.lucroAcumuladoAno || 0}
+          patrimonioInicialBackend={patrimonioImobiliario}
+          onPortfolioChanged={() => carregarDadosFinanceiros(mesFiltro, anoFiltro)}
+        />
+      )}
 
       {/* =========================================================
           SUB-ABA 1: GRÁFICOS, LUCRO, DRE & BI DE ALUNOS MATRICULADOS

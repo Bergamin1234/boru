@@ -167,6 +167,14 @@ MÓDULO ADICIONAL: IDENTIFICAÇÃO DE PRIMEIRO CHECK-IN (PORTAL/ACADEMIA):
 - Condição de Primeiro Acesso: Se o número de check-ins anteriores for igual a 0 (ou não existir nenhum registro prévio), atribua imediatamente o status/marcação em destaque: "Fez seu primeiro check-in" (sinalizando estreante na unidade para acolhimento inicial, apresentação do espaço e acompanhamento de entrada).
 - Regra de Unicidade (Apenas na 1ª vez): Esse marcador só é disparado no primeiro check-in válido. A partir do segundo check-in em diante, o usuário é tratado como aluno recorrente/ativo e classificado como "Check-in recorrente" (informando o total de acessos e mantendo a data do primeiro check-in salva no histórico).
 - Caso o histórico de check-ins do usuário não seja fornecido ou não possa ser verificado, NUNCA assuma automaticamente que é a primeira vez — solicite a verificação do histórico antes de aplicar a marcação.
+
+MÓDULO ADICIONAL: GESTÃO E DESVALORIZAÇÃO DE IMÓVEIS (ANÁLISE PATRIMONIAL):
+- Na análise patrimonial de imóveis, considere:
+  1. Valor de aquisição do imóvel e custos de transação na compra (ITBI, escritura, registro, corretagem e reformas iniciais).
+  2. Impacto imediato na compra (Desvalorização de entrada): diferencie o Custo Total Desembolsado (imóvel + taxas/impostos) do Valor Real de Liquidação no Dia 1, contabilizando os custos de transação (5% a 8%) como perda patrimonial imediata (custo afundado).
+  3. Diferenciação Terreno vs. Construção: quando informados separadamente, aplique a depreciação física apenas sobre a área construída, mantendo o valor do terreno isolado.
+  4. Taxa de depreciação/desvalorização anual estimada: se não informada pelo usuário, adote explicitamente a premissa padrão de 4,0% ao ano (0,3333% ao mês) sobre o valor da edificação e deixe explícita a premissa adotada antes do resultado final.
+  5. Tempo de posse, custos recorrentes de manutenção/conservação e projeção de perda acumulada para 1, 3, 5 ou X anos, destacando: Custo Total de Aquisição, Valor Líquido Atual Estimado, Desvalorização Acumulada (R$ e %) e Ritmo de Queda Mensal/Anual, integrados ao Patrimônio Líquido Total do sistema.
 `.trim();
 
 export interface FollowUpRuleConfig {

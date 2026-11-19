@@ -9,6 +9,12 @@ import {
   buildCheckinHistoryMapForStudents,
   buildStudentMatricula,
 } from './firstCheckinService';
+import {
+  calculateRealEstateDepreciation,
+  loadStoredRealEstateAssets,
+  saveStoredRealEstateAssets,
+  getConsolidatedRealEstatePortfolio,
+} from './realEstateDepreciationService';
 
 export async function ensureRbacSeeded(prisma: PrismaClient) {
   try {
@@ -1288,6 +1294,8 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         });
       }
 
+      const patrimonioImobiliario = getConsolidatedRealEstatePortfolio(lucroAcumuladoAno);
+
       res.json({
         resumo: {
           mesReferencia: mesFiltro,
@@ -1315,6 +1323,16 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
           countBolsistas,
           countConvenioDiaria,
           totalAlunos: alunos.length,
+          // Indicadores de Patrimônio Imobiliário & Desvalorização integrados ao Patrimônio Líquido Total
+          custoTotalAquisicaoImoveis: patrimonioImobiliario.consolidado.custoTotalAquisicaoImoveis,
+          valorLiquidoAtualImoveis: patrimonioImobiliario.consolidado.valorLiquidoAtualImoveis,
+          desvalorizacaoImoveisAcumuladaRs: patrimonioImobiliario.consolidado.desvalorizacaoAcumuladaTotalRs,
+          desvalorizacaoImoveisAcumuladaPct: patrimonioImobiliario.consolidado.desvalorizacaoAcumuladaTotalPct,
+          desvalorizacaoImoveisLiquidaTotalRs: patrimonioImobiliario.consolidado.desvalorizacaoLiquidaTotalRs,
+          ritmoQuedaImoveisMensalRs: patrimonioImobiliario.consolidado.ritmoQuedaMensalTotalRs,
+          ritmoQuedaImoveisAnualRs: patrimonioImobiliario.consolidado.ritmoQuedaAnualTotalRs,
+          patrimonioBrutoSemDesvalorizacao: patrimonioImobiliario.consolidado.patrimonioBrutoSemDesvalorizacao,
+          patrimonioLiquidoRealAjustado: patrimonioImobiliario.consolidado.patrimonioLiquidoRealAjustado,
         },
         graficos: {
           fluxoPorMes,
@@ -1330,6 +1348,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
             quantidade,
           })),
         },
+        patrimonioImobiliario,
         registros: registrosFinanceiros,
         transacoes,
         produtos,
@@ -1337,6 +1356,122 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
     } catch (error) {
       console.error('Erro no dashboard financeiro completo:', error);
       res.status(500).json({ erro: 'Erro ao carregar dados financeiros.' });
+    }
+  });
+
+  // =========================================================
+  // MÓDULO ADICIONAL: GESTÃO E DESVALORIZAÇÃO DE IMÓVEIS (PATRIMÔNIO LÍQUIDO)
+  // =========================================================
+  app.get('/api/admin/patrimonio/imoveis', async (req: Request, res: Response) => {
+    try {
+      const caixaParam = req.query.caixaOperacional ? Number(req.query.caixaOperacional) : 0;
+      const portfolio = getConsolidatedRealEstatePortfolio(caixaParam);
+      res.json({
+        ok: true,
+        ...portfolio,
+      });
+    } catch (error) {
+      console.error('Erro ao consultar patrimônio imobiliário:', error);
+      res.status(500).json({ erro: 'Erro ao carregar gestão e desvalorização de imóveis.' });
+    }
+  });
+
+  app.post('/api/admin/patrimonio/imoveis/simular', async (req: Request, res: Response) => {
+    try {
+      const analise = calculateRealEstateDepreciation(req.body || {});
+      if (!analise.validacaoOk) {
+        return res.status(400).json({
+          ok: false,
+          camposFaltantes: analise.camposFaltantes,
+          erro: analise.mensagemSolicitacao,
+          analise,
+        });
+      }
+      return res.json({
+        ok: true,
+        analise,
+      });
+    } catch (error) {
+      console.error('Erro ao simular depreciação de imóvel:', error);
+      return res.status(500).json({ erro: 'Erro ao calcular análise patrimonial do imóvel.' });
+    }
+  });
+
+  app.post('/api/admin/patrimonio/imoveis', async (req: Request, res: Response) => {
+    try {
+      const body = req.body || {};
+      const analise = calculateRealEstateDepreciation(body);
+      if (!analise.validacaoOk) {
+        return res.status(400).json({
+          ok: false,
+          camposFaltantes: analise.camposFaltantes,
+          erro: analise.mensagemSolicitacao,
+        });
+      }
+
+      const listaAtual = loadStoredRealEstateAssets();
+      const novoImovel = {
+        ...body,
+        id: body.id || `imovel-${Date.now()}`,
+        nome: analise.nome,
+        tipoImovel: analise.tipoImovel,
+        dataAquisicao: analise.dataAquisicao,
+        valorAquisicao: analise.valorAquisicao,
+        separarTerrenoConstrucao: analise.separarTerrenoConstrucao,
+        valorTerreno: analise.valorTerrenoIsolado,
+        valorConstrucao: analise.baseDepreciavelEdificacao,
+        itbiValor: analise.custosTransacaoDetalhados.itbiValor,
+        escrituraRegistroValor: analise.custosTransacaoDetalhados.escrituraRegistroValor,
+        corretagemEntradaValor: analise.custosTransacaoDetalhados.corretagemEntradaValor,
+        reformasIniciaisValor: analise.custosTransacaoDetalhados.reformasIniciaisValor,
+        taxaDepreciacaoAnualPct: analise.taxaDepreciacaoAnualPct,
+        tempoPosseMeses: analise.tempoPosseMeses,
+        horizonteProjecaoAnos: analise.horizonteProjecaoAnos,
+        custoManutencaoMensal: analise.custoManutencaoMensal,
+        observacoes: analise.observacoes,
+      };
+
+      const idxExistente = listaAtual.findIndex((i) => i.id === novoImovel.id);
+      if (idxExistente >= 0) {
+        listaAtual[idxExistente] = novoImovel;
+      } else {
+        listaAtual.unshift(novoImovel);
+      }
+
+      saveStoredRealEstateAssets(listaAtual);
+
+      await logSystemEvent(
+        'INFO',
+        'PATRIMONIO_IMOVEL',
+        `Imóvel registrado/atualizado: ${analise.nome} | Custo Total: R$ ${analise.custoTotalAquisicao.toFixed(2)} | Valor Líquido Atual: R$ ${analise.valorLiquidoAtualEstimado.toFixed(2)} | Desvalorização Acumulada: R$ ${analise.desvalorizacaoAcumuladaRs.toFixed(2)} (${analise.desvalorizacaoAcumuladaPct}%)`
+      );
+
+      return res.status(201).json({
+        ok: true,
+        mensagem: 'Imóvel registrado na gestão patrimonial com análise de desvalorização e depreciação!',
+        analise,
+        portfolio: getConsolidatedRealEstatePortfolio(),
+      });
+    } catch (error) {
+      console.error('Erro ao salvar imóvel no patrimônio:', error);
+      return res.status(500).json({ erro: 'Erro ao registrar imóvel no sistema patrimonial.' });
+    }
+  });
+
+  app.delete('/api/admin/patrimonio/imoveis/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const listaAtual = loadStoredRealEstateAssets();
+      const filtrada = listaAtual.filter((i) => i.id !== id);
+      saveStoredRealEstateAssets(filtrada);
+      return res.json({
+        ok: true,
+        mensagem: 'Imóvel removido do cálculo patrimonial.',
+        portfolio: getConsolidatedRealEstatePortfolio(),
+      });
+    } catch (error) {
+      console.error('Erro ao remover imóvel:', error);
+      return res.status(500).json({ erro: 'Erro ao remover imóvel.' });
     }
   });
 
