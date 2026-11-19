@@ -1440,16 +1440,51 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
 
       saveStoredRealEstateAssets(listaAtual);
 
+      // Se o Mestre / Gestor Financeiro marcou para lançar automaticamente no Livro-Caixa / Despesas & Investimentos:
+      let transacaoCriada: any = null;
+      if (body.lancarNoLivroCaixa) {
+        const categoriaLancamento =
+          body.categoriaContabil ||
+          (analise.tipoImovel === 'EQUIPAMENTO_CT'
+            ? 'INVESTIMENTO_EQUIPAMENTOS'
+            : analise.tipoImovel === 'MANUTENCAO_ESTRUTURA'
+            ? 'EQUIPAMENTOS_MANUTENCAO'
+            : 'CAPEX_IMOBILIZADO');
+        transacaoCriada = await prisma.transacaoFinanceira
+          .create({
+            data: {
+              tipo: 'SAIDA',
+              categoria: categoriaLancamento,
+              descricao: `${analise.nome}${
+                analise.custosTransacaoDetalhados.totalCustosTransacaoRs > 0
+                  ? ` (+ Custos/Taxas/Instalação: R$ ${analise.custosTransacaoDetalhados.totalCustosTransacaoRs.toFixed(2)})`
+                  : ''
+              }`,
+              valor: analise.custoTotalAquisicao,
+              data: analise.dataAquisicao ? new Date(analise.dataAquisicao + 'T12:00:00') : new Date(),
+              metodoPagamento: body.metodoPagamento || 'PIX',
+              status: 'CONFIRMADO',
+              registradoPor: body.registradoPor || 'Mestre / Gestor Financeiro',
+              observacao:
+                analise.observacoes ||
+                `Ativo/Equipamento registrado • Valor Líquido Atual: R$ ${analise.valorLiquidoAtualEstimado.toFixed(2)} • Taxa Depreciação: ${analise.taxaDepreciacaoAnualPct}% a.a.`,
+            },
+          })
+          .catch(() => null);
+      }
+
       await logSystemEvent(
         'INFO',
         'PATRIMONIO_IMOVEL',
-        `Imóvel registrado/atualizado: ${analise.nome} | Custo Total: R$ ${analise.custoTotalAquisicao.toFixed(2)} | Valor Líquido Atual: R$ ${analise.valorLiquidoAtualEstimado.toFixed(2)} | Desvalorização Acumulada: R$ ${analise.desvalorizacaoAcumuladaRs.toFixed(2)} (${analise.desvalorizacaoAcumuladaPct}%)`
+        `Ativo/Equipamento registrado: ${analise.nome} | Custo Total: R$ ${analise.custoTotalAquisicao.toFixed(2)} | Valor Líquido Atual: R$ ${analise.valorLiquidoAtualEstimado.toFixed(2)} | Desvalorização Acumulada: R$ ${analise.desvalorizacaoAcumuladaRs.toFixed(2)} (${analise.desvalorizacaoAcumuladaPct}%)`
       );
 
       return res.status(201).json({
         ok: true,
-        mensagem: 'Imóvel registrado na gestão patrimonial com análise de desvalorização e depreciação!',
+        mensagem:
+          'Ativo/Equipamento registrado na gestão patrimonial e sincronizado com o painel financeiro!',
         analise,
+        transacaoCriada,
         portfolio: getConsolidatedRealEstatePortfolio(),
       });
     } catch (error) {

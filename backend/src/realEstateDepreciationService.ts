@@ -337,28 +337,7 @@ export function calculateRealEstateDepreciation(input: RealEstateAssetInput): Re
   };
 }
 
-const DEFAULT_SEED_PROPERTIES: RealEstateAssetInput[] = [
-  {
-    id: 'imovel-sede-ct-boru-pvh',
-    nome: 'Imóvel Sede & Galpão CT BORÜ (180m² Climatizado — Porto Velho/RO)',
-    tipoImovel: 'COMERCIAL_GALPAO',
-    dataAquisicao: '2024-05-15',
-    valorAquisicao: 480000,
-    separarTerrenoConstrucao: true,
-    valorTerreno: 160000,
-    valorConstrucao: 320000,
-    itbiValor: 14400, // 3% ITBI
-    escrituraRegistroValor: 9600, // 2% Cartório/Escritura/Registro
-    corretagemEntradaValor: 0,
-    reformasIniciaisValor: 18000, // Adequação inicial tatame/climatização/elétrica
-    taxaDepreciacaoAnualPct: 4.0, // 4% a.a. sobre os R$ 320.000 de área construída
-    tempoPosseMeses: 30,
-    horizonteProjecaoAnos: 5,
-    custoManutencaoMensal: 650, // Conservação predial, IPTU rateado e manutenção estrutural
-    observacoes:
-      'Ativo imobiliário operacional do CT. Custos de transação (ITBI + Escritura + Reforma Inicial = R$ 42.000 / 8,75%) contabilizados como perda patrimonial imediata no Dia 1; depreciação física de 4% a.a. aplicada exclusivamente sobre a edificação (R$ 320.000), mantendo o terreno (R$ 160.000) isolado.',
-  },
-];
+const DEFAULT_SEED_PROPERTIES: RealEstateAssetInput[] = [];
 
 export function loadStoredRealEstateAssets(): RealEstateAssetInput[] {
   try {
@@ -367,16 +346,21 @@ export function loadStoredRealEstateAssets(): RealEstateAssetInput[] {
     }
     if (!fs.existsSync(STORAGE_FILE)) {
       fs.writeFileSync(STORAGE_FILE, JSON.stringify(DEFAULT_SEED_PROPERTIES, null, 2), 'utf8');
-      return DEFAULT_SEED_PROPERTIES;
+      return [];
     }
     const raw = fs.readFileSync(STORAGE_FILE, 'utf8');
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      // Remove eventual item de seed antigo ('imovel-sede-ct-boru-pvh') para manter o sistema 100% limpo
+      const limpo = parsed.filter((item: any) => item?.id !== 'imovel-sede-ct-boru-pvh');
+      if (limpo.length !== parsed.length) {
+        fs.writeFileSync(STORAGE_FILE, JSON.stringify(limpo, null, 2), 'utf8');
+      }
+      return limpo;
     }
-    return DEFAULT_SEED_PROPERTIES;
+    return [];
   } catch {
-    return DEFAULT_SEED_PROPERTIES;
+    return [];
   }
 }
 

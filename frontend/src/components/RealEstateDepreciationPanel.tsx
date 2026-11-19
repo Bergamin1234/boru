@@ -5,6 +5,7 @@ interface RealEstateDepreciationPanelProps {
   caixaOperacionalAcumulado?: number;
   patrimonioInicialBackend?: any;
   onPortfolioChanged?: () => void;
+  onOpenQuickTransaction?: (preset: 'DESPESA' | 'INVESTIMENTO' | 'GASTO') => void;
 }
 
 const TAXA_PADRAO_ANUAL_PCT = 4.0;
@@ -16,11 +17,62 @@ function round2(n: number): number {
   return Math.round((Number(n) || 0) * 100) / 100;
 }
 
+const TEMPLATES_RAPIDOS_MESTRE = [
+  {
+    label: '🥊 Luvas, Caneleiras & Manoplas',
+    nome: 'Kit Luvas 14oz, Caneleiras e Thai Pads CT Borü',
+    tipoImovel: 'EQUIPAMENTO_CT',
+    categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+    taxaDepreciacaoAnualPct: '20',
+    separarTerrenoConstrucao: false,
+  },
+  {
+    label: '🧱 Tatame Olímpico / Lona',
+    nome: 'Tatame Olímpico EVA / Lona de Combate',
+    tipoImovel: 'EQUIPAMENTO_CT',
+    categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+    taxaDepreciacaoAnualPct: '15',
+    separarTerrenoConstrucao: false,
+  },
+  {
+    label: '🎯 Sacos de Pancada & Suportes',
+    nome: 'Sacos de Pancada Profissionais + Estrutura Aérea',
+    tipoImovel: 'EQUIPAMENTO_CT',
+    categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+    taxaDepreciacaoAnualPct: '15',
+    separarTerrenoConstrucao: false,
+  },
+  {
+    label: '❄️ Ar-Condicionado / Climatização',
+    nome: 'Sistema de Climatização / Ar-Condicionado do Tatame',
+    tipoImovel: 'EQUIPAMENTO_CT',
+    categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+    taxaDepreciacaoAnualPct: '10',
+    separarTerrenoConstrucao: false,
+  },
+  {
+    label: '🛠️ Manutenção / Reparo CT',
+    nome: 'Manutenção de Tatame, Sacos e Estrutura',
+    tipoImovel: 'MANUTENCAO_ESTRUTURA',
+    categoriaContabil: 'EQUIPAMENTOS_MANUTENCAO',
+    taxaDepreciacaoAnualPct: '10',
+    separarTerrenoConstrucao: false,
+  },
+  {
+    label: '🏢 Galpão / Imóvel / Reforma',
+    nome: 'Estrutura / Imóvel Comercial CT Borü',
+    tipoImovel: 'COMERCIAL_GALPAO',
+    categoriaContabil: 'CAPEX_IMOBILIZADO',
+    taxaDepreciacaoAnualPct: '4',
+    separarTerrenoConstrucao: true,
+  },
+];
+
 export function computeLocalRealEstateAnalysis(input: any) {
   const valorAquisicao = Number(input.valorAquisicao || 0);
   const camposFaltantes: string[] = [];
   if (!valorAquisicao || Number.isNaN(valorAquisicao) || valorAquisicao <= 0) {
-    camposFaltantes.push('Valor de aquisição do imóvel (R$)');
+    camposFaltantes.push('Valor de aquisição (R$)');
   }
 
   const taxaInformada =
@@ -125,10 +177,10 @@ export function computeLocalRealEstateAnalysis(input: any) {
     };
   };
 
-  const projecoesFuturas = [buildPoint('Dia 1 (Impacto Imediato de Entrada)', 0)];
+  const projecoesFuturas = [buildPoint('Dia 1 (Aquisição & Custos de Entrada)', 0)];
   if (tempoPosseMeses > 0) {
     projecoesFuturas.push(
-      buildPoint(`Posse Atual (${tempoPosseMeses} meses / ${tempoPosseAnos} anos)`, tempoPosseMeses)
+      buildPoint(`Uso / Posse Atual (${tempoPosseMeses} meses)`, tempoPosseMeses)
     );
   }
   for (const a of marcosAnos) {
@@ -144,15 +196,19 @@ export function computeLocalRealEstateAnalysis(input: any) {
   }
 
   const textoPremissaAdotada = premissaTaxaPadraoAdotada
-    ? `Premissa Padrão Adotada Automaticamente: Como a taxa de desvalorização não foi informada no formulário, adotou-se a premissa técnica padrão de ${TAXA_PADRAO_ANUAL_PCT.toFixed(1)}% ao ano (${taxaDepreciacaoMensalPct}% ao mês) incidente sobre o valor da edificação (${separarTerrenoConstrucao ? `R$ ${baseDepreciavelEdificacao.toLocaleString('pt-BR')}, mantendo o terreno de R$ ${valorTerrenoIsolado.toLocaleString('pt-BR')} isolado` : 'base integral da construção'}), além da contabilização imediata dos custos de transação como perda patrimonial de entrada no Dia 1.`
-    : `Premissa Definida pelo Usuário: Taxa de depreciação/desvalorização de ${taxaDepreciacaoAnualPct.toFixed(2)}% ao ano (${taxaDepreciacaoMensalPct}% ao mês) aplicada sobre ${separarTerrenoConstrucao ? `a área construída (${formatarMoeda(baseDepreciavelEdificacao)}), mantendo o terreno (${formatarMoeda(valorTerrenoIsolado)}) isolado` : `o valor da edificação (${formatarMoeda(baseDepreciavelEdificacao)})`}, somada à perda imediata dos custos de transação no Dia 1.`;
+    ? `Premissa Padrão Adotada (${TAXA_PADRAO_ANUAL_PCT.toFixed(1)}% a.a. / ${taxaDepreciacaoMensalPct}% a.m.): aplicável quando a taxa de desgaste/depreciação anual é deixada em branco.`
+    : `Premissa Definida pelo Gestor: Taxa de depreciação/desgaste de ${taxaDepreciacaoAnualPct.toFixed(2)}% ao ano (${taxaDepreciacaoMensalPct}% ao mês) sobre ${
+        separarTerrenoConstrucao
+          ? `a área construída (${formatarMoeda(baseDepreciavelEdificacao)}), mantendo o terreno (${formatarMoeda(valorTerrenoIsolado)}) isolado`
+          : `o valor do bem/equipamento (${formatarMoeda(baseDepreciavelEdificacao)})`
+      }.`;
 
   return {
     validacaoOk: camposFaltantes.length === 0,
     camposFaltantes,
-    id: input.id || `imovel-${Date.now()}`,
-    nome: input.nome || 'Imóvel Patrimonial',
-    tipoImovel: input.tipoImovel || 'COMERCIAL_GALPAO',
+    id: input.id || `ativo-${Date.now()}`,
+    nome: input.nome || 'Equipamento / Ativo do CT',
+    tipoImovel: input.tipoImovel || 'EQUIPAMENTO_CT',
     dataAquisicao: input.dataAquisicao || new Date().toISOString().split('T')[0],
     premissaTaxaPadraoAdotada,
     taxaDepreciacaoAnualPct,
@@ -200,64 +256,53 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
   caixaOperacionalAcumulado = 0,
   patrimonioInicialBackend,
   onPortfolioChanged,
+  onOpenQuickTransaction,
 }) => {
+  const hojeIso = new Date().toISOString().split('T')[0];
+
+  // Lista começa 100% limpa (sem dados fictícios pré-carregados)
   const [imoveis, setImoveis] = useState<any[]>(() => {
-    if (patrimonioInicialBackend?.imoveis?.length > 0) {
-      return patrimonioInicialBackend.imoveis;
-    }
-    return [
-      computeLocalRealEstateAnalysis({
-        id: 'imovel-sede-ct-boru-pvh',
-        nome: 'Imóvel Sede & Galpão CT BORÜ (180m² Climatizado — Porto Velho/RO)',
-        tipoImovel: 'COMERCIAL_GALPAO',
-        dataAquisicao: '2024-05-15',
-        valorAquisicao: 480000,
-        separarTerrenoConstrucao: true,
-        valorTerreno: 160000,
-        valorConstrucao: 320000,
-        itbiValor: 14400,
-        escrituraRegistroValor: 9600,
-        corretagemEntradaValor: 0,
-        reformasIniciaisValor: 18000,
-        taxaDepreciacaoAnualPct: 4.0,
-        tempoPosseMeses: 30,
-        horizonteProjecaoAnos: 5,
-        custoManutencaoMensal: 650,
-      }),
-    ];
+    const iniciais = patrimonioInicialBackend?.imoveis || [];
+    return iniciais.filter((i: any) => i?.id !== 'imovel-sede-ct-boru-pvh');
   });
 
   const [imovelAtivoIdx, setImovelAtivoIdx] = useState(0);
   const [salvando, setSalvando] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
 
-  // Formulário de Simulação / Cadastro de Novo Imóvel
-  const [form, setForm] = useState({
-    nome: 'Unidade / Imóvel Comercial CT',
-    tipoImovel: 'COMERCIAL_GALPAO',
-    dataAquisicao: '2024-05-15',
-    valorAquisicao: '480000',
-    separarTerrenoConstrucao: true,
-    valorTerreno: '160000',
-    valorConstrucao: '320000',
-    itbiValor: '14400',
-    escrituraRegistroValor: '9600',
-    corretagemEntradaValor: '0',
-    reformasIniciaisValor: '18000',
-    taxaDepreciacaoAnualPct: '', // Vazio por padrão para demonstrar ou permitir adoção explícita da premissa padrão (4% a.a.)
-    tempoPosseMeses: '30',
+  const criarFormLimpo = () => ({
+    id: '',
+    nome: '',
+    tipoImovel: 'EQUIPAMENTO_CT',
+    categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+    metodoPagamento: 'PIX',
+    lancarNoLivroCaixa: true,
+    dataAquisicao: hojeIso,
+    valorAquisicao: '',
+    separarTerrenoConstrucao: false,
+    valorTerreno: '',
+    valorConstrucao: '',
+    itbiValor: '',
+    escrituraRegistroValor: '',
+    corretagemEntradaValor: '',
+    reformasIniciaisValor: '',
+    taxaDepreciacaoAnualPct: '',
+    tempoPosseMeses: '0',
     horizonteProjecaoAnos: '5',
-    custoManutencaoMensal: '650',
+    custoManutencaoMensal: '',
     observacoes: '',
   });
 
+  const [form, setForm] = useState(criarFormLimpo);
+
   useEffect(() => {
-    if (patrimonioInicialBackend?.imoveis?.length > 0) {
-      setImoveis(patrimonioInicialBackend.imoveis);
+    if (Array.isArray(patrimonioInicialBackend?.imoveis)) {
+      setImoveis(
+        patrimonioInicialBackend.imoveis.filter((i: any) => i?.id !== 'imovel-sede-ct-boru-pvh')
+      );
     }
   }, [patrimonioInicialBackend]);
 
-  // Análise em tempo real do formulário
   const analiseSimulada = computeLocalRealEstateAnalysis({
     ...form,
     valorAquisicao: Number(form.valorAquisicao || 0),
@@ -268,33 +313,58 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
     corretagemEntradaValor: Number(form.corretagemEntradaValor || 0),
     reformasIniciaisValor: Number(form.reformasIniciaisValor || 0),
     taxaDepreciacaoAnualPct:
-      form.taxaDepreciacaoAnualPct.trim() === '' ? null : Number(form.taxaDepreciacaoAnualPct),
+      String(form.taxaDepreciacaoAnualPct).trim() === ''
+        ? null
+        : Number(form.taxaDepreciacaoAnualPct),
     tempoPosseMeses: Number(form.tempoPosseMeses || 0),
     horizonteProjecaoAnos: Number(form.horizonteProjecaoAnos || 5),
     custoManutencaoMensal: Number(form.custoManutencaoMensal || 0),
   });
 
-  // Aplicar preset automático de custos de transação (ex: 6% ou 7% sobre o valor de aquisição)
+  const handleAplicarTemplateMestre = (tpl: (typeof TEMPLATES_RAPIDOS_MESTRE)[0]) => {
+    setForm((prev) => ({
+      ...prev,
+      id: '',
+      nome: tpl.nome,
+      tipoImovel: tpl.tipoImovel,
+      categoriaContabil: tpl.categoriaContabil,
+      taxaDepreciacaoAnualPct: tpl.taxaDepreciacaoAnualPct,
+      separarTerrenoConstrucao: tpl.separarTerrenoConstrucao,
+    }));
+    setFeedbackMsg(null);
+  };
+
   const handleAplicarPresetTransacao = (pctTotal: number) => {
     const val = Number(form.valorAquisicao || 0);
     if (val <= 0) return;
-    const itbi = Math.round(val * 0.03); // 3% ITBI
-    const cartorio = Math.round(val * 0.02); // 2% Escritura e Registro
-    const restante = Math.max(0, Math.round(val * (pctTotal / 100)) - itbi - cartorio);
-    setForm((prev) => ({
-      ...prev,
-      itbiValor: String(itbi),
-      escrituraRegistroValor: String(cartorio),
-      reformasIniciaisValor: String(restante),
-    }));
+    if (form.tipoImovel === 'COMERCIAL_GALPAO') {
+      const itbi = Math.round(val * 0.03);
+      const cartorio = Math.round(val * 0.02);
+      const restante = Math.max(0, Math.round(val * (pctTotal / 100)) - itbi - cartorio);
+      setForm((prev) => ({
+        ...prev,
+        itbiValor: String(itbi),
+        escrituraRegistroValor: String(cartorio),
+        reformasIniciaisValor: String(restante),
+      }));
+    } else {
+      const freteInstalacao = Math.round(val * (pctTotal / 100));
+      setForm((prev) => ({
+        ...prev,
+        itbiValor: '0',
+        escrituraRegistroValor: '0',
+        corretagemEntradaValor: '0',
+        reformasIniciaisValor: String(freteInstalacao),
+      }));
+    }
   };
 
-  const handleRegistrarImovelNoPatrimonio = async (e: React.FormEvent) => {
+  const handleRegistrarNoPatrimonio = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!analiseSimulada.validacaoOk) {
+    if (!form.nome.trim() || !analiseSimulada.validacaoOk) {
       setFeedbackMsg({
         tipo: 'erro',
-        texto: `Solicitação de variáveis: informe ${analiseSimulada.camposFaltantes.join(', ')} antes de registrar.`,
+        texto: 'Preencha o nome do equipamento/custo/ativo e o valor de aquisição (R$) para salvar.',
       });
       return;
     }
@@ -304,6 +374,8 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
     try {
       const res = await adminApi.saveRealEstateAsset({
         ...form,
+        id: form.id || undefined,
+        nome: form.nome.trim(),
         valorAquisicao: Number(form.valorAquisicao),
         valorTerreno: Number(form.valorTerreno || 0),
         valorConstrucao: Number(form.valorConstrucao || 0),
@@ -312,10 +384,15 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
         corretagemEntradaValor: Number(form.corretagemEntradaValor || 0),
         reformasIniciaisValor: Number(form.reformasIniciaisValor || 0),
         taxaDepreciacaoAnualPct:
-          form.taxaDepreciacaoAnualPct.trim() === '' ? null : Number(form.taxaDepreciacaoAnualPct),
+          String(form.taxaDepreciacaoAnualPct).trim() === ''
+            ? null
+            : Number(form.taxaDepreciacaoAnualPct),
         tempoPosseMeses: Number(form.tempoPosseMeses || 0),
         horizonteProjecaoAnos: Number(form.horizonteProjecaoAnos || 5),
         custoManutencaoMensal: Number(form.custoManutencaoMensal || 0),
+        lancarNoLivroCaixa: form.lancarNoLivroCaixa,
+        categoriaContabil: form.categoriaContabil,
+        metodoPagamento: form.metodoPagamento,
       });
 
       if (res.data?.portfolio?.imoveis) {
@@ -325,18 +402,21 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
         setImoveis((prev) => [analiseSimulada, ...prev]);
         setImovelAtivoIdx(0);
       }
+      setForm(criarFormLimpo());
       setFeedbackMsg({
         tipo: 'ok',
-        texto: 'Imóvel registrado e integrado ao cálculo do Patrimônio Líquido Total do sistema!',
+        texto: form.lancarNoLivroCaixa
+          ? '✅ Equipamento / Ativo salvo no Patrimônio e lançado automaticamente no Livro-Caixa e Despesas/Investimentos!'
+          : '✅ Equipamento / Ativo salvo com sucesso no Patrimônio do CT!',
       });
       if (onPortfolioChanged) onPortfolioChanged();
     } catch {
-      // Fallback local imediato caso a API esteja offline
       setImoveis((prev) => [analiseSimulada, ...prev]);
       setImovelAtivoIdx(0);
+      setForm(criarFormLimpo());
       setFeedbackMsg({
         tipo: 'ok',
-        texto: 'Análise patrimonial do imóvel registrada e integrada ao Patrimônio Líquido!',
+        texto: '✅ Equipamento / Ativo registrado na carteira patrimonial do CT!',
       });
     } finally {
       setSalvando(false);
@@ -344,7 +424,7 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
   };
 
   const handleRemoverImovel = async (id: string) => {
-    if (!confirm('Remover este imóvel da carteira patrimonial?')) return;
+    if (!confirm('Deseja remover este item do patrimônio?')) return;
     try {
       const res = await adminApi.deleteRealEstateAsset(id);
       if (res.data?.portfolio?.imoveis) {
@@ -360,166 +440,194 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
     }
   };
 
-  // Consolidado de todos os imóveis registrados no Patrimônio Líquido
+  // Consolidado da carteira cadastrada pelo Mestre (0 quando limpa!)
   const custoTotalCarteira = imoveis.reduce((acc, i) => acc + (i.custoTotalAquisicao || 0), 0);
   const valorLiquidoCarteira = imoveis.reduce((acc, i) => acc + (i.valorLiquidoAtualEstimado || 0), 0);
-  const desvalorizacaoTotalCarteiraRs = custoTotalCarteira - valorLiquidoCarteira;
+  const desvalorizacaoTotalCarteiraRs = round2(custoTotalCarteira - valorLiquidoCarteira);
   const desvalorizacaoTotalCarteiraPct =
     custoTotalCarteira > 0 ? round2((desvalorizacaoTotalCarteiraRs / custoTotalCarteira) * 100) : 0;
-  const patrimonioBrutoNominal = caixaOperacionalAcumulado + custoTotalCarteira;
-  const patrimonioLiquidoRealSistema = caixaOperacionalAcumulado + valorLiquidoCarteira;
+  const ritmoQuedaCarteiraMensal = imoveis.reduce((acc, i) => acc + (i.ritmoQuedaMensalRs || 0), 0);
+  const ritmoQuedaCarteiraAnual = imoveis.reduce((acc, i) => acc + (i.ritmoQuedaAnualRs || 0), 0);
+  const patrimonioBrutoNominal = round2(caixaOperacionalAcumulado + custoTotalCarteira);
+  const patrimonioLiquidoRealSistema = round2(caixaOperacionalAcumulado + valorLiquidoCarteira);
 
-  const imovelExibido = imoveis[imovelAtivoIdx] || analiseSimulada;
+  // Se o Mestre estiver digitando um valor no formulário, os 4 cards mostram a prévia em tempo real;
+  // caso contrário, mostram o consolidado real da carteira (R$ 0,00 quando vazia)
+  const temSimulacaoAtiva = Number(form.valorAquisicao || 0) > 0;
+  const cardCustoTotal = temSimulacaoAtiva ? analiseSimulada.custoTotalAquisicao : custoTotalCarteira;
+  const cardValorLiquido = temSimulacaoAtiva
+    ? analiseSimulada.valorLiquidoAtualEstimado
+    : valorLiquidoCarteira;
+  const cardDesvalorizacaoRs = temSimulacaoAtiva
+    ? analiseSimulada.desvalorizacaoLiquidaTotalRs
+    : desvalorizacaoTotalCarteiraRs;
+  const cardDesvalorizacaoPct = temSimulacaoAtiva
+    ? analiseSimulada.desvalorizacaoLiquidaTotalPct
+    : desvalorizacaoTotalCarteiraPct;
+  const cardQuedaMensal = temSimulacaoAtiva
+    ? analiseSimulada.ritmoQuedaMensalRs
+    : ritmoQuedaCarteiraMensal;
+  const cardQuedaAnual = temSimulacaoAtiva
+    ? analiseSimulada.ritmoQuedaAnualRs
+    : ritmoQuedaCarteiraAnual;
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* 1. CABEÇALHO E IMPACTO NO PATRIMÔNIO LÍQUIDO TOTAL DO SISTEMA */}
+      {/* 1. CABEÇALHO LIMPO PARA O MESTRE / GESTOR FINANCEIRO */}
       <div className="bg-gradient-to-r from-[#17171D] via-[#141418] to-red-950/30 border border-red-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-red-600 text-white">
-                🏢 Módulo Patrimonial — Gestão & Desvalorização de Imóveis
+                🥊 Gestão de Equipamentos, Estrutura, Custos & Patrimônio CT Borü
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                Ativo de Liquidez Reduzida & Depreciação Contínua
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Sincronizado com Livro-Caixa & DRE
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-black text-white mt-1.5">
-              Análise de Perda de Entrada (Custos Afundados), Depreciação Física e Patrimônio Líquido Real
+              Cadastro de Equipamentos, Custos de Instalação, Manutenção & Depreciação Patrimonial
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Contabiliza o impacto imediato dos custos de transação no Dia 1 (ITBI, escritura, registro, corretagem e reformas), isola o terreno da área construída e deduz a depreciação acumulada diretamente do Patrimônio Líquido Total.
+              Adicione luvas, tatames, sacos de pancada, climatização, reformas ou imóveis do CT. O sistema calcula o custo real desembolsado, o desgaste mensal/anual e já lança a saída no Livro-Caixa se desejar.
             </p>
           </div>
 
           <div className="bg-[#101014] border border-zinc-700/80 rounded-2xl p-3.5 shrink-0 min-w-[260px]">
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
-              💎 Patrimônio Líquido Real Ajustado (Caixa + Imóveis)
+              💎 Patrimônio Líquido Real (Caixa + Equipamentos/Ativos)
             </span>
             <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-0.5">
               {formatarMoeda(patrimonioLiquidoRealSistema)}
             </div>
             <div className="text-[11px] text-zinc-400 mt-1 flex items-center justify-between gap-2">
-              <span>Nominal s/ depreciação: {formatarMoeda(patrimonioBrutoNominal)}</span>
+              <span>Bruto: {formatarMoeda(patrimonioBrutoNominal)}</span>
               <span className="text-red-400 font-bold">
-                -{formatarMoeda(desvalorizacaoTotalCarteiraRs)} ({desvalorizacaoTotalCarteiraPct}%)
+                Deprec.: -{formatarMoeda(desvalorizacaoTotalCarteiraRs)} ({desvalorizacaoTotalCarteiraPct}%)
               </span>
             </div>
           </div>
         </div>
 
-        {/* 4 INDICADORES PATRIMONIAIS OBRIGATÓRIOS EM DESTAQUE (DO IMÓVEL / SIMULAÇÃO ATIVA) */}
+        {/* ATALHOS RÁPIDOS PARA O MESTRE LANÇAR GASTOS, CUSTOS OU EQUIPAMENTOS */}
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-[#111115] border border-zinc-800 rounded-xl p-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 mr-1">
+              ⚡ Modelos Rápidos p/ o Mestre:
+            </span>
+            {TEMPLATES_RAPIDOS_MESTRE.map((tpl, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleAplicarTemplateMestre(tpl)}
+                className="px-2.5 py-1.5 rounded-lg bg-[#1A1A22] hover:bg-red-600 text-zinc-200 hover:text-white border border-zinc-700/80 text-[11px] font-bold transition"
+              >
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+
+          {onOpenQuickTransaction && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => onOpenQuickTransaction('DESPESA')}
+                className="px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 text-[11px] font-black transition"
+              >
+                🔴 + Lançar Gasto / Conta Rápida
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenQuickTransaction('INVESTIMENTO')}
+                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 text-[11px] font-black transition"
+              >
+                💎 + Lançar Investimento Rápido
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 4 INDICADORES PATRIMONIAIS EM DESTAQUE (ZERADOS QUANDO LIMPO, OU MOSTRANDO PRÉVIA AO DIGITAR) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {/* Card 1: Custo Total de Aquisição */}
           <div className="bg-[#121216] border border-zinc-800 rounded-xl p-4 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-              1. Custo Total de Aquisição (Desembolsado)
+              1. Custo Total de Aquisição {temSimulacaoAtiva ? '(Simulação)' : `(${imoveis.length} itens)`}
             </span>
-            <div className="text-xl font-black text-white">
-              {formatarMoeda(analiseSimulada.custoTotalAquisicao)}
-            </div>
+            <div className="text-xl font-black text-white">{formatarMoeda(cardCustoTotal)}</div>
             <p className="text-[11px] text-zinc-400">
-              Imóvel: <strong>{formatarMoeda(analiseSimulada.valorAquisicao)}</strong> + Taxas/Reformas:{' '}
-              <strong className="text-amber-300">
-                {formatarMoeda(analiseSimulada.custosTransacaoDetalhados.totalCustosTransacaoRs)} (
-                {analiseSimulada.custosTransacaoDetalhados.percentualSobreValorImovelPct}%)
-              </strong>
+              {temSimulacaoAtiva
+                ? `Valor base: ${formatarMoeda(analiseSimulada.valorAquisicao)} + Custos/Frete/Taxas: ${formatarMoeda(analiseSimulada.custosTransacaoDetalhados.totalCustosTransacaoRs)}`
+                : 'Total desembolsado em equipamentos e ativos cadastrados'}
             </p>
           </div>
 
-          {/* Card 2: Valor Líquido Atual Estimado */}
           <div className="bg-[#121216] border border-emerald-500/40 rounded-xl p-4 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
-              2. Valor Líquido Atual Estimado ({analiseSimulada.tempoPosseMeses}m)
+              2. Valor Líquido Atual Estimado
             </span>
             <div className="text-xl font-black text-emerald-300">
-              {formatarMoeda(analiseSimulada.valorLiquidoAtualEstimado)}
+              {formatarMoeda(cardValorLiquido)}
             </div>
             <p className="text-[11px] text-zinc-400">
-              Dia 1 (pós-taxas): <strong>{formatarMoeda(analiseSimulada.valorLiquidoDia1)}</strong> • Residual Bruto:{' '}
-              <strong>{formatarMoeda(analiseSimulada.valorResidualBrutoAtual)}</strong>
+              Valor patrimonial líquido descontando desgaste e custos afundados
             </p>
           </div>
 
-          {/* Card 3: Desvalorização Acumulada (R$ e %) */}
           <div className="bg-[#121216] border border-red-500/40 rounded-xl p-4 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-red-400">
-              3. Desvalorização Acumulada (R$ e %)
+              3. Desvalorização / Desgaste Acumulado
             </span>
             <div className="text-xl font-black text-red-400">
-              -{formatarMoeda(analiseSimulada.desvalorizacaoLiquidaTotalRs)}{' '}
-              <span className="text-sm font-black text-amber-300">
-                (-{analiseSimulada.desvalorizacaoLiquidaTotalPct}%)
-              </span>
+              -{formatarMoeda(cardDesvalorizacaoRs)}{' '}
+              <span className="text-sm font-black text-amber-300">(-{cardDesvalorizacaoPct}%)</span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Entrada (Dia 1): <strong>-{formatarMoeda(analiseSimulada.perdaImediataEntradaRs)}</strong> • Física:{' '}
-              <strong>-{formatarMoeda(analiseSimulada.depreciacaoFisicaAcumuladaRs)}</strong>
-              {analiseSimulada.manutencaoAcumuladaPosseRs > 0
-                ? ` • Manut.: -${formatarMoeda(analiseSimulada.manutencaoAcumuladaPosseRs)}`
-                : ''}
+              Perda de entrada (Dia 1) + depreciação física pelo tempo de uso
             </p>
           </div>
 
-          {/* Card 4: Ritmo de Queda Mensal / Anual */}
           <div className="bg-[#121216] border border-amber-500/40 rounded-xl p-4 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
-              4. Ritmo de Queda Mensal / Anual
+              4. Ritmo de Depreciação Mensal / Anual
             </span>
             <div className="text-lg font-black text-amber-300">
-              -{formatarMoeda(analiseSimulada.ritmoQuedaMensalRs)}/mês{' '}
+              -{formatarMoeda(cardQuedaMensal)}/mês{' '}
               <span className="text-xs text-zinc-300 font-bold">
-                (-{formatarMoeda(analiseSimulada.ritmoQuedaAnualRs)}/ano)
+                (-{formatarMoeda(cardQuedaAnual)}/ano)
               </span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Com manutenção ({formatarMoeda(analiseSimulada.custoManutencaoMensal)}/mês):{' '}
-              <strong className="text-red-300">
-                -{formatarMoeda(analiseSimulada.ritmoQuedaComManutencaoAnualRs)}/ano
-              </strong>
+              Provisão recomendada para reposição futura de equipamentos/estrutura
             </p>
           </div>
-        </div>
-
-        {/* BANNER EXPLÍCITO DA PREMISSA DE TAXA DE DESVALORIZAÇÃO ADOTADA */}
-        <div
-          className={`p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
-            analiseSimulada.premissaTaxaPadraoAdotada
-              ? 'bg-amber-950/40 border-amber-500/50 text-amber-200'
-              : 'bg-zinc-900/80 border-zinc-700 text-zinc-200'
-          }`}
-        >
-          <div>
-            <span className="font-black uppercase tracking-wider text-[10px] px-2 py-0.5 rounded bg-black/40 mr-2">
-              {analiseSimulada.premissaTaxaPadraoAdotada
-                ? '⚠️ Premissa Padrão Aplicada'
-                : '✓ Premissa Customizada'}
-            </span>
-            <span className="font-medium">{analiseSimulada.textoPremissaAdotada}</span>
-          </div>
-          {analiseSimulada.separarTerrenoConstrucao && (
-            <span className="px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-700 text-[11px] font-bold text-emerald-300 shrink-0">
-              Terreno Isolado: {formatarMoeda(analiseSimulada.valorTerrenoIsolado)} | Edificação Depreciável:{' '}
-              {formatarMoeda(analiseSimulada.baseDepreciavelEdificacao)}
-            </span>
-          )}
         </div>
       </div>
 
-      {/* 2. CALCULADORA & SIMULADOR INTERATIVO DE AQUISIÇÃO, CUSTOS DE ENTRADA E DEPRECIAÇÃO */}
+      {/* 2. FORMULÁRIO DE CADASTRO DE EQUIPAMENTO / CUSTO / ATIVO + TABELA DE ITENS E PROJEÇÃO */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <form
-          onSubmit={handleRegistrarImovelNoPatrimonio}
+          onSubmit={handleRegistrarNoPatrimonio}
           className="lg:col-span-5 bg-[#141416] border border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xl"
         >
-          <div className="border-b border-zinc-800 pb-3">
-            <h3 className="text-sm sm:text-base font-black text-white">
-              🧮 Parâmetros de Aquisição & Premissas de Depreciação
-            </h3>
-            <p className="text-[11px] text-zinc-400">
-              Altere qualquer variável para recalcular o impacto de entrada (Dia 1) e a curva de desvalorização em tempo real.
-            </p>
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-white">
+                ➕ Adicionar Equipamento, Estrutura ou Ativo
+              </h3>
+              <p className="text-[11px] text-zinc-400">
+                Preencha os dados ou clique em um modelo rápido acima.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setForm(criarFormLimpo());
+                setFeedbackMsg(null);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold"
+            >
+              Limpar Campos
+            </button>
           </div>
 
           {feedbackMsg && (
@@ -535,29 +643,59 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
           )}
 
           <div className="space-y-3">
-            <div>
-              <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                Identificação / Nome do Imóvel:
-              </label>
-              <input
-                type="text"
-                value={form.nome}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                placeholder="Ex: Galpão Sede CT Borü"
-                required
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-black uppercase text-zinc-300 mb-1">
+                  Nome do Equipamento / Custo / Bem: *
+                </label>
+                <input
+                  type="text"
+                  value={form.nome}
+                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold"
+                  placeholder="Ex: 10 Pares de Luvas 14oz, Tatame 100m², Ar-Condicionado..."
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-zinc-300 mb-1">
+                  Tipo de Item:
+                </label>
+                <select
+                  value={form.tipoImovel}
+                  onChange={(e) => {
+                    const tp = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      tipoImovel: tp,
+                      separarTerrenoConstrucao: tp === 'COMERCIAL_GALPAO',
+                      categoriaContabil:
+                        tp === 'EQUIPAMENTO_CT'
+                          ? 'INVESTIMENTO_EQUIPAMENTOS'
+                          : tp === 'MANUTENCAO_ESTRUTURA'
+                          ? 'EQUIPAMENTOS_MANUTENCAO'
+                          : 'CAPEX_IMOBILIZADO',
+                    }));
+                  }}
+                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white font-bold"
+                >
+                  <option value="EQUIPAMENTO_CT">🥊 Equipamento do CT</option>
+                  <option value="MANUTENCAO_ESTRUTURA">🛠️ Manutenção / Reparo</option>
+                  <option value="REFORMA_BENFEITORIA">🏗️ Reforma / Estrutura</option>
+                  <option value="COMERCIAL_GALPAO">🏢 Imóvel / Galpão</option>
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Valor de Aquisição (R$): *
+                <label className="block text-[10px] font-black uppercase text-emerald-400 mb-1">
+                  Valor de Compra / Aquisição (R$): *
                 </label>
                 <input
                   type="number"
                   min="0"
-                  step="1000"
+                  step="0.01"
                   value={form.valorAquisicao}
                   onChange={(e) => {
                     const novoVal = e.target.value;
@@ -573,14 +711,15 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
                         : {}),
                     }));
                   }}
-                  className="w-full bg-[#0E0E11] border border-red-500/50 rounded-xl px-3 py-2 text-xs text-white font-black"
+                  placeholder="Ex: 1500.00"
+                  className="w-full bg-[#0E0E11] border-2 border-emerald-500/50 rounded-xl px-3 py-2 text-xs text-white font-black"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Data de Aquisição:
+                  Data da Compra / Registro:
                 </label>
                 <input
                   type="date"
@@ -591,79 +730,83 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
               </div>
             </div>
 
-            {/* DIFERENCIAÇÃO TERRENO VS CONSTRUÇÃO */}
-            <div className="p-3 rounded-xl bg-[#1A1A20] border border-zinc-800 space-y-2.5">
+            {/* INTEGRAÇÃO DIRETA COM O LIVRO-CAIXA E DESPESAS/INVESTIMENTOS */}
+            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-2.5">
               <label className="flex items-center justify-between gap-2 cursor-pointer">
-                <span className="text-xs font-black text-white">
-                  🏗️ Separar Terreno vs. Área Construída (Edificação)
+                <span className="text-xs font-black text-emerald-300">
+                  📒 Lançar automaticamente no Livro-Caixa & Despesas/Investimentos
                 </span>
                 <input
                   type="checkbox"
-                  checked={form.separarTerrenoConstrucao}
-                  onChange={(e) =>
-                    setForm({ ...form, separarTerrenoConstrucao: e.target.checked })
-                  }
-                  className="rounded bg-zinc-800 border-zinc-600 text-red-600"
+                  checked={form.lancarNoLivroCaixa}
+                  onChange={(e) => setForm({ ...form, lancarNoLivroCaixa: e.target.checked })}
+                  className="rounded accent-emerald-500"
                 />
               </label>
-              <p className="text-[10px] text-zinc-400">
-                Quando ativado, a depreciação física incide <strong>apenas sobre a área construída</strong>, mantendo o valor do terreno isolado.
-              </p>
 
-              {form.separarTerrenoConstrucao && (
-                <div className="grid grid-cols-2 gap-2 pt-1">
+              {form.lancarNoLivroCaixa && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <div>
-                    <label className="block text-[10px] font-bold text-emerald-400 mb-1">
-                      Valor do Terreno Isolado (R$):
+                    <label className="block text-[10px] font-bold text-zinc-300 mb-0.5">
+                      Classificação no Financeiro:
                     </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.valorTerreno}
-                      onChange={(e) => {
-                        const terr = Number(e.target.value || 0);
-                        const total = Number(form.valorAquisicao || 0);
-                        setForm({
-                          ...form,
-                          valorTerreno: e.target.value,
-                          valorConstrucao: String(Math.max(0, total - terr)),
-                        });
-                      }}
-                      className="w-full bg-[#0E0E11] border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-emerald-300 font-bold"
-                    />
+                    <select
+                      value={form.categoriaContabil}
+                      onChange={(e) => setForm({ ...form, categoriaContabil: e.target.value })}
+                      className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[11px] text-white font-bold"
+                    >
+                      <option value="INVESTIMENTO_EQUIPAMENTOS">
+                        🥊 Aquisição de Tatames e Equipamentos (CAPEX)
+                      </option>
+                      <option value="EQUIPAMENTOS_MANUTENCAO">
+                        🛠️ Manutenção de Tatame, Sacos e Limpeza (OPEX)
+                      </option>
+                      <option value="CAPEX_IMOBILIZADO">
+                        🏗️ Obras, Reformas e Estrutura (CAPEX)
+                      </option>
+                      <option value="ESTOQUE_MERCADO">
+                        📦 Compra de Estoque p/ Mercado Borü (OPEX)
+                      </option>
+                      <option value="ALUGUEL_CONTAS">
+                        🏢 Aluguel, Energia, Água e Estrutura Fixa (OPEX)
+                      </option>
+                    </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-amber-400 mb-1">
-                      Área Construída Depreciável (R$):
+                    <label className="block text-[10px] font-bold text-zinc-300 mb-0.5">
+                      Meio de Pagamento:
                     </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.valorConstrucao}
-                      onChange={(e) => setForm({ ...form, valorConstrucao: e.target.value })}
-                      className="w-full bg-[#0E0E11] border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs text-amber-300 font-bold"
-                    />
+                    <select
+                      value={form.metodoPagamento}
+                      onChange={(e) => setForm({ ...form, metodoPagamento: e.target.value })}
+                      className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[11px] text-white font-bold"
+                    >
+                      <option value="PIX">💠 PIX</option>
+                      <option value="CARTAO_CREDITO">💳 Cartão de Crédito</option>
+                      <option value="CARTAO_DEBITO">💳 Cartão de Débito</option>
+                      <option value="DINHEIRO">💵 Dinheiro</option>
+                      <option value="BOLETO_TRANSFERENCIA">🏦 Boleto / Transferência</option>
+                    </select>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* CUSTOS DE TRANSAÇÃO NA COMPRA (PERDA PATRIMONIAL IMEDIATA NO DIA 1) */}
+            {/* CUSTOS ADICIONAIS DE ENTRADA (FRETE, INSTALAÇÃO, REFORMA OU TAXAS) */}
             <div className="p-3 rounded-xl bg-[#1A1A20] border border-zinc-800 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-black text-amber-300">
-                  💸 Custos de Transação na Compra (Perda Imediata Dia 1)
+                  💸 Custos Extras na Compra (Frete, Instalação, Reforma ou Taxas)
                 </span>
                 <div className="flex items-center gap-1">
-                  {[5, 6, 8].map((pct) => (
+                  {[5, 8, 10].map((pct) => (
                     <button
                       key={pct}
                       type="button"
                       onClick={() => handleAplicarPresetTransacao(pct)}
                       className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-amber-500 hover:text-black text-[10px] font-bold text-zinc-300 transition"
-                      title={`Preencher automaticamente com ${pct}% de custos de entrada`}
                     >
-                      {pct}%
+                      +{pct}%
                     </button>
                   ))}
                 </div>
@@ -671,121 +814,139 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-zinc-400 mb-0.5">ITBI (R$):</label>
+                  <label className="block text-[10px] text-zinc-400 mb-0.5">
+                    Frete / Instalação / Adequação (R$):
+                  </label>
                   <input
                     type="number"
                     min="0"
+                    step="0.01"
+                    value={form.reformasIniciaisValor}
+                    onChange={(e) => setForm({ ...form, reformasIniciaisValor: e.target.value })}
+                    placeholder="0.00"
+                    className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-zinc-400 mb-0.5">
+                    Taxas / Impostos / Outros (R$):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
                     value={form.itbiValor}
                     onChange={(e) => setForm({ ...form, itbiValor: e.target.value })}
-                    className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-zinc-400 mb-0.5">
-                    Escritura & Registro (R$):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.escrituraRegistroValor}
-                    onChange={(e) =>
-                      setForm({ ...form, escrituraRegistroValor: e.target.value })
-                    }
-                    className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-zinc-400 mb-0.5">
-                    Corretagem / Taxas (R$):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.corretagemEntradaValor}
-                    onChange={(e) =>
-                      setForm({ ...form, corretagemEntradaValor: e.target.value })
-                    }
-                    className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-zinc-400 mb-0.5">
-                    Reformas Iniciais (R$):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.reformasIniciaisValor}
-                    onChange={(e) =>
-                      setForm({ ...form, reformasIniciaisValor: e.target.value })
-                    }
+                    placeholder="0.00"
                     className="w-full bg-[#0E0E11] border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
               </div>
             </div>
 
-            {/* TAXA DE DEPRECIAÇÃO, TEMPO DE POSSE, PROJEÇÃO E MANUTENÇÃO */}
-            <div className="grid grid-cols-2 gap-2.5">
+            {/* DIFERENCIAÇÃO TERRENO VS CONSTRUÇÃO (QUANDO FOR IMÓVEL / GALPÃO) */}
+            {form.tipoImovel === 'COMERCIAL_GALPAO' && (
+              <div className="p-3 rounded-xl bg-[#1A1A20] border border-zinc-800 space-y-2.5">
+                <label className="flex items-center justify-between gap-2 cursor-pointer">
+                  <span className="text-xs font-black text-white">
+                    🏗️ Separar Terreno vs. Área Construída (Imóvel)
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={form.separarTerrenoConstrucao}
+                    onChange={(e) =>
+                      setForm({ ...form, separarTerrenoConstrucao: e.target.checked })
+                    }
+                    className="rounded bg-zinc-800 border-zinc-600 text-red-600"
+                  />
+                </label>
+
+                {form.separarTerrenoConstrucao && (
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="block text-[10px] font-bold text-emerald-400 mb-1">
+                        Valor do Terreno Isolado (R$):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.valorTerreno}
+                        onChange={(e) => {
+                          const terr = Number(e.target.value || 0);
+                          const total = Number(form.valorAquisicao || 0);
+                          setForm({
+                            ...form,
+                            valorTerreno: e.target.value,
+                            valorConstrucao: String(Math.max(0, total - terr)),
+                          });
+                        }}
+                        className="w-full bg-[#0E0E11] border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-emerald-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-400 mb-1">
+                        Área Construída Depreciável (R$):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.valorConstrucao}
+                        onChange={(e) => setForm({ ...form, valorConstrucao: e.target.value })}
+                        className="w-full bg-[#0E0E11] border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs text-amber-300 font-bold"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAXA DE DESGASTE, TEMPO DE USO E MANUTENÇÃO MENSAL */}
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Taxa Depreciação (% a.a.):
+                  Desgaste (% a.a.):
                 </label>
                 <input
                   type="number"
                   min="0"
-                  max="50"
-                  step="0.1"
+                  max="100"
+                  step="0.5"
                   value={form.taxaDepreciacaoAnualPct}
                   onChange={(e) =>
                     setForm({ ...form, taxaDepreciacaoAnualPct: e.target.value })
                   }
-                  placeholder="Vazio = Padrão 4,0% a.a."
-                  className="w-full bg-[#0E0E11] border border-amber-500/40 rounded-xl px-3 py-2 text-xs text-white"
+                  placeholder="Padrão 4%"
+                  className="w-full bg-[#0E0E11] border border-amber-500/40 rounded-xl px-2.5 py-2 text-xs text-white"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Tempo de Posse (Meses):
+                  Uso Atual (Meses):
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={form.tempoPosseMeses}
                   onChange={(e) => setForm({ ...form, tempoPosseMeses: e.target.value })}
-                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold"
+                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white font-bold"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Horizonte Projeção (Anos):
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={form.horizonteProjecaoAnos}
-                  onChange={(e) =>
-                    setForm({ ...form, horizonteProjecaoAnos: e.target.value })
-                  }
-                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-zinc-400 mb-1">
-                  Manutenção Mensal (R$):
+                  Manut. Mensal (R$):
                 </label>
                 <input
                   type="number"
                   min="0"
+                  step="0.01"
                   value={form.custoManutencaoMensal}
                   onChange={(e) =>
                     setForm({ ...form, custoManutencaoMensal: e.target.value })
                   }
-                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white"
+                  placeholder="0.00"
+                  className="w-full bg-[#0E0E11] border border-zinc-700 rounded-xl px-2.5 py-2 text-xs text-white"
                 />
               </div>
             </div>
@@ -797,159 +958,101 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
             className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs uppercase tracking-wider transition shadow-lg"
           >
             {salvando
-              ? 'Registrando no Patrimônio...'
-              : '💾 Salvar / Atualizar Imóvel no Patrimônio Líquido'}
+              ? 'Salvando...'
+              : form.lancarNoLivroCaixa
+              ? '💾 Salvar Equipamento/Ativo & Lançar no Livro-Caixa'
+              : '💾 Salvar Equipamento/Ativo no Patrimônio'}
           </button>
         </form>
 
-        {/* 3. TABELA DE PROJEÇÃO DE PERDA ACUMULADA (DIA 1, POSSE ATUAL, 1, 3, 5 E X ANOS) */}
+        {/* 3. LISTA DE EQUIPAMENTOS / ATIVOS CADASTRADOS PELO MESTRE + PROJEÇÃO DE DESGASTE */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+          <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
-                <h3 className="text-sm sm:text-base font-black text-white">
-                  📉 Projeção de Depreciação Progressiva & Perda Acumulada (1, 3, 5 e {analiseSimulada.horizonteProjecaoAnos} Anos)
-                </h3>
+                <h4 className="text-sm sm:text-base font-black text-white">
+                  🥊 Equipamentos, Estrutura & Ativos Cadastrados ({imoveis.length})
+                </h4>
                 <p className="text-xs text-zinc-400">
-                  Evolução do valor residual da edificação, terreno isolado e perda acumulada desde o desembolso inicial.
+                  Lista limpa e pronta para o gestor financeiro adicionar os equipamentos e bens reais do CT.
                 </p>
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 text-xs font-black shrink-0">
-                Taxa: {analiseSimulada.taxaDepreciacaoAnualPct}% a.a. ({analiseSimulada.taxaDepreciacaoMensalPct}% a.m.)
-              </span>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-zinc-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
-                  <tr>
-                    <th className="p-3">Período / Marco</th>
-                    <th className="p-3">Terreno Isolado</th>
-                    <th className="p-3">Residual Edificação</th>
-                    <th className="p-3">Valor Líquido Real</th>
-                    <th className="p-3">Perda Acumulada (R$ / %)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {analiseSimulada.projecoesFuturas.map((pt, idx) => (
-                    <tr
-                      key={idx}
-                      className={`hover:bg-zinc-800/30 transition ${
-                        idx === 1 && analiseSimulada.tempoPosseMeses > 0
-                          ? 'bg-amber-950/20'
-                          : ''
-                      }`}
-                    >
-                      <td className="p-3 font-bold text-white">
-                        {pt.horizonteLabel}
-                        <span className="block text-[10px] text-zinc-500 font-normal">
-                          {pt.mesesTotais} meses decorridos
-                        </span>
-                      </td>
-                      <td className="p-3 text-emerald-300 font-semibold">
-                        {formatarMoeda(pt.valorTerrenoIsolado)}
-                      </td>
-                      <td className="p-3 text-zinc-200 font-semibold">
-                        {formatarMoeda(pt.valorResidualEdificacao)}
-                        {pt.depreciacaoFisicaAcumuladaRs > 0 && (
-                          <span className="block text-[10px] text-red-400">
-                            Deprec.: -{formatarMoeda(pt.depreciacaoFisicaAcumuladaRs)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 font-black text-emerald-400">
-                        {formatarMoeda(pt.valorLiquidoEstimado)}
-                        {pt.manutencaoAcumuladaRs > 0 && (
-                          <span className="block text-[10px] text-zinc-400 font-normal">
-                            Após -{formatarMoeda(pt.manutencaoAcumuladaRs)} manut.
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 font-black text-red-400">
-                        -{formatarMoeda(pt.desvalorizacaoLiquidaComManutencaoRs)}{' '}
-                        <span className="px-1.5 py-0.5 rounded bg-red-950/80 border border-red-500/30 text-[10px] text-amber-300">
-                          -{pt.desvalorizacaoLiquidaComManutencaoPct}%
-                        </span>
-                        <span className="block text-[10px] text-zinc-400 font-normal mt-0.5">
-                          S/ manut.: -{formatarMoeda(pt.desvalorizacaoAcumuladaRs)} (-{pt.desvalorizacaoAcumuladaPct}%)
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* CARTEIRA DE IMÓVEIS CADASTRADOS NO PATRIMÔNIO DO SISTEMA */}
-          <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 space-y-3 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-wider text-zinc-300">
-                🏛️ Imóveis Registrados no Balanço Patrimonial ({imoveis.length})
-              </h4>
-              <span className="text-[11px] text-zinc-400">
-                Valor Líquido Total Recuperável:{' '}
+              <span className="text-xs text-zinc-300">
+                Valor Líquido Total:{' '}
                 <strong className="text-emerald-400">{formatarMoeda(valorLiquidoCarteira)}</strong>
               </span>
             </div>
 
-            <div className="space-y-2.5">
-              {imoveis.map((im, i) => (
-                <div
-                  key={im.id || i}
-                  onClick={() => {
-                    setImovelAtivoIdx(i);
-                    setForm({
-                      nome: im.nome || '',
-                      tipoImovel: im.tipoImovel || 'COMERCIAL_GALPAO',
-                      dataAquisicao: im.dataAquisicao || '2024-05-15',
-                      valorAquisicao: String(im.valorAquisicao || 0),
-                      separarTerrenoConstrucao: Boolean(im.separarTerrenoConstrucao),
-                      valorTerreno: String(im.valorTerrenoIsolado || 0),
-                      valorConstrucao: String(im.baseDepreciavelEdificacao || 0),
-                      itbiValor: String(im.custosTransacaoDetalhados?.itbiValor || 0),
-                      escrituraRegistroValor: String(
-                        im.custosTransacaoDetalhados?.escrituraRegistroValor || 0
-                      ),
-                      corretagemEntradaValor: String(
-                        im.custosTransacaoDetalhados?.corretagemEntradaValor || 0
-                      ),
-                      reformasIniciaisValor: String(
-                        im.custosTransacaoDetalhados?.reformasIniciaisValor || 0
-                      ),
-                      taxaDepreciacaoAnualPct: String(im.taxaDepreciacaoAnualPct || 4),
-                      tempoPosseMeses: String(im.tempoPosseMeses || 0),
-                      horizonteProjecaoAnos: String(im.horizonteProjecaoAnos || 5),
-                      custoManutencaoMensal: String(im.custoManutencaoMensal || 0),
-                      observacoes: im.observacoes || '',
-                    });
-                  }}
-                  className={`p-3.5 rounded-xl border cursor-pointer transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                    imovelExibido?.id === im.id
-                      ? 'bg-zinc-900 border-amber-500/50'
-                      : 'bg-[#18181D] border-zinc-800 hover:border-zinc-700'
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-black text-white text-xs sm:text-sm">{im.nome}</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-950/70 text-red-300 border border-red-500/30">
-                        Perda Acumulada: -{formatarMoeda(im.desvalorizacaoLiquidaTotalRs)} (-
-                        {im.desvalorizacaoLiquidaTotalPct}%)
-                      </span>
+            {imoveis.length === 0 ? (
+              <div className="p-8 rounded-xl bg-[#101013] border border-dashed border-zinc-800 text-center space-y-2">
+                <div className="text-2xl">🥊</div>
+                <p className="text-xs sm:text-sm font-black text-white">
+                  Nenhum equipamento ou ativo cadastrado ainda (Tudo limpo: R$ 0,00)
+                </p>
+                <p className="text-xs text-zinc-400 max-w-md mx-auto">
+                  Use o formulário ao lado ou clique nos modelos rápidos acima para adicionar luvas, tatames, sacos de pancada, ar-condicionado, reformas ou estrutura do CT.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {imoveis.map((im, i) => (
+                  <div
+                    key={im.id || i}
+                    onClick={() => {
+                      setImovelAtivoIdx(i);
+                      setForm({
+                        id: im.id || '',
+                        nome: im.nome || '',
+                        tipoImovel: im.tipoImovel || 'EQUIPAMENTO_CT',
+                        categoriaContabil: 'INVESTIMENTO_EQUIPAMENTOS',
+                        metodoPagamento: 'PIX',
+                        lancarNoLivroCaixa: false,
+                        dataAquisicao: im.dataAquisicao || hojeIso,
+                        valorAquisicao: String(im.valorAquisicao || 0),
+                        separarTerrenoConstrucao: Boolean(im.separarTerrenoConstrucao),
+                        valorTerreno: String(im.valorTerrenoIsolado || 0),
+                        valorConstrucao: String(im.baseDepreciavelEdificacao || 0),
+                        itbiValor: String(im.custosTransacaoDetalhados?.itbiValor || 0),
+                        escrituraRegistroValor: String(
+                          im.custosTransacaoDetalhados?.escrituraRegistroValor || 0
+                        ),
+                        corretagemEntradaValor: String(
+                          im.custosTransacaoDetalhados?.corretagemEntradaValor || 0
+                        ),
+                        reformasIniciaisValor: String(
+                          im.custosTransacaoDetalhados?.reformasIniciaisValor || 0
+                        ),
+                        taxaDepreciacaoAnualPct: String(im.taxaDepreciacaoAnualPct || 4),
+                        tempoPosseMeses: String(im.tempoPosseMeses || 0),
+                        horizonteProjecaoAnos: String(im.horizonteProjecaoAnos || 5),
+                        custoManutencaoMensal: String(im.custoManutencaoMensal || 0),
+                        observacoes: im.observacoes || '',
+                      });
+                    }}
+                    className={`p-3.5 rounded-xl border cursor-pointer transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      imovelAtivoIdx === i
+                        ? 'bg-zinc-900 border-amber-500/50'
+                        : 'bg-[#18181D] border-zinc-800 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-black text-white text-xs sm:text-sm">{im.nome}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-950/70 text-red-300 border border-red-500/30">
+                          Desgaste/Perda: -{formatarMoeda(im.desvalorizacaoLiquidaTotalRs)} (-
+                          {im.desvalorizacaoLiquidaTotalPct}%)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400">
+                        Custo Total: <strong>{formatarMoeda(im.custoTotalAquisicao)}</strong> •
+                        Valor Líquido Atual:{' '}
+                        <strong className="text-emerald-400">
+                          {formatarMoeda(im.valorLiquidoAtualEstimado)}
+                        </strong>{' '}
+                        • Depreciação: <strong>-{formatarMoeda(im.ritmoQuedaMensalRs)}/mês</strong>
+                      </p>
                     </div>
-                    <p className="text-[11px] text-zinc-400">
-                      Custo Total Aquisição: <strong>{formatarMoeda(im.custoTotalAquisicao)}</strong> •
-                      Valor Líquido Atual:{' '}
-                      <strong className="text-emerald-400">
-                        {formatarMoeda(im.valorLiquidoAtualEstimado)}
-                      </strong>{' '}
-                      • Queda: <strong>-{formatarMoeda(im.ritmoQuedaMensalRs)}/mês</strong> (-
-                      {formatarMoeda(im.ritmoQuedaAnualRs)}/ano)
-                    </p>
-                  </div>
 
-                  {imoveis.length > 1 && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -958,13 +1061,68 @@ export const RealEstateDepreciationPanel: React.FC<RealEstateDepreciationPanelPr
                       }}
                       className="px-2.5 py-1 rounded-lg bg-red-950/50 hover:bg-red-600 text-red-300 hover:text-white text-[10px] font-bold border border-red-500/30 shrink-0"
                     >
-                      Remover
+                      🗑️ Remover
                     </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* TABELA DE SIMULAÇÃO DE DEPRECIAÇÃO (EXIBIDA QUANDO O MESTRE PREENCHE UM VALOR OU SELECIONA UM ITEM) */}
+          {temSimulacaoAtiva && (
+            <div className="bg-[#141416] border border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    📉 Curva de Desgaste & Valor Residual Projetado ({form.nome || 'Simulação Atual'})
+                  </h3>
+                  <p className="text-xs text-zinc-400">{analiseSimulada.textoPremissaAdotada}</p>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 text-xs font-black shrink-0">
+                  Taxa: {analiseSimulada.taxaDepreciacaoAnualPct}% a.a. (
+                  {analiseSimulada.taxaDepreciacaoMensalPct}% a.m.)
+                </span>
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border border-zinc-800">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#1A1A1E] text-zinc-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
+                    <tr>
+                      <th className="p-3">Período / Marco</th>
+                      <th className="p-3">Valor Residual do Bem</th>
+                      <th className="p-3">Valor Líquido Real</th>
+                      <th className="p-3">Desgaste Acumulado (R$ / %)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {analiseSimulada.projecoesFuturas.map((pt, idx) => (
+                      <tr key={idx} className="hover:bg-zinc-800/30 transition">
+                        <td className="p-3 font-bold text-white">
+                          {pt.horizonteLabel}
+                          <span className="block text-[10px] text-zinc-500 font-normal">
+                            {pt.mesesTotais} meses decorridos
+                          </span>
+                        </td>
+                        <td className="p-3 text-zinc-200 font-semibold">
+                          {formatarMoeda(pt.valorResidualBrutoImovel)}
+                        </td>
+                        <td className="p-3 font-black text-emerald-400">
+                          {formatarMoeda(pt.valorLiquidoEstimado)}
+                        </td>
+                        <td className="p-3 font-black text-red-400">
+                          -{formatarMoeda(pt.desvalorizacaoLiquidaComManutencaoRs)}{' '}
+                          <span className="px-1.5 py-0.5 rounded bg-red-950/80 border border-red-500/30 text-[10px] text-amber-300">
+                            -{pt.desvalorizacaoLiquidaComManutencaoPct}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

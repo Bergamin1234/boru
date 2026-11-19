@@ -188,10 +188,37 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
   };
 
   // =========================================================
-  // ABERTURA RÁPIDA DE MODAIS DE LANÇAMENTO
+  // ABERTURA RÁPIDA DE MODAIS DE LANÇAMENTO (MESTRE & GESTOR FINANCEIRO)
   // =========================================================
+  const abrirLancamentoRapidoMestre = (preset: {
+    tipo: 'ENTRADA' | 'SAIDA';
+    categoria: string;
+    descricao: string;
+    valor?: string;
+    observacao?: string;
+  }) => {
+    setEditandoTransacaoId(null);
+    setFormTransacao({
+      tipo: preset.tipo,
+      categoria: preset.categoria,
+      descricao: preset.descricao,
+      valor: preset.valor || '',
+      data: hojeIso,
+      metodoPagamento: 'PIX',
+      status: 'CONFIRMADO',
+      alunoId: '',
+      produtoId: '',
+      quantidade: '1',
+      registradoPor: usuarioLogadoNome,
+      observacao: preset.observacao || '',
+      renovarAssinaturaAluno: false,
+      atualizarEstoqueProduto: false,
+    });
+    setModalTransacao(true);
+  };
+
   const abrirModalNovoLancamento = (
-    preset: 'ASSINATURA' | 'MERCADO' | 'DESPESA' | 'INVESTIMENTO' | 'GASTO' | 'LIVRE',
+    preset: 'ASSINATURA' | 'MERCADO' | 'DESPESA' | 'INVESTIMENTO' | 'EQUIPAMENTO' | 'GASTO' | 'LIVRE',
     produtoPreSelecionado?: any
   ) => {
     setEditandoTransacaoId(null);
@@ -234,6 +261,23 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       setFormTransacao({
         tipo: 'SAIDA',
         categoria: 'ALUGUEL_CONTAS',
+        descricao: '',
+        valor: '',
+        data: hojeIso,
+        metodoPagamento: 'PIX',
+        status: 'CONFIRMADO',
+        alunoId: '',
+        produtoId: '',
+        quantidade: '1',
+        registradoPor: usuarioLogadoNome,
+        observacao: '',
+        renovarAssinaturaAluno: false,
+        atualizarEstoqueProduto: false,
+      });
+    } else if (preset === 'EQUIPAMENTO') {
+      setFormTransacao({
+        tipo: 'SAIDA',
+        categoria: 'INVESTIMENTO_EQUIPAMENTOS',
         descricao: '',
         valor: '',
         data: hojeIso,
@@ -584,8 +628,8 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
           </div>
         </div>
 
-        {/* BARRA DE AÇÕES RÁPIDAS DA ADMINISTRADORA (REGISTRAR TUDO) */}
-        <div className="pt-3 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
+        {/* BARRA DE AÇÕES RÁPIDAS DO MESTRE & GESTOR FINANCEIRO (REGISTRAR TUDO EM 1 CLIQUE) */}
+        <div className="pt-3 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5">
           <button
             type="button"
             onClick={() => abrirModalNovoLancamento('ASSINATURA')}
@@ -626,10 +670,26 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
             <span className="text-2xl">🔴</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                + Registrar Despesa
+                + Gasto / Custo Fixo
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-red-100">
-                Aluguel, Luz, Equipe, Contas (OPEX)
+                Aluguel, Luz, Água, Equipe, Contas
+              </span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => abrirModalNovoLancamento('EQUIPAMENTO')}
+            className="p-3 rounded-xl bg-orange-600/20 hover:bg-orange-600 text-orange-300 hover:text-white border border-orange-500/40 transition flex items-center gap-2.5 text-left group shadow-sm"
+          >
+            <span className="text-2xl">🥊</span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider block">
+                + Adicionar Equipamento
+              </span>
+              <span className="text-[10px] text-zinc-400 group-hover:text-orange-100">
+                Luvas, Caneleiras, Tatames, Sacos
               </span>
             </div>
           </button>
@@ -645,7 +705,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                 + Registrar Investimento
               </span>
               <span className="text-[10px] text-zinc-400 group-hover:text-indigo-100">
-                Tatames, Obras, Equipamentos (CAPEX)
+                Obras, Reforma, Estrutura (CAPEX)
               </span>
             </div>
           </button>
@@ -752,7 +812,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
         </div>
       </div>
 
-      {/* NAVEGAÇÃO INTERNA DAS 5 SUB-ABAS DO ERP FINANCEIRO */}
+      {/* NAVEGAÇÃO INTERNA DAS 6 SUB-ABAS DO ERP FINANCEIRO */}
       <div className="flex gap-2 border-b border-zinc-800 pb-3 overflow-x-auto scrollbar-none">
         <button
           type="button"
@@ -764,6 +824,18 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
           }`}
         >
           📊 Gráficos, Lucro, DRE & BI de Alunos
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSubAba('controle_gastos')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 ${
+            subAba === 'controle_gastos'
+              ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
+              : 'bg-[#141416] text-red-400 hover:text-white border border-red-500/30'
+          }`}
+        >
+          📉 Gastos, Custos, Equipamentos & Investimentos ({saidasMes.length})
         </button>
 
         <button
@@ -792,18 +864,6 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
         <button
           type="button"
-          onClick={() => setSubAba('controle_gastos')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 ${
-            subAba === 'controle_gastos'
-              ? 'bg-red-600 text-white shadow-lg shadow-red-900/30'
-              : 'bg-[#141416] text-red-400 hover:text-white border border-red-500/30'
-          }`}
-        >
-          📉 Despesas & Investimentos ({saidasMes.length})
-        </button>
-
-        <button
-          type="button"
           onClick={() => setSubAba('assinaturas_alunos')}
           className={`px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 ${
             subAba === 'assinaturas_alunos'
@@ -823,55 +883,66 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               : 'bg-[#141416] text-amber-300 hover:text-white border border-amber-500/40'
           }`}
         >
-          🏢 Patrimônio & Desvalorização de Imóveis
+          🥊 Equipamentos, Patrimônio & Depreciação
         </button>
       </div>
 
-      {/* FAIXA EXECUTIVA: PATRIMÔNIO LÍQUIDO TOTAL & DESVALORIZAÇÃO IMOBILIÁRIA */}
+      {/* FAIXA EXECUTIVA LIMPA: GESTÃO DE EQUIPAMENTOS, GASTOS, CUSTOS & PATRIMÔNIO DO CT */}
       {subAba !== 'patrimonio_imoveis' && (
         <div className="bg-gradient-to-r from-[#16161B] via-[#141418] to-amber-950/20 border border-amber-500/30 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-lg">
           <div className="space-y-0.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-400 text-black">
-                🏢 Balanço Patrimonial & Imóveis
+                🥊 Equipamentos, Custos & Patrimônio CT
               </span>
               <span className="text-xs font-black text-white">
                 Patrimônio Líquido Real Ajustado:{' '}
                 <strong className="text-emerald-400">
                   {formatarMoeda(
-                    resumo?.patrimonioLiquidoRealAjustado ??
-                      (resumo?.lucroAcumuladoAno || 0) + 418500
+                    resumo?.patrimonioLiquidoRealAjustado ?? (resumo?.lucroAcumuladoAno || 0)
                   )}
                 </strong>
               </span>
             </div>
             <p className="text-[11px] text-zinc-400">
-              Custo Total Aquisição Imóveis:{' '}
+              Equipamentos & Ativos Cadastrados:{' '}
               <strong className="text-zinc-200">
-                {formatarMoeda(resumo?.custoTotalAquisicaoImoveis ?? 522000)}
+                {formatarMoeda(resumo?.custoTotalAquisicaoImoveis ?? 0)}
               </strong>{' '}
               • Valor Líquido Atual:{' '}
               <strong className="text-emerald-300">
-                {formatarMoeda(resumo?.valorLiquidoAtualImoveis ?? 418500)}
+                {formatarMoeda(resumo?.valorLiquidoAtualImoveis ?? 0)}
               </strong>{' '}
-              • Desvalorização Acumulada (Entrada + Depreciação Física):{' '}
+              • Desgaste/Depreciação Acumulada:{' '}
               <strong className="text-red-400">
-                -{formatarMoeda(resumo?.desvalorizacaoImoveisLiquidaTotalRs ?? 103500)} (-
-                {resumo?.desvalorizacaoImoveisAcumuladaPct ?? 14.18}%)
-              </strong>{' '}
-              • Queda:{' '}
-              <strong className="text-amber-300">
-                -{formatarMoeda(resumo?.ritmoQuedaImoveisMensalRs ?? 1066.67)}/mês
+                -{formatarMoeda(resumo?.desvalorizacaoImoveisLiquidaTotalRs ?? 0)} (-
+                {resumo?.desvalorizacaoImoveisAcumuladaPct ?? 0}%)
               </strong>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setSubAba('patrimonio_imoveis')}
-            className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 text-xs font-black transition shrink-0"
-          >
-            🏢 Abrir Gestão & Simulador de Imóveis →
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => abrirModalNovoLancamento('EQUIPAMENTO')}
+              className="px-3 py-2 rounded-xl bg-orange-600/20 hover:bg-orange-600 text-orange-300 hover:text-white border border-orange-500/40 text-xs font-black transition"
+            >
+              🥊 + Equipamento
+            </button>
+            <button
+              type="button"
+              onClick={() => abrirModalNovoLancamento('DESPESA')}
+              className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 text-xs font-black transition"
+            >
+              🔴 + Gasto / Custo
+            </button>
+            <button
+              type="button"
+              onClick={() => setSubAba('patrimonio_imoveis')}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/40 text-xs font-black transition"
+            >
+              🥊 Gerenciar Equipamentos & Patrimônio →
+            </button>
+          </div>
         </div>
       )}
 
@@ -880,6 +951,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
           caixaOperacionalAcumulado={resumo?.lucroAcumuladoAno || 0}
           patrimonioInicialBackend={patrimonioImobiliario}
           onPortfolioChanged={() => carregarDadosFinanceiros(mesFiltro, anoFiltro)}
+          onOpenQuickTransaction={(preset) => abrirModalNovoLancamento(preset)}
         />
       )}
 
@@ -1572,26 +1644,33 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
       )}
 
       {/* =========================================================
-          SUB-ABA 4: CONTROLE DE DESPESAS & INVESTIMENTOS DO CT
+          SUB-ABA 4: CONTROLE DE GASTOS, CUSTOS, EQUIPAMENTOS & INVESTIMENTOS DO CT
       ========================================================= */}
       {subAba === 'controle_gastos' && (
         <div className="bg-[#141416] border border-red-500/30 rounded-2xl p-5 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
             <div>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                📉 Controle de Despesas & Investimentos ({nomeMesFormatado})
+                📉 Controle de Gastos, Custos, Equipamentos & Investimentos ({nomeMesFormatado})
               </h3>
               <p className="text-xs text-zinc-400">
-                Gestão contábil e controladoria: diferencie despesas correntes operacionais (OPEX) de investimentos patrimoniais de longo prazo (CAPEX).
+                Central do Mestre e Gestor Financeiro: lance compras de equipamentos, manutenção, contas fixas, repasses e investimentos em 1 clique.
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
+                onClick={() => abrirModalNovoLancamento('EQUIPAMENTO')}
+                className="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-orange-900/30 flex items-center gap-1.5"
+              >
+                <span>🥊</span> + Adicionar Equipamento
+              </button>
+              <button
+                type="button"
                 onClick={() => abrirModalNovoLancamento('DESPESA')}
                 className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-red-900/30 flex items-center gap-1.5"
               >
-                <span>🔴</span> + Registrar Despesa
+                <span>🔴</span> + Registrar Gasto / Custo
               </button>
               <button
                 type="button"
@@ -1600,6 +1679,117 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
               >
                 <span>💎</span> + Registrar Investimento
               </button>
+            </div>
+          </div>
+
+          {/* ATALHOS DE 1 CLIQUE PARA O MESTRE ADICIONAR EQUIPAMENTOS, GASTOS E CUSTOS */}
+          <div className="bg-[#101014] border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase tracking-wider text-amber-400">
+                ⚡ Lançamento Rápido em 1 Clique (Equipamentos, Custos Fixos e Gastos do CT):
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                Clique em qualquer item para abrir o lançamento já preenchido
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              {[
+                {
+                  icon: '🥊',
+                  titulo: 'Luvas & Caneleiras',
+                  sub: 'Equipamento de Combate',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'INVESTIMENTO_EQUIPAMENTOS',
+                  descricao: 'Aquisição de Luvas, Caneleiras e Manoplas CT Borü',
+                },
+                {
+                  icon: '🧱',
+                  titulo: 'Tatame & Sacos',
+                  sub: 'Aquisição / Estrutura',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'INVESTIMENTO_EQUIPAMENTOS',
+                  descricao: 'Aquisição de Tatame / Sacos de Pancada / Suportes',
+                },
+                {
+                  icon: '🛠️',
+                  titulo: 'Manutenção & Limpeza',
+                  sub: 'Custo Operacional CT',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'EQUIPAMENTOS_MANUTENCAO',
+                  descricao: 'Manutenção de Tatame, Higienização e Insumos de Limpeza',
+                },
+                {
+                  icon: '🏢',
+                  titulo: 'Aluguel do CT',
+                  sub: 'Custo Fixo Mensal',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'ALUGUEL_CONTAS',
+                  descricao: `Aluguel Mensal Galpão CT Borü — ${nomeMesFormatado}`,
+                },
+                {
+                  icon: '⚡',
+                  titulo: 'Energia / Água / Net',
+                  sub: 'Contas Fixas da Unidade',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'ALUGUEL_CONTAS',
+                  descricao: `Conta de Energia / Água / Internet Fibra — ${nomeMesFormatado}`,
+                },
+                {
+                  icon: '🥋',
+                  titulo: 'Pagamento Professores',
+                  sub: 'Repasse / Equipe Técnica',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'PAGAMENTO_PROFESSORES',
+                  descricao: `Pagamento / Repasse de Professores — ${nomeMesFormatado}`,
+                },
+                {
+                  icon: '📦',
+                  titulo: 'Estoque do Mercado',
+                  sub: 'Bebidas, Luvas e Loja',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'ESTOQUE_MERCADO',
+                  descricao: 'Reposição de Estoque do Mercado Borü (Bebidas / Acessórios)',
+                },
+                {
+                  icon: '❄️',
+                  titulo: 'Ar-Condicionado / Som',
+                  sub: 'Climatização & Conforto',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'CAPEX_IMOBILIZADO',
+                  descricao: 'Climatização / Ar-Condicionado / Infraestrutura do CT',
+                },
+                {
+                  icon: '📢',
+                  titulo: 'Marketing & Sistema',
+                  sub: 'Anúncios, Placas e App',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'MARKETING_SISTEMA',
+                  descricao: 'Tráfego Pago / Marketing / Divulgação CT Borü',
+                },
+                {
+                  icon: '🏛️',
+                  titulo: 'Contabilidade & Taxas',
+                  sub: 'Impostos, CNPJ e Banco',
+                  tipo: 'SAIDA' as const,
+                  categoria: 'IMPOSTOS_TAXAS',
+                  descricao: `Impostos, Contabilidade e Taxas — ${nomeMesFormatado}`,
+                },
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => abrirLancamentoRapidoMestre(item)}
+                  className="p-2.5 rounded-xl bg-[#18181F] hover:bg-red-600/20 border border-zinc-800 hover:border-red-500/50 text-left transition group flex items-start gap-2"
+                >
+                  <span className="text-lg shrink-0">{item.icon}</span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-black text-white group-hover:text-red-300 block truncate">
+                      {item.titulo}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block truncate">{item.sub}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -2127,7 +2317,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                       tipo: 'SAIDA',
                       categoria: isInvestimento(formTransacao.categoria)
                         ? formTransacao.categoria
-                        : 'CAPEX_IMOBILIZADO',
+                        : 'INVESTIMENTO_EQUIPAMENTOS',
                     })
                   }
                   className={`py-2.5 px-1 rounded-xl font-black text-xs uppercase border transition flex items-center justify-center gap-1 ${
@@ -2136,9 +2326,78 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
                       : 'bg-[#1A1A1E] text-zinc-400 border-zinc-800 hover:text-white'
                   }`}
                 >
-                  💎 Investimento (-)
+                  🥊 Equip. / Invest. (-)
                 </button>
               </div>
+
+              {/* Atalhos Rápidos de 1 Clique para o Mestre dentro do Modal */}
+              {formTransacao.tipo === 'SAIDA' && (
+                <div className="bg-[#101014] border border-zinc-800 rounded-xl p-2.5 space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block">
+                    ⚡ Preencher Rápido (Clique para preencher Categoria e Descrição):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      {
+                        label: '🥊 Luvas / Caneleiras',
+                        cat: 'INVESTIMENTO_EQUIPAMENTOS',
+                        desc: 'Aquisição de Luvas, Caneleiras e Manoplas CT Borü',
+                      },
+                      {
+                        label: '🧱 Tatame / Sacos',
+                        cat: 'INVESTIMENTO_EQUIPAMENTOS',
+                        desc: 'Aquisição de Tatame / Sacos de Pancada',
+                      },
+                      {
+                        label: '🛠️ Manutenção / Limpeza',
+                        cat: 'EQUIPAMENTOS_MANUTENCAO',
+                        desc: 'Manutenção de Tatame, Equipamentos e Limpeza',
+                      },
+                      {
+                        label: '🏢 Aluguel',
+                        cat: 'ALUGUEL_CONTAS',
+                        desc: `Aluguel Mensal do CT — ${nomeMesFormatado}`,
+                      },
+                      {
+                        label: '⚡ Energia / Água / Net',
+                        cat: 'ALUGUEL_CONTAS',
+                        desc: `Conta de Energia / Água / Internet — ${nomeMesFormatado}`,
+                      },
+                      {
+                        label: '🥋 Professores',
+                        cat: 'PAGAMENTO_PROFESSORES',
+                        desc: `Pagamento / Repasse de Professores — ${nomeMesFormatado}`,
+                      },
+                      {
+                        label: '📦 Estoque Mercado',
+                        cat: 'ESTOQUE_MERCADO',
+                        desc: 'Compra de Estoque p/ Mercado Borü (Bebidas/Loja)',
+                      },
+                      {
+                        label: '🏗️ Reforma / Estrutura',
+                        cat: 'CAPEX_IMOBILIZADO',
+                        desc: 'Obra / Reforma / Climatização na Unidade',
+                      },
+                    ].map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() =>
+                          setFormTransacao({
+                            ...formTransacao,
+                            tipo: 'SAIDA',
+                            categoria: p.cat,
+                            descricao: p.desc,
+                          })
+                        }
+                        className="px-2 py-1 rounded-lg bg-[#1A1A22] hover:bg-red-600 text-zinc-200 hover:text-white border border-zinc-700/80 text-[10px] font-bold transition"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Categoria */}
               <div>
