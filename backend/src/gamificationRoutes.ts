@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { Express } from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -6,6 +5,7 @@ import {
   ensureGamificationSeeded,
   evaluateStudentGamification,
 } from './gamificationService';
+import { readJsonStorageFile, writeJsonStorageFile } from './utils/sharedHelpers';
 
 export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
   // Inicializa o seed padrão silenciosamente ao subir o servidor
@@ -508,24 +508,11 @@ export function registerGamificationRoutes(app: Express, prisma: PrismaClient) {
   // ==========================================
   const avaliacoesFilePath = path.join(__dirname, '../data/avaliacoes_alunos.json');
 
-  function carregarAvaliacoes(): Record<string, any> {
-    try {
-      if (fs.existsSync(avaliacoesFilePath)) {
-        return JSON.parse(fs.readFileSync(avaliacoesFilePath, 'utf8'));
-      }
-    } catch (e) {}
-    return {};
-  }
+  const carregarAvaliacoes = (): Record<string, any> =>
+    readJsonStorageFile<Record<string, any>>(avaliacoesFilePath, {});
 
-  function salvarAvaliacoes(dados: Record<string, any>) {
-    try {
-      const dir = path.dirname(avaliacoesFilePath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(avaliacoesFilePath, JSON.stringify(dados, null, 2), 'utf8');
-    } catch (e) {
-      console.error('Erro ao salvar avaliações:', e);
-    }
-  }
+  const salvarAvaliacoes = (dados: Record<string, any>) =>
+    writeJsonStorageFile(avaliacoesFilePath, dados);
 
   // Obter avaliação do aluno (Admin / Professor)
   app.get('/api/admin/alunos/:id/avaliacao', async (req, res) => {

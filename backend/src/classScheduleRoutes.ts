@@ -6,6 +6,11 @@ import {
   buildCheckinHistoryMapForStudents,
   buildStudentMatricula,
 } from './firstCheckinService';
+import {
+  formatClassEventScheduleTime,
+  getDayBounds,
+  inferTrainingShift,
+} from './utils/sharedHelpers';
 
 // Grade horária oficial real do CT Borü (Mestre Felipe Ferreira Pontes)
 const GRADE_OFICIAL_POR_DIA: Record<number, Array<{ horario: string; horaFim: string; titulo: string; modalidade: string; professor: string; capacidade: number }>> = {
@@ -178,12 +183,13 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
       }
 
       eventos.forEach(ev => {
-        const d = new Date(ev.dataInicio);
-        const dataIso = d.toISOString().split('T')[0];
-        const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        const horaCurta = d.getMinutes() > 0 ? `${d.getHours()}h${d.getMinutes()}` : `${d.getHours()}h`;
-        const profCurto = ev.professorNome ? ev.professorNome.split(' ')[0] : 'Felipe';
-        const horarioFormatado = `${horaCurta} ${profCurto}`;
+        const {
+          dateObj: d,
+          dataIso,
+          horaStr,
+          horaCurta,
+          horarioFormatado,
+        } = formatClassEventScheduleTime(ev.dataInicio, ev.professorNome);
 
         // Alunos agendados / presentes
         const alunosValidos = ev.agendamentos.filter(a => a.status === 'AGENDADO' || a.status === 'PRESENTE');
@@ -291,8 +297,7 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
     try {
       await ensureMonthClassesCreated(prisma, ano, mes);
 
-      const inicioDia = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
-      const fimDia = new Date(ano, mes - 1, dia, 23, 59, 59, 999);
+      const { inicioDia, fimDia } = getDayBounds(agora);
 
       const eventos = await prisma.eventoDeAula.findMany({
         where: {
@@ -309,11 +314,10 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
       });
 
       const aulasFormatadas = eventos.map(ev => {
-        const d = new Date(ev.dataInicio);
-        const horaStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        const horaCurta = d.getMinutes() > 0 ? `${d.getHours()}h${d.getMinutes()}` : `${d.getHours()}h`;
-        const profCurto = ev.professorNome ? ev.professorNome.split(' ')[0] : 'Felipe';
-        const horarioFormatado = `${horaCurta} ${profCurto}`;
+        const { horaStr, horaCurta, horarioFormatado } = formatClassEventScheduleTime(
+          ev.dataInicio,
+          ev.professorNome
+        );
 
         const totalAgendados = ev.agendamentos.length;
         const capacidade = ev.capacidade || 25;
@@ -400,8 +404,7 @@ export function registerClassScheduleRoutes(app: Express, prisma: PrismaClient) 
       }
 
       const dataAula = new Date(evento.dataInicio);
-      const horaAula = dataAula.getHours();
-      const turnoInferido = shift || (horaAula < 12 ? 'MANHA' : horaAula < 18 ? 'TARDE' : 'NOITE');
+      const turnoInferido = inferTrainingShift(dataAula, shift);
 
       const checkin = await prisma.agendamentoPresenca.create({
         data: {

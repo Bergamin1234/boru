@@ -1,5 +1,9 @@
-import fs from 'fs';
 import path from 'path';
+import {
+  round2,
+  readJsonStorageFile,
+  writeJsonStorageFile,
+} from './utils/sharedHelpers';
 
 export interface RealEstateAssetInput {
   id?: string;
@@ -98,10 +102,6 @@ export interface RealEstateAnalysisResult {
 const TAXA_DEPRECIACAO_PADRAO_ANUAL_PCT = 4.0; // 4% a.a. sobre a edificação (vida útil técnica de 25 anos)
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STORAGE_FILE = path.join(DATA_DIR, 'patrimonio_imoveis.json');
-
-function round2(n: number): number {
-  return Math.round((Number(n) || 0) * 100) / 100;
-}
 
 /**
  * Calcula a análise patrimonial completa de um imóvel:
@@ -340,39 +340,21 @@ export function calculateRealEstateDepreciation(input: RealEstateAssetInput): Re
 const DEFAULT_SEED_PROPERTIES: RealEstateAssetInput[] = [];
 
 export function loadStoredRealEstateAssets(): RealEstateAssetInput[] {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(STORAGE_FILE)) {
-      fs.writeFileSync(STORAGE_FILE, JSON.stringify(DEFAULT_SEED_PROPERTIES, null, 2), 'utf8');
-      return [];
-    }
-    const raw = fs.readFileSync(STORAGE_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      // Remove eventual item de seed antigo ('imovel-sede-ct-boru-pvh') para manter o sistema 100% limpo
-      const limpo = parsed.filter((item: any) => item?.id !== 'imovel-sede-ct-boru-pvh');
-      if (limpo.length !== parsed.length) {
-        fs.writeFileSync(STORAGE_FILE, JSON.stringify(limpo, null, 2), 'utf8');
-      }
-      return limpo;
-    }
-    return [];
-  } catch {
-    return [];
+  const parsed = readJsonStorageFile<RealEstateAssetInput[]>(
+    STORAGE_FILE,
+    DEFAULT_SEED_PROPERTIES,
+    true
+  );
+  if (!Array.isArray(parsed)) return [];
+  const limpo = parsed.filter((item: any) => item?.id !== 'imovel-sede-ct-boru-pvh');
+  if (limpo.length !== parsed.length) {
+    writeJsonStorageFile(STORAGE_FILE, limpo);
   }
+  return limpo;
 }
 
 export function saveStoredRealEstateAssets(assets: RealEstateAssetInput[]): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(STORAGE_FILE, JSON.stringify(assets, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Erro ao salvar patrimônio imobiliário:', err);
-  }
+  writeJsonStorageFile(STORAGE_FILE, assets);
 }
 
 export function getConsolidatedRealEstatePortfolio(caixaOperacionalAcumulado = 0) {

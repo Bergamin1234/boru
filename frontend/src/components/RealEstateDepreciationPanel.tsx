@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
+import { formatarMoeda, round2 } from '../utils/sharedFormatters';
 
 interface RealEstateDepreciationPanelProps {
   caixaOperacionalAcumulado?: number;
@@ -9,13 +10,6 @@ interface RealEstateDepreciationPanelProps {
 }
 
 const TAXA_PADRAO_ANUAL_PCT = 4.0;
-
-const formatarMoeda = (valor: number) =>
-  (Number(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-function round2(n: number): number {
-  return Math.round((Number(n) || 0) * 100) / 100;
-}
 
 const TEMPLATES_RAPIDOS_MESTRE = [
   {

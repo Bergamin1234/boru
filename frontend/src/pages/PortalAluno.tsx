@@ -11,6 +11,7 @@ import { PublicQuickCheckinCard, LoggedQuickCheckinBanner } from '../components/
 import { isImageSource } from '../components/FileUploadInput';
 import { StudentRewardStoreTab } from '../components/StudentRewardStoreTab';
 import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
+import { formatarCpfInput, isDiariaOuConvenio, validarCPF } from '../utils/sharedFormatters';
 
 export default function PortalAluno() {
   const [aulas, setAulas] = useState<any[]>([]);
@@ -163,22 +164,6 @@ export default function PortalAluno() {
 
 
 
-
-  const validarCPF = (cpf: string) => {
-    cpf = cpf.replace(/[^\d]+/g, '');
-    if (cpf === '' || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-    let add = 0;
-    for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
-    let rev = 11 - (add % 11);
-    if (rev === 10 || rev === 11) rev = 0;
-    if (rev !== parseInt(cpf.charAt(9))) return false;
-    add = 0;
-    for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
-    rev = 11 - (add % 11);
-    if (rev === 10 || rev === 11) rev = 0;
-    if (rev !== parseInt(cpf.charAt(10))) return false;
-    return true;
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,11 +328,7 @@ export default function PortalAluno() {
   };
 
   const formatarCpf = (v: string) => {
-    v = v.replace(/\D/g, "");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    setCpf(v);
+    setCpf(formatarCpfInput(v));
   };
 
   // CHECK-IN ESTIMULANTE / GAMIFICADO
@@ -414,12 +395,6 @@ const fazerCheckin = async (id: string) => {
     } catch (error) {
       alert('Erro ao enviar justificativa.');
     }
-  };
-
-  const isDiariaOuConvenio = (plano?: string) => {
-    if (!plano) return false;
-    const p = plano.toLowerCase();
-    return p.includes('diária') || p.includes('diaria') || p.includes('wellhub') || p.includes('totalpass') || p.includes('gympass');
   };
 
   const calcularDiasVencimento = () => {

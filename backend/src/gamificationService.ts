@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { inferTrainingShift as inferShift } from './utils/sharedHelpers';
 
 export interface DefaultRankSeed {
   name: string;
@@ -487,16 +488,6 @@ function getISOWeekKey(date: Date): string {
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-}
-
-function inferShift(date: Date, explicitShift?: string | null): 'MANHA' | 'TARDE' | 'NOITE' {
-  if (explicitShift === 'MANHA' || explicitShift === 'TARDE' || explicitShift === 'NOITE') {
-    return explicitShift;
-  }
-  const h = date.getHours();
-  if (h < 12) return 'MANHA';
-  if (h < 18) return 'TARDE';
-  return 'NOITE';
 }
 
 export async function evaluateStudentGamification(prisma: PrismaClient, alunoId: string) {

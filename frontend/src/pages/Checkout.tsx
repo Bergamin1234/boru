@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { publicApi } from '../services/api';
+import { formatarCpfInput } from '../utils/sharedFormatters';
 
 export default function Checkout() {
   const location = useLocation();
@@ -23,11 +24,7 @@ export default function Checkout() {
   });
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/\D/g, "");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d)/, "$1.$2");
-    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    setFormData({ ...formData, cpf: v });
+    setFormData({ ...formData, cpf: formatarCpfInput(e.target.value) });
   };
 
   const nextStep = (e: React.FormEvent) => {

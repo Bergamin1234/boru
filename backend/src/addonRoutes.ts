@@ -15,6 +15,15 @@ import {
   saveStoredRealEstateAssets,
   getConsolidatedRealEstatePortfolio,
 } from './realEstateDepreciationService';
+import {
+  getDayBounds,
+  getMonthBounds,
+  inferPlanDefaultValue,
+  inferTrainingShift,
+  isDiariaOuConvenioPlan,
+  isInvestimentoCategory,
+  round2,
+} from './utils/sharedHelpers';
 
 export async function ensureRbacSeeded(prisma: PrismaClient) {
   try {
@@ -611,8 +620,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
 
       // Verificar se foi passado um evento/horário específico ou fluxo padrão
       const agora = new Date();
-      const horaAtual = agora.getHours();
-      const turnoInferido = shift || (horaAtual < 12 ? 'MANHA' : horaAtual < 18 ? 'TARDE' : 'NOITE');
+      const turnoInferido = inferTrainingShift(agora, shift);
       let presencaHoje: any = null;
       let jaEstavaPresente = false;
       let horarioNomeFormatado = 'Treino de Hoje';
@@ -664,8 +672,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         }
       } else {
         // Fallback legado sem eventoId específico
-        const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
-        const fimDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
+        const { inicioDia, fimDia } = getDayBounds(agora);
 
         presencaHoje = await prisma.agendamentoPresenca.findFirst({
           where: {
@@ -908,15 +915,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
   // =========================================================
   // MÓDULO 5 (SUPER ERP FINANCEIRO): ASSINATURAS, MERCADO, DESPESAS & INVESTIMENTOS, DRE, GRÁFICOS E TABELAS
   // =========================================================
-  const isInvestimentoCat = (cat: string) => {
-    return [
-      'CAPEX_IMOBILIZADO',
-      'INVESTIMENTO_EQUIPAMENTOS',
-      'CAPEX_INTANGIVEL',
-      'INVESTIMENTO_EXPANSAO',
-      'OUTROS_INVESTIMENTOS',
-    ].includes(cat);
-  };
+  const isInvestimentoCat = isInvestimentoCategory;
 
   app.get('/api/admin/financeiro', async (req: Request, res: Response) => {
     try {
@@ -924,8 +923,7 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
       const mesFiltro = req.query.mes ? Number(req.query.mes) : agora.getMonth() + 1;
       const anoFiltro = req.query.ano ? Number(req.query.ano) : agora.getFullYear();
 
-      const inicioMes = new Date(anoFiltro, mesFiltro - 1, 1, 0, 0, 0, 0);
-      const fimMes = new Date(anoFiltro, mesFiltro, 0, 23, 59, 59, 999);
+      const { inicioMes, fimMes } = getMonthBounds(anoFiltro, mesFiltro);
       const inicioAno = new Date(anoFiltro, 0, 1, 0, 0, 0, 0);
       const fimAno = new Date(anoFiltro, 11, 31, 23, 59, 59, 999);
 
@@ -1017,23 +1015,9 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         }
         mapaPlanos[planoNome].totalAlunos += 1;
 
-        const planoLower = (aluno.plano || '').toLowerCase();
-        const isDiariaOuConvenio =
-          planoLower.includes('diária') ||
-          planoLower.includes('diaria') ||
-          planoLower.includes('wellhub') ||
-          planoLower.includes('totalpass') ||
-          planoLower.includes('gympass');
-
+        const isDiariaOuConvenio = isDiariaOuConvenioPlan(aluno.plano);
         const ultimaMensalidade = aluno.mensalidades[0] || null;
-
-        let valorPadrao = ultimaMensalidade?.valor || 160;
-        if (!ultimaMensalidade) {
-          if (planoLower.includes('2x')) valorPadrao = 130;
-          else if (planoLower.includes('3x')) valorPadrao = 160;
-          else if (planoLower.includes('todos')) valorPadrao = 280;
-          else if (isDiariaOuConvenio) valorPadrao = 40;
-        }
+        const valorPadrao = ultimaMensalidade?.valor || inferPlanDefaultValue(aluno.plano, 160);
 
         // Regra de Negócio Módulo 1: Ignorar alunos com is_bolsista == true na inadimplência
         if (aluno.is_bolsista) {
@@ -1282,15 +1266,15 @@ export function registerAddonRoutes(app: Express, prisma: PrismaClient) {
         fluxoPorMes.push({
           mesAno: `${String(mIdx + 1).padStart(2, '0')}/${yIdx}`,
           mesLabel: `${nomesMesesCurto[mIdx]}/${String(yIdx).slice(-2)}`,
-          entradas: Math.round(entM * 100) / 100,
-          mensalidades: Math.round(mensM * 100) / 100,
-          mercado: Math.round(mercM * 100) / 100,
-          outros: Math.round(outM * 100) / 100,
-          despesas: Math.round(despM * 100) / 100,
-          investimentos: Math.round(invM * 100) / 100,
-          saidas: Math.round(gastM * 100) / 100,
-          gastos: Math.round(gastM * 100) / 100,
-          lucro: Math.round((entM - gastM) * 100) / 100,
+          entradas: round2(entM),
+          mensalidades: round2(mensM),
+          mercado: round2(mercM),
+          outros: round2(outM),
+          despesas: round2(despM),
+          investimentos: round2(invM),
+          saidas: round2(gastM),
+          gastos: round2(gastM),
+          lucro: round2(entM - gastM),
         });
       }
 

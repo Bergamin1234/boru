@@ -12,7 +12,14 @@ import {
   evaluateCheckinAccessProfile,
   buildCheckinHistoryMapForStudents,
   buildStudentMatricula,
+  summarizeStudentCheckinHistoryList,
 } from './firstCheckinService';
+import {
+  getMonthBounds,
+  isDiariaOuConvenioPlan,
+  readJsonStorageFile,
+  writeJsonStorageFile,
+} from './utils/sharedHelpers';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -549,23 +556,12 @@ const fotosPadraoGaleria = [
 ];
 
 function carregarGaleria(): any[] {
-  try {
-    if (fs.existsSync(galeriaFilePath)) {
-      const data = JSON.parse(fs.readFileSync(galeriaFilePath, 'utf8'));
-      if (Array.isArray(data) && data.length > 0) return data;
-    }
-  } catch (e) {}
-  return fotosPadraoGaleria;
+  const data = readJsonStorageFile<any[]>(galeriaFilePath, fotosPadraoGaleria);
+  return Array.isArray(data) && data.length > 0 ? data : fotosPadraoGaleria;
 }
 
 function salvarGaleria(fotos: any[]) {
-  try {
-    const dir = path.dirname(galeriaFilePath);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(galeriaFilePath, JSON.stringify(fotos, null, 2), 'utf8');
-  } catch (e) {
-    console.error('Erro ao salvar galeria:', e);
-  }
+  writeJsonStorageFile(galeriaFilePath, fotos);
 }
 
 // Listar fotos da galeria (Público & Admin)
@@ -785,8 +781,7 @@ app.post('/api/alunos/login', async (req, res) => {
       }
     }
 
-    const planoLower = (aluno.plano || '').toLowerCase();
-    const isDiariaOuConvenio = planoLower.includes('diária') || planoLower.includes('diaria') || planoLower.includes('wellhub') || planoLower.includes('totalpass') || planoLower.includes('gympass');
+    const isDiariaOuConvenio = isDiariaOuConvenioPlan(aluno.plano);
 
     res.json({
       ...aluno,
@@ -1133,7 +1128,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
       }
 
       const planoLower = (aluno.plano || '').toLowerCase();
-      const isDiariaOuConvenio = planoLower.includes('diária') || planoLower.includes('diaria') || planoLower.includes('wellhub') || planoLower.includes('totalpass') || planoLower.includes('gympass');
+      const isDiariaOuConvenio = isDiariaOuConvenioPlan(aluno.plano);
 
       // Frequência filtrada para o mês vigente
       const presencasDoMes = aluno.presencas.filter(p => p.data >= inicioMes && p.data <= fimMes);
@@ -1195,21 +1190,15 @@ app.get('/api/admin/dashboard', async (req, res) => {
       }
 
       // Histórico completo de check-ins válidos para identificação de 1º check-in vs recorrente
-      const checkinsValidosHistorico = [...aluno.presencas]
-        .filter(p => ['AGENDADO', 'PRESENTE', 'DOENCA', 'JUSTIFICADO'].includes(p.status))
-        .sort((a, b) => new Date(a.criadoEm || a.data).getTime() - new Date(b.criadoEm || b.data).getTime());
-      const totalCheckinsHistorico = checkinsValidosHistorico.length;
-      const primeiroCheckinReg = totalCheckinsHistorico > 0 ? checkinsValidosHistorico[0] : null;
-      const dataPrimeiroCheckin = primeiroCheckinReg
-        ? new Date(primeiroCheckinReg.criadoEm || primeiroCheckinReg.data).toISOString()
-        : null;
-      const isPrimeiroCheckin = totalCheckinsHistorico === 1;
-      const tagPerfilCheckin =
-        totalCheckinsHistorico === 0
-          ? 'Sem check-ins (Aguardando 1º acesso)'
-          : totalCheckinsHistorico === 1
-          ? 'Fez seu primeiro check-in'
-          : 'Check-in recorrente';
+      const {
+        totalCheckins: totalCheckinsHistorico,
+        isPrimeiroCheckin,
+        tagPerfilCheckin,
+        dataPrimeiroCheckin,
+      } = summarizeStudentCheckinHistoryList(
+        aluno.presencas,
+        'Sem check-ins (Aguardando 1º acesso)'
+      );
 
       return {
         id: aluno.id,
@@ -1492,8 +1481,7 @@ app.get('/api/admin/frequencia-geral', async (req, res) => {
   const ano = parseInt(req.query.ano as string) || agora.getFullYear();
 
   try {
-    const dataInicioMes = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
-    const dataFimMes = new Date(ano, mes, 0, 23, 59, 59, 999);
+    const { inicioMes: dataInicioMes, fimMes: dataFimMes } = getMonthBounds(ano, mes);
 
     const presencas = await prisma.agendamentoPresenca.findMany({
       where: {
@@ -1611,8 +1599,7 @@ app.get('/api/admin/alunos/:id/calendario', async (req, res) => {
 
     if (!aluno) return res.status(404).json({ erro: 'Aluno não encontrado.' });
 
-    const dataInicioMes = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
-    const dataFimMes = new Date(ano, mes, 0, 23, 59, 59, 999);
+    const { inicioMes: dataInicioMes, fimMes: dataFimMes } = getMonthBounds(ano, mes);
 
     const presencas = await prisma.agendamentoPresenca.findMany({
       where: {

@@ -331,3 +331,44 @@ export async function buildCheckinHistoryMapForStudents(
 
   return { porCheckinId, porAlunoId };
 }
+
+/**
+ * Resume de forma síncrona uma lista de registros de presença/check-in de um aluno,
+ * retornando os contadores e a classificação de 1º check-in vs recorrente sem repetir lógica nas rotas.
+ */
+export function summarizeStudentCheckinHistoryList(
+  records: Array<{ id?: string; data: Date | string; criadoEm?: Date | string | null; status?: string }>,
+  emptyLabel = 'Sem check-ins registrados'
+) {
+  const validos = records
+    .filter((r) => !r.status || VALID_CHECKIN_STATUSES.includes(r.status))
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(a.criadoEm || a.data).getTime() - new Date(b.criadoEm || b.data).getTime()
+    );
+
+  const totalCheckins = validos.length;
+  const primeiroReg = totalCheckins > 0 ? validos[0] : null;
+  const ultimoReg = totalCheckins > 0 ? validos[totalCheckins - 1] : null;
+  const isPrimeiroCheckin = totalCheckins === 1;
+  const tagPerfilCheckin =
+    totalCheckins === 0
+      ? emptyLabel
+      : totalCheckins === 1
+      ? 'Fez seu primeiro check-in'
+      : 'Check-in recorrente';
+
+  return {
+    totalCheckins,
+    isPrimeiroCheckin,
+    tagPerfilCheckin,
+    dataPrimeiroCheckin: primeiroReg
+      ? new Date(primeiroReg.criadoEm || primeiroReg.data).toISOString()
+      : null,
+    dataUltimoCheckin: ultimoReg
+      ? new Date(ultimoReg.criadoEm || ultimoReg.data).toISOString()
+      : null,
+  };
+}
+

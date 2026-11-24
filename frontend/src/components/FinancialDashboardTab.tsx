@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
 import { RealEstateDepreciationPanel } from './RealEstateDepreciationPanel';
+import { formatarMoeda, shiftMonthYear } from '../utils/sharedFormatters';
 
 interface FinancialDashboardTabProps {
   onRefreshGlobal?: () => void;
@@ -67,9 +68,6 @@ const METODOS_PAGAMENTO = [
   { value: 'BOLETO_TRANSFERENCIA', label: '🏦 Transferência / Boleto' },
   { value: 'CONVENIO', label: '🎫 Convênio (Wellhub / TotalPass)' },
 ];
-
-const formatarMoeda = (valor: number) =>
-  (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const traduzirCategoria = (cat: string) => {
   const todas = [...CATEGORIAS_ENTRADA, ...CATEGORIAS_SAIDA];
@@ -174,15 +172,7 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
   }, [mesFiltro, anoFiltro]);
 
   const mudarMes = (delta: number) => {
-    let novoMes = mesFiltro + delta;
-    let novoAno = anoFiltro;
-    if (novoMes > 12) {
-      novoMes = 1;
-      novoAno += 1;
-    } else if (novoMes < 1) {
-      novoMes = 12;
-      novoAno -= 1;
-    }
+    const { mes: novoMes, ano: novoAno } = shiftMonthYear(mesFiltro, anoFiltro, delta);
     setMesFiltro(novoMes);
     setAnoFiltro(novoAno);
   };

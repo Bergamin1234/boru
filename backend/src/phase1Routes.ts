@@ -1,6 +1,12 @@
 import { Express, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { summarizeStudentCheckinHistoryList } from './firstCheckinService';
+import {
+  getDayBounds,
+  getMonthBounds,
+  summarizeCashRegisterTransactions,
+} from './utils/sharedHelpers';
 
 // Seed automático dos itens oficiais da Loja de Points
 export async function seedRewardStoreItems(prisma: PrismaClient) {
@@ -363,22 +369,13 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
         }
       });
 
-      let entradasDinheiro = 0;
-      let entradasPix = 0;
-      let entradasCartao = 0;
-      let saidasDinheiro = 0;
-
-      for (const t of transacoes) {
-        if (t.tipo === 'ENTRADA') {
-          if (t.metodoPagamento === 'DINHEIRO') entradasDinheiro += t.valor;
-          else if (t.metodoPagamento === 'PIX') entradasPix += t.valor;
-          else entradasCartao += t.valor;
-        } else if (t.tipo === 'SAIDA') {
-          if (t.metodoPagamento === 'DINHEIRO') saidasDinheiro += t.valor;
-        }
-      }
-
-      const saldoEsperadoDinheiro = caixaAberto.saldo_inicial_dinheiro + entradasDinheiro - saidasDinheiro;
+      const {
+        entradasDinheiro,
+        entradasPix,
+        entradasCartao,
+        saidasDinheiro,
+        saldoEsperadoDinheiro,
+      } = summarizeCashRegisterTransactions(transacoes, caixaAberto.saldo_inicial_dinheiro);
 
       res.json({
         status: 'ABERTO',
@@ -447,22 +444,13 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
         }
       });
 
-      let entradasDinheiro = 0;
-      let entradasPix = 0;
-      let entradasCartao = 0;
-      let saidasDinheiro = 0;
-
-      for (const t of transacoes) {
-        if (t.tipo === 'ENTRADA') {
-          if (t.metodoPagamento === 'DINHEIRO') entradasDinheiro += t.valor;
-          else if (t.metodoPagamento === 'PIX') entradasPix += t.valor;
-          else entradasCartao += t.valor;
-        } else if (t.tipo === 'SAIDA') {
-          if (t.metodoPagamento === 'DINHEIRO') saidasDinheiro += t.valor;
-        }
-      }
-
-      const saldoEsperado = caixa.saldo_inicial_dinheiro + entradasDinheiro - saidasDinheiro;
+      const {
+        entradasDinheiro,
+        entradasPix,
+        entradasCartao,
+        saidasDinheiro,
+        saldoEsperadoDinheiro: saldoEsperado,
+      } = summarizeCashRegisterTransactions(transacoes, caixa.saldo_inicial_dinheiro);
       const contado = Number(saldo_dinheiro_contado) || 0;
       const diferenca = contado - saldoEsperado;
 
@@ -679,8 +667,7 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
       });
       const settings = await prisma.teacherCommissionSetting.findMany();
 
-      const primeiroDia = new Date(ano, mes - 1, 1);
-      const ultimoDia = new Date(ano, mes, 0, 23, 59, 59);
+      const { inicioMes: primeiroDia, fimMes: ultimoDia } = getMonthBounds(ano, mes);
 
       // Total de alunos ativos no sistema
       const totalAlunosAtivos = await prisma.aluno.count();
@@ -759,9 +746,7 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
 
   app.get('/api/admin/dashboard/ocupacao', async (_req: Request, res: Response) => {
     try {
-      const agora = new Date();
-      const inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
-      const fimDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
+      const { inicioDia, fimDia } = getDayBounds();
 
       const eventos = await prisma.eventoDeAula.findMany({
         where: {
@@ -833,16 +818,10 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
         }),
       ]);
 
-      const totalCheckins = checkinsHistorico.length;
-      const primeiroReg = totalCheckins > 0 ? checkinsHistorico[0] : null;
-      const ultimoReg = totalCheckins > 0 ? checkinsHistorico[totalCheckins - 1] : null;
-      const isPrimeiroCheckin = totalCheckins === 1;
-      const tagPerfilCheckin =
-        totalCheckins === 0
-          ? 'Sem check-ins registrados'
-          : totalCheckins === 1
-          ? 'Fez seu primeiro check-in'
-          : 'Check-in recorrente';
+      const resumoCheckin = summarizeStudentCheckinHistoryList(
+        checkinsHistorico,
+        'Sem check-ins registrados'
+      );
 
       res.json({
         aluno: {
@@ -864,11 +843,11 @@ export function registerPhase1Routes(app: Express, prisma: PrismaClient) {
         },
         metricas: {
           totalPresencas,
-          totalCheckins,
-          isPrimeiroCheckin,
-          tagPerfilCheckin,
-          dataPrimeiroCheckin: primeiroReg ? new Date(primeiroReg.criadoEm || primeiroReg.data).toISOString() : null,
-          dataUltimoCheckin: ultimoReg ? new Date(ultimoReg.criadoEm || ultimoReg.data).toISOString() : null,
+          totalCheckins: resumoCheckin.totalCheckins,
+          isPrimeiroCheckin: resumoCheckin.isPrimeiroCheckin,
+          tagPerfilCheckin: resumoCheckin.tagPerfilCheckin,
+          dataPrimeiroCheckin: resumoCheckin.dataPrimeiroCheckin,
+          dataUltimoCheckin: resumoCheckin.dataUltimoCheckin,
           totalConquistas: aluno.conquistasProgresso.length,
           totalContratos: aluno.contratosLongos.length,
           totalResgates: aluno.resgatesLoja.length

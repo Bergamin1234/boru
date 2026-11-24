@@ -15,86 +15,15 @@ import { AdminStoreRedemptionsTab } from '../components/AdminStoreRedemptionsTab
 import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
 import { BoruAiAutonomousTab } from '../components/BoruAiAutonomousTab';
 import { FirstCheckinIdentificationBanner } from '../components/FirstCheckinIdentificationBanner';
-
-const graduacoesPorModalidade: Record<string, string[]> = {
-  'Muay Thai': [
-    'Prajied Branco',
-    'Prajied Branco e Amarelo',
-    'Prajied Amarelo',
-    'Prajied Amarelo e Branco Ponta',
-    'Prajied Laranja',
-    'Prajied Verde',
-    'Prajied Azul Claro',
-    'Prajied Azul Escuro',
-    'Prajied Azul Escuro e Preto',
-    'Prajied Marrom',
-    'Prajied Vermelho',
-    'Prajied Vermelho e Preto',
-    'Prajied Preto'
-  ],
-  'Jiu-Jitsu': [
-    'Faixa Branca',
-    'Faixa Azul',
-    'Faixa Roxa',
-    'Faixa Marrom',
-    'Faixa Preta 1º Grau',
-    'Faixa Preta 2º Grau',
-    'Faixa Preta 3º Grau',
-    'Faixa Coral (Vermelha e Preta)',
-    'Faixa Vermelha'
-  ],
-  'Taekwondo': [
-    'Faixa Branca',
-    'Faixa Amarela',
-    'Faixa Verde',
-    'Faixa Azul',
-    'Faixa Vermelha',
-    'Faixa Ponta Preta',
-    'Faixa Preta 1º Dan',
-    'Faixa Preta 2º Dan',
-    'Faixa Preta 3º Dan',
-    'Faixa Preta 4º Dan',
-    'Faixa Preta 5º Dan'
-  ],
-  'Boxe': [
-    'Sem faixa (Graduação por experiência e cartel)',
-    '1 a 3 anos de prática',
-    '3 a 5 anos de prática',
-    '5 a 10 anos de prática',
-    'Mais de 10 anos / Veterano',
-    'Ex-Atleta Profissional'
-  ],
-  'MMA': [
-    'Sem faixa (Graduação por experiência e cartel)',
-    '1 a 3 anos de prática',
-    '3 a 5 anos de prática',
-    '5 a 10 anos de prática',
-    'Mais de 10 anos / Veterano',
-    'Ex-Atleta Profissional'
-  ],
-  '[DEV-SYSTEM]': [
-    'Desenvolvedor do Sistema [DEV-SYSTEM]',
-    'Arquiteto & Engenheiro de Software Full-Stack',
-    'Tech Lead & DevOps / Cloud',
-    'Administrador Técnico do Sistema',
-    'Segurança & Infraestrutura de TI'
-  ],
-  'Administração Geral': [
-    'Gestão Operacional & Financeira',
-    'Diretoria & Coordenação Geral',
-    'Supervisão & Atendimento',
-    'Financeiro & Contabilidade'
-  ]
-};
-
-const temposDeAula = ['45 min', '60 min', '75 min', '90 min', '120 min'];
-const opcoesTempoDocencia = [
-  'Iniciando docência (menos de 1 ano)',
-  '1 a 3 anos dando aulas',
-  '3 a 5 anos dando aulas',
-  '5 a 10 anos lecionando',
-  'Mais de 10 anos como professor / Mestre'
-];
+import {
+  formatarCpfInput,
+  formatarWhatsUrl,
+  GRADUACOES_POR_MODALIDADE as graduacoesPorModalidade,
+  isDiariaOuConvenio,
+  OPCOES_TEMPO_DOCENCIA as opcoesTempoDocencia,
+  shiftMonthYear,
+  TEMPOS_DE_AULA as temposDeAula,
+} from '../utils/sharedFormatters';
 
 export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?: 'PROFESSOR' | 'ADMIN' }) {
   const [modoLogin, setModoLogin] = useState<'PROFESSOR' | 'ADMIN'>(modoInicial);
@@ -303,14 +232,6 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
     const professor = matchProf ? matchProf[1].trim() : '';
 
     return { cpf, modalidade, professor };
-  };
-
-  const formatarCpfInput = (val: string) => {
-    const raw = val.replace(/\D/g, '').slice(0, 11);
-    if (raw.length <= 3) return raw;
-    if (raw.length <= 6) return `${raw.slice(0, 3)}.${raw.slice(3)}`;
-    if (raw.length <= 9) return `${raw.slice(0, 3)}.${raw.slice(3, 6)}.${raw.slice(6)}`;
-    return `${raw.slice(0, 3)}.${raw.slice(3, 6)}.${raw.slice(6, 9)}-${raw.slice(9, 11)}`;
   };
 
   const handlePlanoMatriculaChange = (novoPlano: string) => {
@@ -823,12 +744,6 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
     }
   };
 
-  const isDiariaOuConvenio = (plano?: string) => {
-    if (!plano) return false;
-    const p = plano.toLowerCase();
-    return p.includes('diária') || p.includes('diaria') || p.includes('wellhub') || p.includes('totalpass') || p.includes('gympass');
-  };
-
   const atualizarPlanoAluno = async (alunoId: string, plano: string) => {
     try {
       await adminApi.updateStudent(alunoId, { plano });
@@ -837,15 +752,6 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
     } catch (error: any) {
       alert(error.response?.data?.erro || 'Erro ao atualizar plano do aluno.');
     }
-  };
-
-  const formatarWhatsUrl = (telefone: string, mensagem: string) => {
-    let limpo = (telefone || '').replace(/\D/g, '');
-    if (!limpo) return '#';
-    if (!limpo.startsWith('55') && (limpo.length === 10 || limpo.length === 11)) {
-      limpo = '55' + limpo;
-    }
-    return `https://wa.me/${limpo}?text=${encodeURIComponent(mensagem)}`;
   };
 
   const handleCobrar = (aluno: any) => {
@@ -896,15 +802,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
   };
 
   const mudarMesCalendario = (delta: number) => {
-    let novoMes = mesCalendario + delta;
-    let novoAno = anoCalendario;
-    if (novoMes > 12) {
-      novoMes = 1;
-      novoAno += 1;
-    } else if (novoMes < 1) {
-      novoMes = 12;
-      novoAno -= 1;
-    }
+    const { mes: novoMes, ano: novoAno } = shiftMonthYear(mesCalendario, anoCalendario, delta);
     setMesCalendario(novoMes);
     setAnoCalendario(novoAno);
     if (alunoSelecionado) {
@@ -1035,15 +933,11 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
   };
 
   const mudarMesFrequenciaGeral = (delta: number) => {
-    let novoMes = mesFrequenciaGeral + delta;
-    let novoAno = anoFrequenciaGeral;
-    if (novoMes > 12) {
-      novoMes = 1;
-      novoAno += 1;
-    } else if (novoMes < 1) {
-      novoMes = 12;
-      novoAno -= 1;
-    }
+    const { mes: novoMes, ano: novoAno } = shiftMonthYear(
+      mesFrequenciaGeral,
+      anoFrequenciaGeral,
+      delta
+    );
     setMesFrequenciaGeral(novoMes);
     setAnoFrequenciaGeral(novoAno);
     carregarFrequenciaGeral(novoMes, novoAno);
