@@ -78,6 +78,7 @@ function App() {
           <Route path="/dashboard-lutador" element={<PortalAluno />} />
           <Route path="/torneios" element={<PortalAluno />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/atendimento" element={<AdminDashboard modoInicial="ATENDENTE" />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/agendar" element={<AgendarAula />} />
         </Routes>

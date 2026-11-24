@@ -156,7 +156,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (!usuario) {
       return res.status(401).json({
-        erro: 'Usuário não localizado. Professores e Administradores devem acessar informando o seu CPF ou E-mail e senha cadastrados.'
+        erro: 'Usuário não localizado. Professores, Atendentes e Administradores devem acessar informando o seu CPF ou E-mail e senha cadastrados.'
       });
     }
 
@@ -237,12 +237,21 @@ app.post('/api/admin/professores', async (req, res) => {
     return res.status(400).json({ erro: 'Nome e Senha são obrigatórios.' });
   }
 
-  const cargoFinal = cargo === 'ADMIN' ? 'ADMIN' : 'PROFESSOR';
+  const cargoFinal =
+    cargo === 'ADMIN' ? 'ADMIN' : cargo === 'ATENDENTE' ? 'ATENDENTE' : 'PROFESSOR';
   const cpfLimpo = cpf ? cpf.replace(/\D/g, '') : null;
-  const emailFinal = email ? email.trim().toLowerCase() : (cpfLimpo ? `${cpfLimpo}@boru.com` : `professor_${Date.now()}@boru.com`);
+  const emailFinal = email
+    ? email.trim().toLowerCase()
+    : cpfLimpo
+    ? `${cpfLimpo}@boru.com`
+    : `${cargoFinal.toLowerCase()}_${Date.now()}@boru.com`;
 
-  if (cargoFinal === 'PROFESSOR' && (!cpfLimpo || cpfLimpo.length < 11)) {
-    return res.status(400).json({ erro: 'CPF válido (11 dígitos) é obrigatório para cadastrar o professor. O professor usará este CPF para fazer login no sistema.' });
+  if ((cargoFinal === 'PROFESSOR' || cargoFinal === 'ATENDENTE') && (!cpfLimpo || cpfLimpo.length < 11)) {
+    return res.status(400).json({
+      erro: `CPF válido (11 dígitos) é obrigatório para cadastrar o ${
+        cargoFinal === 'ATENDENTE' ? 'atendente' : 'professor'
+      }. Ele usará este CPF para fazer login no sistema.`
+    });
   }
 
   try {

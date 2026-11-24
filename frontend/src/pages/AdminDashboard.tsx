@@ -25,8 +25,23 @@ import {
   TEMPOS_DE_AULA as temposDeAula,
 } from '../utils/sharedFormatters';
 
-export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?: 'PROFESSOR' | 'ADMIN' }) {
-  const [modoLogin, setModoLogin] = useState<'PROFESSOR' | 'ADMIN'>(modoInicial);
+const ATENDENTE_ALLOWED_TABS = new Set([
+  'agendamentos',
+  'alunos',
+  'chamada_diaria',
+  'calendario_geral',
+  'presencas',
+  'ocupacao',
+  'avisos',
+  'resgates_loja',
+]);
+
+export default function AdminDashboard({
+  modoInicial = 'ADMIN',
+}: {
+  modoInicial?: 'PROFESSOR' | 'ATENDENTE' | 'ADMIN';
+}) {
+  const [modoLogin, setModoLogin] = useState<'PROFESSOR' | 'ATENDENTE' | 'ADMIN'>(modoInicial);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [usuarioLogado, setUsuarioLogado] = useState<any>(null);
   const [loginInput, setLoginInput] = useState('');
@@ -36,10 +51,14 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
   const [mostrarSenhaEditarProf, setMostrarSenhaEditarProf] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  const isAtendente = usuarioLogado?.cargo === 'ATENDENTE';
+
   useEffect(() => {
     setModoLogin(modoInicial);
     if (modoInicial === 'PROFESSOR') {
       setAbaAtiva('chamada_diaria');
+    } else if (modoInicial === 'ATENDENTE') {
+      setAbaAtiva('alunos');
     }
   }, [modoInicial]);
   
@@ -356,6 +375,12 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
     }
   };
 
+  useEffect(() => {
+    if (isAtendente && !ATENDENTE_ALLOWED_TABS.has(abaAtiva)) {
+      setAbaAtiva('alunos');
+    }
+  }, [isAtendente, abaAtiva]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
@@ -366,7 +391,9 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
       });
       const user = response.data.usuario;
       setUsuarioLogado(user);
-      if (user?.cargo !== 'ADMIN' || modoLogin === 'PROFESSOR') {
+      if (user?.cargo === 'ATENDENTE' || modoLogin === 'ATENDENTE') {
+        setAbaAtiva('alunos');
+      } else if (user?.cargo !== 'ADMIN' || modoLogin === 'PROFESSOR') {
         setAbaAtiva('chamada_diaria');
       } else {
         setAbaAtiva('alunos');
@@ -380,12 +407,12 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
   };
 
   // ==========================================
-  // PROFESSORES (Exclusivo Admin)
+  // PROFESSORES / EQUIPE (Exclusivo Admin)
   // ==========================================
   const criarProfessor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (novoProfessor.cargo === 'PROFESSOR' && !novoProfessor.cpf) {
-      alert('O CPF do professor é obrigatório para que ele possa acessar o sistema.');
+    if ((novoProfessor.cargo === 'PROFESSOR' || novoProfessor.cargo === 'ATENDENTE') && !novoProfessor.cpf) {
+      alert(`O CPF do ${novoProfessor.cargo === 'ATENDENTE' ? 'atendente' : 'professor'} é obrigatório para que ele possa acessar o sistema.`);
       return;
     }
     try {
@@ -1106,38 +1133,51 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
   };
 
   // ==========================================
-  // TELA DE LOGIN DO ADMIN / PROFESSOR
+  // TELA DE LOGIN DO ADMIN / ATENDIMENTO / PROFESSOR
   // ==========================================
   if (!isLoggedIn) {
     const isModoProf = modoLogin === 'PROFESSOR';
+    const isModoAtend = modoLogin === 'ATENDENTE';
     return (
       <div className="fixed inset-0 bg-[#0B0B0C]/85 backdrop-blur-[2px] flex items-center justify-center z-[9999] px-4 relative overflow-hidden">
         <div className="bg-[#141416]/95 backdrop-blur-md border border-zinc-800 p-6 sm:p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10">
-          {/* SELETOR DE MODO (PROFESSOR vs ADMINISTRADOR) */}
-          <div className="grid grid-cols-2 gap-1.5 bg-[#0E0E11] p-1.5 rounded-2xl border border-zinc-800 mb-5">
+          {/* SELETOR DE MODO (PROFESSOR vs ATENDIMENTO vs ADMINISTRADOR) */}
+          <div className="grid grid-cols-3 gap-1.5 bg-[#0E0E11] p-1.5 rounded-2xl border border-zinc-800 mb-5">
             <button
               type="button"
               onClick={() => setModoLogin('PROFESSOR')}
-              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 ${
+              className={`py-2.5 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 ${
                 isModoProf
                   ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/60'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <img src="/icon-professor.png" alt="" className="w-5 h-5 object-contain" />
+              <img src="/icon-professor.png" alt="" className="w-4 h-4 object-contain" />
               <span>Professor</span>
             </button>
             <button
               type="button"
+              onClick={() => setModoLogin('ATENDENTE')}
+              className={`py-2.5 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 ${
+                isModoAtend
+                  ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-950/60'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <span>🎧</span>
+              <span>Atendimento</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setModoLogin('ADMIN')}
-              className={`py-2.5 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 ${
-                !isModoProf
+              className={`py-2.5 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 ${
+                !isModoProf && !isModoAtend
                   ? 'bg-amber-500 text-black shadow-lg shadow-amber-950/60'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <img src="/icon-admin.png" alt="" className="w-5 h-5 object-contain" />
-              <span>Administrador</span>
+              <img src="/icon-admin.png" alt="" className="w-4 h-4 object-contain" />
+              <span>Admin</span>
             </button>
           </div>
 
@@ -1146,24 +1186,42 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
               <div className={`w-20 h-20 rounded-2xl p-2.5 flex items-center justify-center border-2 shadow-2xl transition-all ${
                 isModoProf
                   ? 'bg-emerald-950/40 border-emerald-500 shadow-emerald-950/80'
+                  : isModoAtend
+                  ? 'bg-cyan-950/40 border-cyan-500 shadow-cyan-950/80'
                   : 'bg-amber-950/40 border-amber-500 shadow-amber-950/80'
               }`}>
-                <img 
-                  src={isModoProf ? "/icon-professor.png" : "/icon-admin.png"} 
-                  alt="Perfil BORÜ" 
-                  className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]" 
-                />
+                {isModoAtend ? (
+                  <span className="text-4xl">🎧</span>
+                ) : (
+                  <img 
+                    src={isModoProf ? "/icon-professor.png" : "/icon-admin.png"} 
+                    alt="Perfil BORÜ" 
+                    className="w-full h-full object-contain filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]" 
+                  />
+                )}
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider mb-1">
-              {isModoProf ? 'PORTAL DO PROFESSOR' : 'PAINEL ADMINISTRADOR'}
+              {isModoProf
+                ? 'PORTAL DO PROFESSOR'
+                : isModoAtend
+                ? 'CENTRAL DE ATENDIMENTO'
+                : 'PAINEL ADMINISTRADOR'}
             </h1>
-            <p className={`font-bold text-xs uppercase tracking-widest ${isModoProf ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {isModoProf ? 'Mestres, Instrutores & Chamada' : 'Diretoria & Gestão Executiva'}
+            <p className={`font-bold text-xs uppercase tracking-widest ${
+              isModoProf ? 'text-emerald-400' : isModoAtend ? 'text-cyan-400' : 'text-amber-400'
+            }`}>
+              {isModoProf
+                ? 'Mestres, Instrutores & Chamada'
+                : isModoAtend
+                ? 'Recepção, Matrículas & Check-ins'
+                : 'Diretoria & Gestão Executiva'}
             </p>
             <p className="text-zinc-400 text-xs mt-1">
               {isModoProf
                 ? 'Chamada diária em duas colunas, presença de turmas e avaliação experimental'
+                : isModoAtend
+                ? 'Acesso exclusivo para matrículas, gestão de alunos, aulas experimentais e check-ins'
                 : 'Gestão Financeira (OPEX/CAPEX), Matrículas, Equipe e Controle Geral'}
             </p>
           </div>
@@ -1171,7 +1229,11 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-zinc-400 text-xs font-semibold mb-1">
-                {isModoProf ? 'CPF do Professor / Mestre' : 'Login ou E-mail de Administrador'}
+                {isModoProf
+                  ? 'CPF do Professor / Mestre'
+                  : isModoAtend
+                  ? 'CPF ou E-mail do Atendente'
+                  : 'Login ou E-mail de Administrador'}
               </label>
               <input 
                 type="text" 
@@ -1323,6 +1385,11 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                       </span>
                     )}
                   </>
+                ) : usuarioLogado?.cargo === 'ATENDENTE' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1.5">
+                    <span>🎧</span>
+                    <span>ATENDIMENTO & RECEPÇÃO</span>
+                  </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                     <img src="/icon-professor.png" alt="" className="w-4 h-4 object-contain inline-block" />
@@ -1560,20 +1627,22 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
               <span className="truncate">Chamada</span>
             </button>
 
-            {/* COLUNA 2 - LINHA 2: GAME (GAMIFICAÇÃO) */}
-            <button 
-              type="button"
-              onClick={() => setAbaAtiva('gamificacao')}
-              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
-                abaAtiva === 'gamificacao'
-                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
-                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
-              }`}
-              title="Trilha do Nak Muay, Conquistas e Graduações"
-            >
-              <span className="text-base sm:text-lg">🏆</span>
-              <span className="truncate">Game</span>
-            </button>
+            {/* COLUNA 2 - LINHA 2: GAME (GAMIFICAÇÃO - OCULTO PARA ATENDENTE) */}
+            {!isAtendente && (
+              <button 
+                type="button"
+                onClick={() => setAbaAtiva('gamificacao')}
+                className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                  abaAtiva === 'gamificacao'
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                }`}
+                title="Trilha do Nak Muay, Conquistas e Graduações"
+              >
+                <span className="text-base sm:text-lg">🏆</span>
+                <span className="truncate">Game</span>
+              </button>
+            )}
 
             {/* COLUNA 3 - LINHA 2: AVISOS */}
             <button 
@@ -1590,20 +1659,36 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
               <span className="truncate">Avisos ({avisos.length})</span>
             </button>
 
-            {/* COLUNA 4 - LINHA 2: LOJA */}
-            <button 
-              type="button"
-              onClick={() => setAbaAtiva('loja')}
-              className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
-                ['loja', 'resgates_loja'].includes(abaAtiva)
-                  ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
-                  : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
-              }`}
-              title="Loja Borü, equipamentos e vouchers de resgate"
-            >
-              <span className="text-base sm:text-lg">🛍️</span>
-              <span className="truncate">Loja</span>
-            </button>
+            {/* COLUNA 4 - LINHA 2: LOJA (ADMIN/PROF) OU RETIRADAS DE VOUCHERS (ATENDENTE) */}
+            {isAtendente ? (
+              <button 
+                type="button"
+                onClick={() => setAbaAtiva('resgates_loja')}
+                className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                  abaAtiva === 'resgates_loja'
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                }`}
+                title="Confirmar retirada de vouchers e recompensas na recepção"
+              >
+                <span className="text-base sm:text-lg">🎟️</span>
+                <span className="truncate">Vouchers / Retiradas</span>
+              </button>
+            ) : (
+              <button 
+                type="button"
+                onClick={() => setAbaAtiva('loja')}
+                className={`h-12 sm:h-13 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center gap-2 border text-center ${
+                  ['loja', 'resgates_loja'].includes(abaAtiva)
+                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                }`}
+                title="Loja Borü, equipamentos e vouchers de resgate"
+              >
+                <span className="text-base sm:text-lg">🛍️</span>
+                <span className="truncate">Loja</span>
+              </button>
+            )}
           </div>
 
           {/* ABAS COMPLEMENTARES DISCRETAS (ADMINISTRAÇÃO & DEV) */}
@@ -1765,17 +1850,19 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
           <div className="bg-[#141416] border border-zinc-800 rounded-xl p-2.5 sm:p-3 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-2 overflow-x-auto boru-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
               <span className="text-xs font-black text-zinc-400 uppercase tracking-wider mr-1 hidden sm:inline">Sub-módulo Loja:</span>
-              <button
-                type="button"
-                onClick={() => setAbaAtiva('loja')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  abaAtiva === 'loja'
-                    ? 'bg-red-600 text-white shadow-md shadow-red-950/40'
-                    : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
-                }`}
-              >
-                <span>🛍️ Produtos & Estoque</span>
-              </button>
+              {!isAtendente && (
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('loja')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                    abaAtiva === 'loja'
+                      ? 'bg-red-600 text-white shadow-md shadow-red-950/40'
+                      : 'bg-[#1A1A1E] text-zinc-300 hover:text-white border border-zinc-800'
+                  }`}
+                >
+                  <span>🛍️ Produtos & Estoque</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setAbaAtiva('resgates_loja')}
@@ -2874,7 +2961,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
         )}
 
         {/* CONTEÚDO DA ABA: GESTÃO DE GAMIFICAÇÃO & APROVAÇÃO RÁPIDA (TRILHA DO NAK MUAY) */}
-        {abaAtiva === 'gamificacao' && (
+        {abaAtiva === 'gamificacao' && !isAtendente && (
           <AdminGamificationTab
             cargoUsuario={usuarioLogado?.cargo || 'ADMIN'}
             professorId={usuarioLogado?.id}
@@ -2927,7 +3014,7 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
         )}
 
         {/* CONTEÚDO DA ABA: LOJA & MERCADO (BETA) */}
-        {abaAtiva === 'loja' && (
+        {abaAtiva === 'loja' && !isAtendente && (
           <div className="space-y-4">
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
@@ -3145,6 +3232,10 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                         ) : prof.cargo === 'ADMIN' ? (
                           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                             ADMIN
+                          </span>
+                        ) : prof.cargo === 'ATENDENTE' ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                            🎧 ATENDENTE
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
@@ -3575,8 +3666,9 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
               <div>
                 <label className="block text-zinc-400 text-xs font-semibold mb-1">Cargo no Sistema</label>
                 <select value={novoProfessor.cargo} onChange={(e) => setNovoProfessor({...novoProfessor, cargo: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white">
-                  <option value="PROFESSOR">Professor / Instrutor</option>
-                  <option value="ADMIN">Administrador Geral</option>
+                  <option value="PROFESSOR">🥋 Professor / Instrutor</option>
+                  <option value="ATENDENTE">🎧 Atendente / Recepção (Matrículas, Alunos & Check-ins)</option>
+                  <option value="ADMIN">👑 Administrador Geral</option>
                 </select>
               </div>
 
@@ -3769,8 +3861,9 @@ export default function AdminDashboard({ modoInicial = 'ADMIN' }: { modoInicial?
                 <div>
                   <label className="block text-zinc-400 text-xs font-semibold mb-1">Cargo</label>
                   <select value={professorParaEditar.cargo} onChange={(e) => setProfessorParaEditar({...professorParaEditar, cargo: e.target.value})} className="w-full bg-[#1A1A1E] border border-zinc-700 rounded-lg p-2.5 text-sm text-white">
-                    <option value="PROFESSOR">Professor / Instrutor</option>
-                    <option value="ADMIN">Administrador Geral</option>
+                    <option value="PROFESSOR">🥋 Professor / Instrutor</option>
+                    <option value="ATENDENTE">🎧 Atendente / Recepção (Matrículas, Alunos & Check-ins)</option>
+                    <option value="ADMIN">👑 Administrador Geral</option>
                   </select>
                 </div>
               </div>
