@@ -17,7 +17,11 @@ import { BoruAiAutonomousTab } from '../components/BoruAiAutonomousTab';
 import { FirstCheckinIdentificationBanner } from '../components/FirstCheckinIdentificationBanner';
 import { AdminPartnersTab } from '../components/AdminPartnersTab';
 import { ManagementReportModal } from '../components/ManagementReportModal';
-import { exportGovernanceWorkbookXlsx } from '../utils/exportGovernanceUtils';
+import {
+  exportGovernanceWorkbookXlsx,
+  exportStudentsAnalyticsXlsx,
+  exportLeadsAnalyticsXlsx,
+} from '../utils/exportGovernanceUtils';
 import {
   formatarCpfInput,
   formatarWhatsUrl,
@@ -2020,15 +2024,92 @@ export default function AdminDashboard({
                 </p>
               </div>
 
-              {/* BARRA DE PESQUISA RÁPIDA */}
-              <div className="w-full sm:w-72">
+              {/* BARRA DE PESQUISA RÁPIDA + EXPORTAÇÃO EXCEL DE ALUNOS & MÉDIAS */}
+              <div className="w-full sm:w-auto flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   value={buscaAluno}
                   onChange={(e) => setBuscaAluno(e.target.value)}
                   placeholder="🔍 Buscar aluno por nome, CPF ou telefone..."
-                  className="w-full bg-[#1A1A1E] border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition"
+                  className="w-full sm:w-64 bg-[#1A1A1E] border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition"
                 />
+                <button
+                  type="button"
+                  onClick={() =>
+                    exportStudentsAnalyticsXlsx({
+                      alunos: alunosFiltrados,
+                      filtroAplicado: `${filtroAssiduidade}${buscaAluno ? ` (Busca: ${buscaAluno})` : ''}`,
+                      emitidoPor: usuarioLogado?.nome || 'Administração CT Borü',
+                    })
+                  }
+                  className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-emerald-950/50 whitespace-nowrap"
+                  title="Baixar planilha Excel (.xlsx) de Alunos com cálculo automático de Médias de Presença, Assiduidade, Ticket Médio e Resumo por Plano"
+                >
+                  <span>📊</span>
+                  <span>Excel Alunos & Médias (.xlsx)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowManagementReportModal(true)}
+                  className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 hover:text-white text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"
+                  title="Abrir Relatório Executivo para Impressão / PDF"
+                >
+                  <span>🖨️</span>
+                  <span>Relatório PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {/* FAIXA DE MÉDIAS E INDICADORES AO VIVO DOS ALUNOS FILTRADOS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#111114] border border-zinc-800/80 rounded-xl p-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Média de Presenças / Mês</span>
+                <span className="text-sm sm:text-base font-black text-emerald-400">
+                  {alunosFiltrados.length > 0
+                    ? (
+                        alunosFiltrados.reduce((acc, a) => acc + (Number(a.presencasMes) || 0), 0) /
+                        alunosFiltrados.length
+                      ).toFixed(1)
+                    : '0.0'}{' '}
+                  treinos/aluno
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Média de Assiduidade</span>
+                <span className="text-sm sm:text-base font-black text-cyan-400">
+                  {alunosFiltrados.length > 0
+                    ? (
+                        alunosFiltrados.reduce((acc, a) => acc + (Number(a.porcentagemPresenca ?? 100) || 0), 0) /
+                        alunosFiltrados.length
+                      ).toFixed(1)
+                    : '100.0'}
+                  %
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Média Dias s/ Treinar</span>
+                <span className="text-sm sm:text-base font-black text-amber-400">
+                  {alunosFiltrados.length > 0
+                    ? (
+                        alunosFiltrados.reduce((acc, a) => acc + (Number(a.diasSemTreinar ?? 0) || 0), 0) /
+                        alunosFiltrados.length
+                      ).toFixed(1)
+                    : '0.0'}{' '}
+                  dias
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Ativos vs. Inativos (Filtro)</span>
+                <span className="text-sm sm:text-base font-black text-white">
+                  {
+                    alunosFiltrados.filter(
+                      (a) =>
+                        a.statusAtividade === 'ATIVO' ||
+                        (a.diasSemTreinar !== undefined && a.diasSemTreinar < 14)
+                    ).length
+                  }{' '}
+                  ativos / {alunosFiltrados.length} total
+                </span>
               </div>
             </div>
 
@@ -3406,23 +3487,88 @@ export default function AdminDashboard({
                 </button>
               </div>
 
-              <div className="relative w-full sm:w-64">
-                <input
-                  type="text"
-                  value={buscaAgendamento}
-                  onChange={(e) => setBuscaAgendamento(e.target.value)}
-                  placeholder="🔍 Buscar por nome ou telefone..."
-                  className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
-                />
-                {buscaAgendamento && (
-                  <button
-                    type="button"
-                    onClick={() => setBuscaAgendamento('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <input
+                    type="text"
+                    value={buscaAgendamento}
+                    onChange={(e) => setBuscaAgendamento(e.target.value)}
+                    placeholder="🔍 Buscar por nome ou telefone..."
+                    className="w-full bg-[#1A1A1E] border border-zinc-700 focus:border-red-500 rounded-lg pl-3 pr-8 py-1.5 text-xs text-white placeholder-zinc-500 outline-none"
+                  />
+                  {buscaAgendamento && (
+                    <button
+                      type="button"
+                      onClick={() => setBuscaAgendamento('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    exportLeadsAnalyticsXlsx({
+                      agendamentos,
+                      buscaFiltro: buscaAgendamento,
+                      emitidoPor: usuarioLogado?.nome || 'Administração CT Borü',
+                    })
+                  }
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-emerald-950/50 whitespace-nowrap"
+                  title="Baixar planilha Excel (.xlsx) de Leads & Aulas Experimentais com Funil de Conversão, Média de Dias de Espera e Demanda por Horário"
+                >
+                  <span>📊</span>
+                  <span>Excel Leads & Funil (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* FAIXA DE MÉDIAS E INDICADORES DO FUNIL DE LEADS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#111114] border border-zinc-800/80 rounded-xl p-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Total no Funil</span>
+                <span className="text-sm sm:text-base font-black text-white">
+                  {(agendamentos.pendentes?.length || 0) + (agendamentos.posAula?.length || 0)} leads ativos
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Taxa de Aula Realizada</span>
+                <span className="text-sm sm:text-base font-black text-emerald-400">
+                  {(agendamentos.pendentes?.length || 0) + (agendamentos.posAula?.length || 0) > 0
+                    ? (
+                        ((agendamentos.posAula?.length || 0) /
+                          ((agendamentos.pendentes?.length || 0) + (agendamentos.posAula?.length || 0))) *
+                        100
+                      ).toFixed(1)
+                    : '0.0'}
+                  % ({agendamentos.posAula?.length || 0} pós-aula)
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Média Dias Pós-Aula</span>
+                <span className="text-sm sm:text-base font-black text-amber-400">
+                  {(agendamentos.posAula?.length || 0) > 0
+                    ? (
+                        agendamentos.posAula.reduce(
+                          (acc: number, l: any) => acc + (Number(l.diasDesdeAula) || 0),
+                          0
+                        ) / agendamentos.posAula.length
+                      ).toFixed(1)
+                    : '0.0'}{' '}
+                  dias
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase text-zinc-500 block">Leads Quentes (≤ 3 dias)</span>
+                <span className="text-sm sm:text-base font-black text-red-400">
+                  {
+                    (agendamentos.posAula || []).filter((l: any) => (Number(l.diasDesdeAula) || 0) <= 3)
+                      .length
+                  }{' '}
+                  prontos p/ fechar
+                </span>
               </div>
             </div>
 
