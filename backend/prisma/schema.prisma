@@ -522,3 +522,29 @@ model AiServiceTicket {
   resolvidoEm         DateTime?
   criadoEm            DateTime              @default(now())
 }
+
+// ==========================================
+// MÓDULO DE MONETIZAÇÃO, PARCEIROS & PATROCINADORES
+// ==========================================
+model ParceiroPatrocinador {
+  id                 String    @id @default(uuid())
+  nome               String
+  categoria          String    @default("PARCEIRO_OFICIAL") // "EMPREENDIMENTO_ALUNO" | "PATROCINADOR_FELIPE" | "PARCEIRO_OFICIAL" | "APOIADOR_EVENTO"
+  descricao          String
+  beneficioAlunos    String?
+  alunoVinculadoNome String?
+  logoUrl            String
+  bannerUrl          String?
+  linkDestino        String
+  tipoLink           String    @default("INSTAGRAM") // "INSTAGRAM" | "WHATSAPP" | "SITE"
+  contatoTexto       String?
+  destaqueHome       Boolean   @default(true)
+  ordem              Int       @default(0)
+  dataInicio         DateTime?
+  dataFim            DateTime?
+  ativo              Boolean   @default(true)
+  cliquesCount       Int       @default(0)
+  criadoEm           DateTime  @default(now())
+  atualizadoEm       DateTime  @updatedAt
+}
+

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
 import { RealEstateDepreciationPanel } from './RealEstateDepreciationPanel';
 import { formatarMoeda, shiftMonthYear } from '../utils/sharedFormatters';
+import { exportGovernanceWorkbookXlsx } from '../utils/exportGovernanceUtils';
 
 interface FinancialDashboardTabProps {
   onRefreshGlobal?: () => void;
@@ -609,11 +610,35 @@ export const FinancialDashboardTab: React.FC<FinancialDashboardTabProps> = ({
 
             <button
               type="button"
+              onClick={() =>
+                exportGovernanceWorkbookXlsx({
+                  alunos: registros,
+                  metricas: resumo,
+                  transacoesFinanceiras: transacoesFiltradas,
+                  registrosFinanceiros: registrosFiltrados,
+                  emitidoPor: usuarioLogadoNome,
+                  filtros: {
+                    periodo: 'MES_ATUAL',
+                    statusAluno: 'TODOS',
+                    modalidade: 'TODAS',
+                    mesRef: mesFiltro,
+                    anoRef: anoFiltro,
+                  },
+                })
+              }
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-emerald-950/40"
+              title="Exportar planilha Excel (.xlsx) formatada com abas separadas (Resumo, Alunos, Financeiro)"
+            >
+              📊 Exportar Excel (.xlsx)
+            </button>
+
+            <button
+              type="button"
               onClick={exportarLivroCaixaCSV}
               className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-bold transition flex items-center gap-1.5"
               title="Exportar planilha compatível com Excel (.CSV)"
             >
-              📥 Exportar Excel (CSV)
+              📥 CSV
             </button>
           </div>
         </div>

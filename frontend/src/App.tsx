@@ -6,6 +6,7 @@ const PortalAluno = lazy(() => import('./pages/PortalAluno'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const AgendarAula = lazy(() => import('./pages/AgendarAula'));
+const ParceirosPage = lazy(() => import('./pages/ParceirosPage'));
 
 function RouteLoadingFallback() {
   return (
@@ -81,6 +82,7 @@ function App() {
           <Route path="/atendimento" element={<AdminDashboard modoInicial="ATENDENTE" />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/agendar" element={<AgendarAula />} />
+          <Route path="/parceiros" element={<ParceirosPage />} />
         </Routes>
       </Suspense>
     </Router>

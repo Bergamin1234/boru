@@ -36,7 +36,9 @@ export const publicApi = {
     modoEntradaManualSemBanco?: boolean;
   }) => api.post('/checkin/verificar-perfil', data),
   uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
-    api.post('/upload', data)
+    api.post('/upload', data),
+  getPartners: () => api.get('/parceiros'),
+  trackPartnerClick: (id: string) => api.post(`/parceiros/${id}/clique`),
 };
 
 export const adminApi = {
@@ -152,6 +154,13 @@ export const adminApi = {
   // Upload de Arquivo Local (Storage Real)
   uploadFile: (data: { fileName: string; mimeType: string; base64Data: string; folder?: string }) =>
     api.post('/upload', data),
+
+  // Módulo de Monetização, Parceiros & Patrocinadores + Google Ads
+  getAdminPartners: () => api.get('/admin/parceiros'),
+  createPartner: (data: unknown) => api.post('/admin/parceiros', data),
+  updatePartner: (id: string, data: unknown) => api.patch(`/admin/parceiros/${id}`, data),
+  deletePartner: (id: string) => api.delete(`/admin/parceiros/${id}`),
+  saveGoogleAdsConfig: (data: unknown) => api.put('/admin/parceiros/ads-config', data),
 
   // Módulo 7: Gamificação ("Trilha do Nak Muay")
   getGamificationConfig: () => api.get('/admin/gamificacao/config'),

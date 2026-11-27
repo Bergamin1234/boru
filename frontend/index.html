@@ -339,6 +339,27 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+    /* ================= IMPRESSÃO / RELATÓRIO GERENCIAL PDF (@media print) ================= */
+    @media print {
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      body, html {
+        background: #ffffff !important;
+        color: #111827 !important;
+      }
+      #global-boru-wallpaper,
+      .wallpaper-light-sweep,
+      .combat-bg-animated,
+      .arena-sparks-bg,
+      .ambient-neon-glow,
+      #main-header,
+      footer {
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 <body class="bg-[#0B0B0C] text-zinc-100 min-h-screen selection:bg-red-600 selection:text-white relative">
@@ -381,6 +402,7 @@
         <a href="#professores" class="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition">Professores</a>
         <a href="#estrutura" class="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition">Estrutura</a>
         <a href="#galeria" class="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition">Galeria</a>
+        <a href="#parceiros" class="px-2.5 py-1.5 rounded-lg text-amber-400 hover:text-white hover:bg-amber-500/15 transition font-bold">🤝 Parceiros</a>
         <a href="#faq" class="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition">FAQ</a>
       </nav>
 
@@ -422,6 +444,8 @@
         <a href="#modalidades" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Modalidades de Luta</a>
         <a href="#professores" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Nossos Professores / Mestres</a>
         <a href="#galeria" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Galeria do Tatame</a>
+        <a href="#parceiros" class="text-amber-400 font-bold hover:text-red-400 py-1" onclick="closeMobileMenu()">🤝 Parceiros & Patrocinadores</a>
+        <a href="/parceiros" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">🌐 Vitrine Completa de Parceiros</a>
         <a href="#faq" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Dúvidas Frequentes (FAQ)</a>
         <a href="#localizacao" class="text-zinc-300 hover:text-red-500 py-1" onclick="closeMobileMenu()">Onde Estamos</a>
       </nav>
@@ -2104,6 +2128,77 @@
     })();
   </script>
 
+  <!-- ================= SEÇÃO: PARCEIROS, PATROCINADORES & EMPREENDIMENTOS DE ALUNOS ================= -->
+  <section id="parceiros" class="py-24 bg-[#111114]/95 border-y border-zinc-800/80 relative z-10 overflow-hidden">
+    <div class="absolute -top-32 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="absolute -bottom-32 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10">
+      
+      <!-- Cabeçalho da Seção -->
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div class="space-y-3 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-950/70 border border-red-500/40 text-red-400 font-mono font-bold uppercase tracking-widest text-xs">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span>REDE OFICIAL DE APOIO & NEGÓCIOS // CT BORÜ</span>
+          </div>
+          <h2 class="font-display text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
+            Parceiros, Patrocinadores & <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400">Empreendimentos de Alunos</span>
+          </h2>
+          <p class="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            Conheça as empresas que apoiam o Mestre Felipe Borü, os convênios oficiais e os negócios dos alunos da nossa comunidade em Porto Velho - RO.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="/parceiros" class="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/50 transition inline-flex items-center gap-2">
+            <span>🌐 Ver Vitrine Completa de Parceiros</span>
+            <span>→</span>
+          </a>
+          <a href="https://wa.me/556992384491?text=Ol%C3%A1!%20Quero%20divulgar%20minha%20empresa%20como%20Parceiro%20ou%20Patrocinador%20no%20site%20do%20CT%20BOR%C3%9C." target="_blank" class="px-4 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold text-xs uppercase tracking-wider transition">
+            💬 Anunciar Minha Marca
+          </a>
+        </div>
+      </div>
+
+      <!-- CARROSSEL / BANNER ROTATIVO EM DESTAQUE NA HOME -->
+      <div id="home-partners-carousel-banner" class="rounded-3xl overflow-hidden bg-gradient-to-br from-[#16161B] via-[#121215] to-[#1C1214] border border-zinc-800 shadow-2xl">
+        <!-- Preenchido dinamicamente por app.js via GET /api/parceiros -->
+      </div>
+
+      <!-- FILTROS RÁPIDOS DE CATEGORIA NA HOME -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div class="flex flex-wrap items-center gap-2" id="home-partners-category-filters">
+          <button type="button" data-partner-cat="TODOS" class="partner-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 text-white border border-red-500 transition">
+            🌐 Todos
+          </button>
+          <button type="button" data-partner-cat="EMPREENDIMENTO_ALUNO" class="partner-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 transition">
+            🥋 Empreendimento de Aluno
+          </button>
+          <button type="button" data-partner-cat="PATROCINADOR_FELIPE" class="partner-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 transition">
+            🏆 Patrocinador do Felipe
+          </button>
+          <button type="button" data-partner-cat="PARCEIRO_OFICIAL" class="partner-cat-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 transition">
+            🤝 Parceiro Oficial
+          </button>
+        </div>
+
+        <a href="/parceiros" class="text-xs font-bold text-amber-400 hover:text-amber-300 transition">
+          Abrir página exclusiva /parceiros →
+        </a>
+      </div>
+
+      <!-- GRADE DE CARDS DE PARCEIROS NA HOME -->
+      <div id="home-partners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+
+      <!-- BLOCO GOOGLE ADSENSE RESPONSIVO E DISCRETO (SÓ APARECE QUANDO ATIVADO NO ADMIN) -->
+      <div id="home-google-ads-container" class="hidden"></div>
+
+    </div>
+  </section>
+
 <!-- ================= SEÇÃO: DÚVIDAS FREQUENTES (FAQ) ================= -->
   <section id="faq" class="py-24 bg-[#0B0B0C]/80 backdrop-blur-[2px] relative z-10">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2224,6 +2319,7 @@
           <a href="#professores" class="hover:text-zinc-300 transition">Professores</a>
           <a href="#estrutura" class="hover:text-zinc-300 transition">Estrutura</a>
           <a href="#horarios" class="hover:text-zinc-300 transition">Horários</a>
+          <a href="/parceiros" class="text-amber-400 hover:text-amber-300 transition font-bold">🤝 Parceiros & Patrocinadores</a>
           <a href="/portal" class="hover:text-red-400 transition font-bold">Área do Aluno</a>
         </div>
 

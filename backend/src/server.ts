@@ -8,6 +8,7 @@ import { registerAddonRoutes, calcularProximoVencimentoPorAdesao } from './addon
 import { registerPhase1Routes } from './phase1Routes';
 import { registerClassScheduleRoutes } from './classScheduleRoutes';
 import { registerBoruAiRoutes } from './ai/boruAiRoutes';
+import { registerPartnersRoutes } from './partnersRoutes';
 import {
   evaluateCheckinAccessProfile,
   buildCheckinHistoryMapForStudents,
@@ -50,6 +51,7 @@ registerAddonRoutes(app, prisma);
 registerPhase1Routes(app, prisma);
 registerClassScheduleRoutes(app, prisma);
 registerBoruAiRoutes(app, prisma);
+registerPartnersRoutes(app, prisma);
 
 // Servir arquivos estáticos do frontend e uploads (modo portátil / produção)
 app.use(express.static(path.join(__dirname, '../public')));

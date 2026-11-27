@@ -15,6 +15,9 @@ import { AdminStoreRedemptionsTab } from '../components/AdminStoreRedemptionsTab
 import { InteractiveCombatCalendar } from '../components/InteractiveCombatCalendar';
 import { BoruAiAutonomousTab } from '../components/BoruAiAutonomousTab';
 import { FirstCheckinIdentificationBanner } from '../components/FirstCheckinIdentificationBanner';
+import { AdminPartnersTab } from '../components/AdminPartnersTab';
+import { ManagementReportModal } from '../components/ManagementReportModal';
+import { exportGovernanceWorkbookXlsx } from '../utils/exportGovernanceUtils';
 import {
   formatarCpfInput,
   formatarWhatsUrl,
@@ -178,6 +181,42 @@ export default function AdminDashboard({
   const [showModalGaleria, setShowModalGaleria] = useState(false);
   const [fotosGaleria, setFotosGaleria] = useState<any[]>([]);
   const [carregandoGaleria, setCarregandoGaleria] = useState(false);
+  const [showManagementReportModal, setShowManagementReportModal] = useState(false);
+  const [exportingQuickXlsx, setExportingQuickXlsx] = useState(false);
+
+  const exportarExcelCompleto1Clique = async () => {
+    setExportingQuickXlsx(true);
+    try {
+      let transacoesFin: any[] = [];
+      let registrosFin: any[] = [];
+      try {
+        const finRes = await adminApi.getFinancialDashboard({
+          mes: new Date().getMonth() + 1,
+          ano: new Date().getFullYear(),
+        });
+        transacoesFin = finRes.data?.transacoes || [];
+        registrosFin = finRes.data?.registros || [];
+      } catch (_e) {}
+
+      exportGovernanceWorkbookXlsx({
+        alunos,
+        metricas,
+        transacoesFinanceiras: transacoesFin,
+        registrosFinanceiros: registrosFin,
+        presencas,
+        agendamentosExperimentais: agendamentos,
+        professores,
+        emitidoPor: usuarioLogado?.nome || 'Administração CT Borü',
+        filtros: {
+          periodo: 'TUDO',
+          statusAluno: 'TODOS',
+          modalidade: 'TODAS',
+        },
+      });
+    } finally {
+      setExportingQuickXlsx(false);
+    }
+  };
   const [salvandoFotoGaleria, setSalvandoFotoGaleria] = useState(false);
   const [novaFotoGaleria, setNovaFotoGaleria] = useState({
     url: '',
@@ -1413,6 +1452,29 @@ export default function AdminDashboard({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            {usuarioLogado?.cargo === 'ADMIN' && (
+              <>
+                <button
+                  type="button"
+                  onClick={exportarExcelCompleto1Clique}
+                  disabled={exportingQuickXlsx}
+                  className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-md shadow-emerald-950/40"
+                  title="Baixar planilha Excel (.xlsx) completa em 1 clique com abas separadas (Resumo Geral, Alunos, Financeiro/Planos)"
+                >
+                  <span>📊</span>
+                  <span>{exportingQuickXlsx ? 'Gerando .xlsx...' : 'Exportar Excel (.xlsx)'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowManagementReportModal(true)}
+                  className="px-3.5 py-2 rounded-lg bg-zinc-800/90 hover:bg-zinc-700 text-xs font-bold text-cyan-300 hover:text-white transition border border-cyan-500/30 flex items-center gap-1.5 shadow-sm"
+                  title="Abrir Relatório Gerencial para Impressão / PDF e filtros rápidos de exportação"
+                >
+                  <span>🖨️</span>
+                  <span>Relatório & PDF</span>
+                </button>
+              </>
+            )}
             <button 
               onClick={() => abrirModalEdicaoProf(usuarioLogado)}
               className="px-3 py-2 rounded-lg bg-zinc-800/90 hover:bg-zinc-700 text-xs font-bold text-amber-400 hover:text-amber-300 transition border border-amber-500/30 flex items-center gap-1.5 shadow-sm"
@@ -1694,19 +1756,45 @@ export default function AdminDashboard({
           {/* ABAS COMPLEMENTARES DISCRETAS (ADMINISTRAÇÃO & DEV) */}
           {(usuarioLogado?.cargo === 'ADMIN' || usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/60">
-              <button
-                type="button"
-                onClick={() => setAbaAtiva('boru_ia')}
-                className={`h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  abaAtiva === 'boru_ia'
-                    ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
-                    : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
-                }`}
-                title="Acompanhar todas as conversas do WhatsApp, simular atendimento e configurar a IA"
-              >
-                <span className="text-sm">💬</span>
-                <span>WhatsApp & Atendimento IA</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('boru_ia')}
+                  className={`h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                    abaAtiva === 'boru_ia'
+                      ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                      : 'bg-[#141416] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 hover:bg-[#19191d]'
+                  }`}
+                  title="Acompanhar todas as conversas do WhatsApp, simular atendimento e configurar a IA"
+                >
+                  <span className="text-sm">💬</span>
+                  <span>WhatsApp & Atendimento IA</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('parceiros_anuncios')}
+                  className={`h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                    abaAtiva === 'parceiros_anuncios'
+                      ? 'bg-red-600 text-white border-red-500 shadow-lg shadow-red-950/50 ring-1 ring-red-400/40'
+                      : 'bg-[#141416] text-amber-300 hover:text-white border-amber-500/30 hover:border-amber-500/60 hover:bg-[#19191d]'
+                  }`}
+                  title="Gerenciar Parceiros, Patrocinadores do Felipe, Empreendimentos de Alunos e Google Ads"
+                >
+                  <span className="text-sm">🤝</span>
+                  <span>Parceiros, Patrocinadores & Google Ads</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowManagementReportModal(true)}
+                  className="h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer bg-[#141416] text-emerald-300 hover:text-white border-emerald-500/30 hover:border-emerald-500/60 hover:bg-[#19191d]"
+                  title="Exportar planilha Excel (.xlsx) ou imprimir Relatório Executivo em PDF"
+                >
+                  <span className="text-sm">📊</span>
+                  <span>Exportar Excel (.xlsx) & Relatório PDF</span>
+                </button>
+              </div>
 
               {(usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
                 <button 
@@ -1729,6 +1817,23 @@ export default function AdminDashboard({
         {abaAtiva === 'boru_ia' && (usuarioLogado?.cargo === 'ADMIN' || usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
           <BoruAiAutonomousTab usuarioLogado={usuarioLogado} />
         )}
+
+        {/* MÓDULO DE MONETIZAÇÃO: PARCEIROS, PATROCINADORES & GOOGLE ADS */}
+        {abaAtiva === 'parceiros_anuncios' && (usuarioLogado?.cargo === 'ADMIN' || usuarioLogado?.is_dev || usuarioLogado?.email === 'brgadmin@boru.com') && (
+          <AdminPartnersTab />
+        )}
+
+        {/* MODAL DE RELATÓRIO GERENCIAL PARA IMPRESSÃO / PDF & EXPORTAÇÃO EXCEL COM FILTROS */}
+        <ManagementReportModal
+          isOpen={showManagementReportModal}
+          onClose={() => setShowManagementReportModal(false)}
+          alunos={alunos}
+          metricas={metricas}
+          presencas={presencas}
+          agendamentos={agendamentos}
+          professores={professores}
+          usuarioLogadoNome={usuarioLogado?.nome || 'Administração CT Borü'}
+        />
 
         {/* SUB-BARRA RETRÁTIL: MÓDULO DE GESTÃO (FINANCEIRO, CAIXA & COMISSÕES) */}
         {['financeiro_gestao', 'caixa_diario', 'comissoes'].includes(abaAtiva) && usuarioLogado?.cargo === 'ADMIN' && (
